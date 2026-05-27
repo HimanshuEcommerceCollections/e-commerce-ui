@@ -1,40 +1,106 @@
 "use client";
+import { useState } from "react";
+import { MapPin, Search, ShoppingCart, Package, User } from "lucide-react";
 
-import Link from "next/link";
-import { ShoppingCart, Store } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useCartStore } from "@/store/useCartStore";
+interface NavUser {
+  name: string;
+}
 
-export default function Navbar() {
-  const totalItems = useCartStore((s) => s.totalItems());
+interface NavbarProps {
+  user?: NavUser | null;
+  cartCount?: number;
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
+}
+
+const SEARCH_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Beauty", "Mobiles", "Books", "Toys"];
+
+export default function Navbar({
+  user = null,
+  cartCount = 0,
+  onLoginClick = () => {},
+  onSignupClick = () => {},
+}: NavbarProps) {
+  const [location] = useState<string>("Lucknow 226012");
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [category, setCategory] = useState<string>("All");
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border bg-white/80 backdrop-blur">
-      <div className="container mx-auto flex h-16 items-center justify-between px-4">
-        <Link href="/catalog" className="flex items-center gap-2 font-bold text-xl">
-          <Store className="h-5 w-5 text-slate-700" />
-          NexusCommerce
-        </Link>
+    <nav className="navbar">
 
-        <nav className="flex items-center gap-4">
-          <Link href="/catalog" className="text-sm text-slate-600 hover:text-slate-900">
-            Shop
-          </Link>
-          <Link href="/merchant" className="text-sm text-slate-600 hover:text-slate-900">
-            Sell
-          </Link>
-          <Link href="/cart">
-            <Button variant="outline" size="icon" className="relative">
-              <ShoppingCart className="h-4 w-4" />
-              {totalItems > 0 && (
-                <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-slate-900 text-[10px] font-bold text-white">
-                  {totalItems}
-                </span>
-              )}
-            </Button>
-          </Link>
-        </nav>
+      {/* Left — Logo + Deliver */}
+      <div className="navbar-left">
+        <span className="nexus-logo">
+          Nexus<span className="nexus-logo-dot">.</span>
+        </span>
+        <div className="navbar-deliver">
+          <span className="navbar-deliver-label">Deliver to</span>
+          <span className="navbar-deliver-location">
+            <MapPin size={11} className="navbar-deliver-icon shrink-0" />
+            {location}
+          </span>
+        </div>
       </div>
-    </header>
+
+      {/* Center — Search (takes all remaining space) */}
+      <div className="navbar-center">
+        <div className="navbar-search">
+          <select
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            className="navbar-search-select"
+          >
+            {SEARCH_CATEGORIES.map((c) => (
+              <option key={c}>{c}</option>
+            ))}
+          </select>
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search products, brands and more..."
+            className="navbar-search-input"
+          />
+          <button className="navbar-search-btn">
+            <Search size={16} strokeWidth={2.5} />
+          </button>
+        </div>
+      </div>
+
+      {/* Right — Auth / User actions */}
+      <div className="navbar-right hidden md:flex">
+        {user ? (
+          <>
+            <button className="navbar-icon-btn">
+              <Package size={18} />
+              <span>Orders</span>
+            </button>
+            <div className="navbar-divider" />
+            <button className="navbar-icon-btn">
+              <ShoppingCart size={18} />
+              <span>Cart</span>
+              {cartCount > 0 && (
+                <span className="navbar-cart-badge">{cartCount}</span>
+              )}
+            </button>
+            <div className="navbar-divider" />
+            <button className="navbar-icon-btn">
+              <User size={18} />
+              <span>{user.name?.split(" ")[0] ?? "Account"}</span>
+            </button>
+          </>
+        ) : (
+          <>
+            <button onClick={onLoginClick} className="btn btn-outline">
+              Login
+            </button>
+            <button onClick={onSignupClick} className="btn btn-primary">
+              Sign Up
+            </button>
+          </>
+        )}
+      </div>
+
+    </nav>
   );
 }
