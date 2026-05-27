@@ -51,7 +51,6 @@ export default function ClientLayout({ children }: { children: React.ReactNode }
   const [user,     setUser]     = useState<User | null>(null);
   const [authOpen, setAuthOpen] = useState<boolean>(false);
   const [authMode, setAuthMode] = useState<"signup" | "login">("signup");
-
   /* Cart — full Cart object from API; cartCount derived from totalItems */
   const [cart, setCart] = useState<Cart | null>(null);
   const cartCount = cart?.totalItems ?? 0;

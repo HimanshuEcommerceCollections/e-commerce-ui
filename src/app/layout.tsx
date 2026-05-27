@@ -18,7 +18,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en">
-      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
+      <body className={`${inter.variable} ${syne.variable} font-sans antialiased bg-background text-foreground`}>
         <ClientLayout>
         {children}
         </ClientLayout>

@@ -13,8 +13,8 @@ interface NavbarProps {
 const SEARCH_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Beauty", "Mobiles", "Books", "Toys"];
 
 export default function Navbar({
-  user         = null,
-  cartCount    = 0,
+  user          = null,
+  cartCount     = 0,
   onLoginClick  = () => {},
   onSignupClick = () => {},
 }: NavbarProps) {
