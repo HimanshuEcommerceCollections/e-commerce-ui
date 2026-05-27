@@ -1,40 +1,39 @@
 "use client";
 import { useState } from "react";
-import { MapPin, Search, ShoppingCart, Package, User } from "lucide-react";
-
-interface NavUser {
-  name: string;
-}
+import { Search, ShoppingCart, Package, User } from "lucide-react";
+import type { User as AuthUser } from "@/components/shared/ClientLayout";
 
 interface NavbarProps {
-  user: NavUser | null;
-  cartCount?: number;
-  onLoginClick: () => void;
-  onSignupClick: () => void;
+  user?:          AuthUser | null;
+  cartCount?:     number;
+  onLoginClick?:  () => void;
+  onSignupClick?: () => void;
 }
 
 const SEARCH_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Beauty", "Mobiles", "Books", "Toys"];
 
-export default function Navbar({ user, cartCount = 0, onLoginClick, onSignupClick }: NavbarProps) {
-  const [location] = useState<string>("Lucknow 226012");
+export default function Navbar({
+  user         = null,
+  cartCount    = 0,
+  onLoginClick  = () => {},
+  onSignupClick = () => {},
+}: NavbarProps) {
   const [searchQuery, setSearchQuery] = useState<string>("");
-  const [category, setCategory] = useState<string>("All");
+  const [category,    setCategory]    = useState<string>("All");
+
+  /* Display name: prefer firstName, fall back to displayName (nullable), then email */
+  const displayName = user
+    ? (user.firstName || user.displayName || user.email)
+    : null;
 
   return (
     <nav className="navbar">
 
-      {/* Left — Logo + Deliver */}
+      {/* Left — Logo only */}
       <div className="navbar-left">
         <span className="nexus-logo">
           Nexus<span className="nexus-logo-dot">.</span>
         </span>
-        <div className="navbar-deliver">
-          <span className="navbar-deliver-label">Deliver to</span>
-          <span className="navbar-deliver-location">
-            <MapPin size={11} className="navbar-deliver-icon shrink-0" />
-            {location}
-          </span>
-        </div>
       </div>
 
       {/* Center — Search (takes all remaining space) */}
@@ -81,7 +80,7 @@ export default function Navbar({ user, cartCount = 0, onLoginClick, onSignupClic
             <div className="navbar-divider" />
             <button className="navbar-icon-btn">
               <User size={18} />
-              <span>{user.name?.split(" ")[0] ?? "Account"}</span>
+              <span>{displayName}</span>
             </button>
           </>
         ) : (

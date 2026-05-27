@@ -3,9 +3,19 @@ import { useState, useEffect, ChangeEvent } from "react";
 import { X } from "lucide-react";
 
 type AuthMode = "signup" | "login";
+export type UserRole = "ROLE_CUSTOMER" | "ROLE_MERCHANT" | "ROLE_ADMIN";
 
-interface AuthPayload {
-  name: string;
+export interface AuthPayload {
+  accessToken: string;
+  tokenType: "Bearer";
+  expiresIn: number;
+  userId: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  displayName: string | null;
+  role: UserRole;
+  issuedAt: string;
   mode: AuthMode;
 }
 
@@ -17,8 +27,10 @@ interface AuthModalProps {
 }
 
 interface FormState {
-  name: string;
-  contact: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  email: string;
   password: string;
 }
 
@@ -30,22 +42,22 @@ const AuthModal = ({
 }: AuthModalProps) => {
   const [mode, setMode] = useState<AuthMode>(initialMode);
   const [form, setForm] = useState<FormState>({
-    name: "",
-    contact: "",
+    firstName: "",
+    lastName: "",
+    displayName: "",
+    email: "",
     password: "",
   });
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     setMode(initialMode);
-    setForm({ name: "", contact: "", password: "" });
+    setForm({ firstName: "", lastName: "", displayName: "", email: "", password: "" });
   }, [initialMode, isOpen]);
 
   useEffect(() => {
     document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => {
-      document.body.style.overflow = "";
-    };
+    return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
   if (!isOpen) return null;
@@ -58,14 +70,21 @@ const AuthModal = ({
     setLoading(true);
     await new Promise<void>((r) => setTimeout(r, 800));
     setLoading(false);
-    onAuth({ name: form.name || form.contact, mode });
+    onAuth({
+      accessToken: "mock-token",
+      tokenType: "Bearer",
+      expiresIn: 86400000,
+      userId: "",
+      email: form.email,
+      firstName: form.firstName,
+      lastName: form.lastName,
+      displayName: form.displayName.trim() || null,
+      role: "ROLE_CUSTOMER",
+      issuedAt: new Date().toISOString(),
+      mode,
+    });
     onClose();
   };
-
-  const inputCls =
-    "w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-violet-600 rounded-xl text-slate-200 placeholder:text-[#444] text-sm px-4 py-3 outline-none transition-colors";
-  const labelCls =
-    "block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
 
   return (
     <div
@@ -73,6 +92,7 @@ const AuthModal = ({
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
       <div className="modal-box">
+
         <button onClick={onClose} className="modal-close-btn">
           <X size={15} />
         </button>
@@ -81,6 +101,7 @@ const AuthModal = ({
           Nexus<span className="nexus-logo-dot">.</span>
         </p>
 
+        {/* ── SIGN UP ─────────────────────────────────────────── */}
         {mode === "signup" ? (
           <>
             <h2 className="modal-title">Create your account</h2>
@@ -89,26 +110,61 @@ const AuthModal = ({
             </p>
 
             <div className="space-y-4">
+
+              {/* First + Last name — side by side, matches backend firstName / lastName */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="modal-label">First Name</label>
+                  <input
+                    className="modal-input"
+                    name="firstName"
+                    placeholder="John"
+                    autoComplete="given-name"
+                    value={form.firstName}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div>
+                  <label className="modal-label">Last Name</label>
+                  <input
+                    className="modal-input"
+                    name="lastName"
+                    placeholder="Doe"
+                    autoComplete="family-name"
+                    value={form.lastName}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+
+              {/* Display Name — optional, backend displayName field */}
               <div>
-                <label className="modal-label">Full Name</label>
+                <label className="modal-label">Display Name (optional)</label>
                 <input
                   className="modal-input"
-                  name="name"
-                  placeholder="John Doe"
-                  value={form.name}
+                  name="displayName"
+                  placeholder="How should we call you?"
+                  autoComplete="nickname"
+                  value={form.displayName}
                   onChange={handleChange}
                 />
               </div>
+
+              {/* Email — matches backend email field (unique, max 255) */}
               <div>
-                <label className="modal-label">Phone / Email</label>
+                <label className="modal-label">Email Address</label>
                 <input
                   className="modal-input"
-                  name="contact"
-                  placeholder="+91 98765 43210 or you@email.com"
-                  value={form.contact}
+                  name="email"
+                  type="email"
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                  value={form.email}
                   onChange={handleChange}
                 />
               </div>
+
+              {/* Password — hashed on backend */}
               <div>
                 <label className="modal-label">Password</label>
                 <input
@@ -116,10 +172,12 @@ const AuthModal = ({
                   type="password"
                   name="password"
                   placeholder="Create a strong password"
+                  autoComplete="new-password"
                   value={form.password}
                   onChange={handleChange}
                 />
               </div>
+
             </div>
 
             <button
@@ -132,30 +190,35 @@ const AuthModal = ({
 
             <p className="modal-footer">
               Already have an account?{" "}
-              <span
-                onClick={() => setMode("login")}
-                className="modal-footer-link"
-              >
+              <span onClick={() => setMode("login")} className="modal-footer-link">
                 Login
               </span>
             </p>
           </>
+
         ) : (
+
+        /* ── LOGIN ──────────────────────────────────────────── */
           <>
             <h2 className="modal-title">Welcome back</h2>
             <p className="modal-subtitle">Login to continue shopping</p>
 
             <div className="space-y-4">
+
+              {/* Email — backend authenticates only via email, no phone */}
               <div>
-                <label className="modal-label">Phone / Email</label>
+                <label className="modal-label">Email Address</label>
                 <input
                   className="modal-input"
-                  name="contact"
-                  placeholder="+91 98765 43210 or you@email.com"
-                  value={form.contact}
+                  name="email"
+                  type="email"
+                  placeholder="you@email.com"
+                  autoComplete="email"
+                  value={form.email}
                   onChange={handleChange}
                 />
               </div>
+
               <div>
                 <label className="modal-label">Password</label>
                 <input
@@ -163,10 +226,12 @@ const AuthModal = ({
                   type="password"
                   name="password"
                   placeholder="Enter your password"
+                  autoComplete="current-password"
                   value={form.password}
                   onChange={handleChange}
                 />
               </div>
+
             </div>
 
             <button
@@ -179,15 +244,13 @@ const AuthModal = ({
 
             <p className="modal-footer">
               Don&apos;t have an account?{" "}
-              <span
-                onClick={() => setMode("signup")}
-                className="modal-footer-link"
-              >
+              <span onClick={() => setMode("signup")} className="modal-footer-link">
                 Create one
               </span>
             </p>
           </>
         )}
+
       </div>
     </div>
   );

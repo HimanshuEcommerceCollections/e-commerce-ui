@@ -4,8 +4,10 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 interface Category {
-  icon: string;
-  label: string;
+  id:   string;   // UUID from GET /api/categories — empty string until API integrated
+  icon: string;   // UI-only emoji decoration, not from API
+  name: string;   // maps to API's `name` field (was `label`)
+  slug: string;   // from API, used for /api/products/category/{id} routing
 }
 
 interface CarouselSlide {
@@ -32,20 +34,20 @@ interface DealBox {
 }
 
 const CATEGORIES: Category[] = [
-  { icon: "📱", label: "Mobiles" },
-  { icon: "👗", label: "Fashion" },
-  { icon: "💄", label: "Beauty" },
-  { icon: "🏠", label: "Home" },
-  { icon: "🖥️", label: "Electronics" },
-  { icon: "🛋️", label: "Furniture" },
-  { icon: "🍳", label: "Kitchen" },
-  { icon: "🚲", label: "Sports" },
-  { icon: "📚", label: "Books" },
-  { icon: "🧸", label: "Toys" },
-  { icon: "🔧", label: "Tools" },
-  { icon: "🌿", label: "Garden" },
-  { icon: "🐾", label: "Pets" },
-  { icon: "🎮", label: "Gaming" },
+  { id: "", icon: "📱", name: "Mobiles",     slug: "mobiles"     },
+  { id: "", icon: "👗", name: "Fashion",     slug: "fashion"     },
+  { id: "", icon: "💄", name: "Beauty",      slug: "beauty"      },
+  { id: "", icon: "🏠", name: "Home",        slug: "home"        },
+  { id: "", icon: "🖥️", name: "Electronics", slug: "electronics" },
+  { id: "", icon: "🛋️", name: "Furniture",   slug: "furniture"   },
+  { id: "", icon: "🍳", name: "Kitchen",     slug: "kitchen"     },
+  { id: "", icon: "🚲", name: "Sports",      slug: "sports"      },
+  { id: "", icon: "📚", name: "Books",       slug: "books"       },
+  { id: "", icon: "🧸", name: "Toys",        slug: "toys"        },
+  { id: "", icon: "🔧", name: "Tools",       slug: "tools"       },
+  { id: "", icon: "🌿", name: "Garden",      slug: "garden"      },
+  { id: "", icon: "🐾", name: "Pets",        slug: "pets"        },
+  { id: "", icon: "🎮", name: "Gaming",      slug: "gaming"      },
 ];
 
 const CAROUSEL_SLIDES: CarouselSlide[] = [
@@ -164,12 +166,12 @@ export default function HeroSection() {
         <div className="cat-strip-inner">
           {CATEGORIES.map((c) => (
             <button
-              key={c.label}
-              onClick={() => setActiveCategory(c.label)}
-              className={`cat-item ${activeCategory === c.label ? "cat-item-active" : ""}`}
+              key={c.name}
+              onClick={() => setActiveCategory(c.name)}
+              className={`cat-item ${activeCategory === c.name ? "cat-item-active" : ""}`}
             >
               <span className="cat-item-icon">{c.icon}</span>
-              <span>{c.label}</span>
+              <span>{c.name}</span>
             </button>
           ))}
         </div>
