@@ -7,15 +7,20 @@ interface NavUser {
 }
 
 interface NavbarProps {
-  user: NavUser | null;
+  user?: NavUser | null;
   cartCount?: number;
-  onLoginClick: () => void;
-  onSignupClick: () => void;
+  onLoginClick?: () => void;
+  onSignupClick?: () => void;
 }
 
 const SEARCH_CATEGORIES = ["All", "Electronics", "Fashion", "Home", "Beauty", "Mobiles", "Books", "Toys"];
 
-export default function Navbar({ user, cartCount = 0, onLoginClick, onSignupClick }: NavbarProps) {
+export default function Navbar({
+  user = null,
+  cartCount = 0,
+  onLoginClick = () => {},
+  onSignupClick = () => {},
+}: NavbarProps) {
   const [location] = useState<string>("Lucknow 226012");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [category, setCategory] = useState<string>("All");

@@ -62,11 +62,6 @@ const AuthModal = ({
     onClose();
   };
 
-  const inputCls =
-    "w-full bg-[#1a1a1a] border border-[#2a2a2a] focus:border-violet-600 rounded-xl text-slate-200 placeholder:text-[#444] text-sm px-4 py-3 outline-none transition-colors";
-  const labelCls =
-    "block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1.5";
-
   return (
     <div
       className="modal-overlay"
