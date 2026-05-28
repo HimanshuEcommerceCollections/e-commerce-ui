@@ -328,12 +328,17 @@
     @apply px-6 py-5;
     background-color: var(--bg-base);
   }
-  .carousel-grid {
-    @apply grid grid-cols-2 gap-3 mb-4;
+  .carousel-viewport {
+    position: relative;
+    overflow: hidden;
+    border-radius: var(--radius-2xl);
+  }
+  .carousel-track {
+    display: flex;
   }
   .carousel-slide {
-    @apply rounded-2xl cursor-pointer hover:-translate-y-1 transition-transform
-           relative overflow-hidden min-h-[320px];
+    flex-shrink: 0;
+    @apply cursor-pointer relative overflow-hidden min-h-[320px];
   }
   .carousel-slide-overlay {
     @apply absolute inset-0;
@@ -355,22 +360,25 @@
     @apply inline-block px-3 py-1 rounded-full text-xs font-bold;
   }
   .carousel-nav-btn {
-    @apply absolute w-8 h-8 rounded-full flex items-center justify-center
-           transition-all shadow-lg z-10 text-white;
-    background-color: var(--bg-elevated);
-    border: 1px solid var(--border-default);
-    top: calc(50% - 28px);
+    @apply absolute w-10 h-10 rounded-full flex items-center justify-center
+           transition-all shadow-xl z-20;
+    background: rgba(0, 0, 0, 0.52);
+    border: 1.5px solid rgba(255, 255, 255, 0.30);
+    color: #ffffff;
+    backdrop-filter: blur(6px);
+    top: 50%;
+    transform: translateY(-50%);
   }
   .carousel-nav-btn:hover {
-    background-color: var(--border-default);
+    background: rgba(0, 0, 0, 0.78);
+    border-color: rgba(255, 255, 255, 0.60);
+    transform: translateY(-50%) scale(1.08);
   }
   .carousel-nav-prev {
-    left: 0;
-    transform: translateX(-16px);
+    left: 18px;
   }
   .carousel-nav-next {
-    right: 0;
-    transform: translateX(16px);
+    right: 18px;
   }
   .carousel-dots {
     @apply flex justify-center gap-1.5 mt-1;

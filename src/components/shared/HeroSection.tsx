@@ -1,13 +1,13 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import Image from "next/image";
 
 interface Category {
-  id:   string;   // UUID from GET /api/categories — empty string until API integrated
-  icon: string;   // UI-only emoji decoration, not from API
-  name: string;   // maps to API's `name` field (was `label`)
-  slug: string;   // from API, used for /api/products/category/{id} routing
+  id:   string;
+  icon: string;
+  name: string;
+  slug: string;
 }
 
 interface CarouselSlide {
@@ -60,6 +60,24 @@ const CAROUSEL_SLIDES: CarouselSlide[] = [
   { id: 7, title: "Books & Learning", subtitle: "Expand your world",    offer: "From ₹99",           badgeClass: "slide-badge-orange",  image: "/caraouselslides/books.jpg",            objectPosition: "center center" },
 ];
 
+/* Two slides are visible at once (left + right boxes, each 50% wide).
+   Two clone slides prepended (for backward wrap) and two appended (for
+   forward wrap) so the track can loop seamlessly in both directions.
+   Real slides live at indices REAL_START … REAL_START+REAL_COUNT-1.
+   After a transition into clone territory finishes (~550 ms) we instantly
+   snap to the matching real position — no visible jump. */
+const REAL_COUNT  = CAROUSEL_SLIDES.length; // 7
+const REAL_START  = 2;                       // real slides start here in SLIDES_EXT
+
+const SLIDES_EXT: CarouselSlide[] = [
+  { ...CAROUSEL_SLIDES[REAL_COUNT - 2], id: 200 }, // clone of slide 5  (idx 0)
+  { ...CAROUSEL_SLIDES[REAL_COUNT - 1], id: 201 }, // clone of slide 6  (idx 1)
+  ...CAROUSEL_SLIDES,                               // real slides 0–6   (idx 2–8)
+  { ...CAROUSEL_SLIDES[0], id: 101 },               // clone of slide 0  (idx 9)
+  { ...CAROUSEL_SLIDES[1], id: 102 },               // clone of slide 1  (idx 10)
+];
+const EXT_COUNT = SLIDES_EXT.length; // 11
+
 const DEAL_BOXES: DealBox[] = [
   {
     title: "Mobiles Under ₹15,000",
@@ -79,10 +97,10 @@ const DEAL_BOXES: DealBox[] = [
     borderClass: "deal-border-pink",
     accentClass: "deal-accent-pink",
     products: [
-      { name: "Casual Tees",  emoji: "👕" },
-      { name: "Ethnic Wear",  emoji: "👗" },
-      { name: "Sneakers",     emoji: "👟" },
-      { name: "Accessories",  emoji: "💍" },
+      { name: "Casual Tees", emoji: "👕" },
+      { name: "Ethnic Wear", emoji: "👗" },
+      { name: "Sneakers",    emoji: "👟" },
+      { name: "Accessories", emoji: "💍" },
     ],
   },
   {
@@ -115,10 +133,10 @@ const DEAL_BOXES: DealBox[] = [
     borderClass: "deal-border-rose",
     accentClass: "deal-accent-rose",
     products: [
-      { name: "Skincare", emoji: "🧴" },
-      { name: "Makeup",   emoji: "💄" },
-      { name: "Hair Care",emoji: "💇" },
-      { name: "Perfumes", emoji: "🌸" },
+      { name: "Skincare",  emoji: "🧴" },
+      { name: "Makeup",    emoji: "💄" },
+      { name: "Hair Care", emoji: "💇" },
+      { name: "Perfumes",  emoji: "🌸" },
     ],
   },
   {
@@ -137,26 +155,71 @@ const DEAL_BOXES: DealBox[] = [
 
 export default function HeroSection() {
   const [activeCategory, setActiveCategory] = useState<string>("Mobiles");
-  const [idx, setIdx] = useState<number>(0);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const total = CAROUSEL_SLIDES.length;
 
-  const startTimer = (): void => {
+  /* idx: position in SLIDES_EXT. Real slides live at REAL_START … REAL_START+REAL_COUNT-1.
+     animated: false during the instant snap so no CSS transition plays. */
+  const [idx,      setIdx]      = useState<number>(REAL_START);
+  const [animated, setAnimated] = useState<boolean>(true);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  /* Re-enable CSS transition one paint after disabling it (snap completed). */
+  useEffect(() => {
+    if (!animated) {
+      const rid = requestAnimationFrame(() =>
+        requestAnimationFrame(() => setAnimated(true))
+      );
+      return () => cancelAnimationFrame(rid);
+    }
+  }, [animated]);
+
+  /* After the slide transition into clone territory finishes (~550 ms),
+     snap to the matching real position — identical visual, no visible jump. */
+  useEffect(() => {
+    // Forward overflow: entered end-clones zone
+    if (idx >= REAL_START + REAL_COUNT) {
+      const t = setTimeout(() => {
+        setAnimated(false);
+        setIdx(idx - REAL_COUNT);
+      }, 560);
+      return () => clearTimeout(t);
+    }
+    // Backward overflow: entered start-clones zone
+    if (idx < REAL_START) {
+      const t = setTimeout(() => {
+        setAnimated(false);
+        setIdx(idx + REAL_COUNT);
+      }, 560);
+      return () => clearTimeout(t);
+    }
+  }, [idx]);
+
+  const startTimer = useCallback((): void => {
     if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = setInterval(() => setIdx((p) => (p + 1) % total), 3500);
-  };
+    timerRef.current = setInterval(() => setIdx(p => p + 1), 3500);
+  }, []);
 
   useEffect(() => {
     startTimer();
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, []);
+  }, [startTimer]);
 
-  const goTo = (i: number): void => { setIdx(i); startTimer(); };
-  const prev = (): void => { setIdx((p) => (p - 1 + total) % total); startTimer(); };
-  const next = (): void => { setIdx((p) => (p + 1) % total); startTimer(); };
+  const goTo = (i: number): void => { setIdx(REAL_START + i); startTimer(); };
+  const prev = (): void => { setIdx(p => p - 1); startTimer(); };
+  const next = (): void => { setIdx(p => p + 1); startTimer(); };
 
-  const s1 = CAROUSEL_SLIDES[idx % total];
-  const s2 = CAROUSEL_SLIDES[(idx + 1) % total];
+  /* Which dot to highlight — normalised to real-slide range. */
+  const dotIdx = ((idx - REAL_START) % REAL_COUNT + REAL_COUNT) % REAL_COUNT;
+
+  /* ── Track geometry ──────────────────────────────────────────────────────
+     Viewport  : 100% wide, overflow hidden  →  2 slides visible at once
+     Track     : EXT_COUNT × 50%vw  (= 550% for 11 slides)
+     Each slide: 50% of viewport  =  100/EXT_COUNT % of track
+     Translate : -(idx × 100/EXT_COUNT)% of track
+                 = -(idx × 50)% of viewport  →  one full slide per step ✓
+  ─────────────────────────────────────────────────────────────────────── */
+  const translateX  = `${-(idx * 100) / EXT_COUNT}%`;
+  const trackWidth  = `${EXT_COUNT * 50}%`;
+  const slideWidth  = `${100 / EXT_COUNT}%`;
 
   return (
     <div>
@@ -179,14 +242,27 @@ export default function HeroSection() {
 
       {/* Carousel */}
       <div className="carousel-section">
-        <div className="relative">
-          <div className="carousel-grid">
-            {[s1, s2].map((slide, i) => (
+
+        {/* Viewport — clips the track; arrows sit inside here */}
+        <div className="carousel-viewport">
+
+          {/* Sliding track — all slides in one horizontal row */}
+          <div
+            className="carousel-track"
+            style={{
+              width:     trackWidth,
+              transform: `translateX(${translateX})`,
+              transition: animated
+                ? "transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
+                : "none",
+            }}
+          >
+            {SLIDES_EXT.map((slide) => (
               <div
-                key={`${slide.id}-${i}`}
+                key={slide.id}
                 className="carousel-slide"
+                style={{ width: slideWidth }}
               >
-                {/* Background photo */}
                 <Image
                   src={slide.image}
                   alt={slide.title}
@@ -194,11 +270,9 @@ export default function HeroSection() {
                   sizes="(max-width: 768px) 100vw, 50vw"
                   className="object-cover"
                   style={{ objectPosition: slide.objectPosition }}
-                  priority={i === 0}
+                  priority
                 />
-                {/* Dark gradient so text stays readable */}
                 <div className="carousel-slide-overlay" />
-                {/* Text content */}
                 <div className="carousel-slide-content">
                   <div />
                   <div>
@@ -213,23 +287,27 @@ export default function HeroSection() {
             ))}
           </div>
 
+          {/* Navigation arrows */}
           <button onClick={prev} className="carousel-nav-btn carousel-nav-prev">
-            <ChevronLeft size={16} />
+            <ChevronLeft size={18} />
           </button>
           <button onClick={next} className="carousel-nav-btn carousel-nav-next">
-            <ChevronRight size={16} />
+            <ChevronRight size={18} />
           </button>
+
         </div>
 
+        {/* Dot indicators */}
         <div className="carousel-dots">
           {CAROUSEL_SLIDES.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              className={`carousel-dot ${i === idx ? "carousel-dot-active" : ""}`}
+              className={`carousel-dot ${dotIdx === i ? "carousel-dot-active" : ""}`}
             />
           ))}
         </div>
+
       </div>
 
       {/* Deal Boxes */}
