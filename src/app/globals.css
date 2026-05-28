@@ -331,14 +331,19 @@
   .carousel-viewport {
     position: relative;
     overflow: hidden;
-    border-radius: var(--radius-2xl);
   }
   .carousel-track {
     display: flex;
+    gap: 12px;
   }
   .carousel-slide {
     flex-shrink: 0;
-    @apply cursor-pointer relative overflow-hidden min-h-[320px];
+    width: 50vw;
+    min-height: 320px;
+    border-radius: var(--radius-2xl);
+    overflow: hidden;
+    cursor: pointer;
+    position: relative;
   }
   .carousel-slide-overlay {
     @apply absolute inset-0;

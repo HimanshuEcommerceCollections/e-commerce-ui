@@ -211,15 +211,10 @@ export default function HeroSection() {
   const dotIdx = ((idx - REAL_START) % REAL_COUNT + REAL_COUNT) % REAL_COUNT;
 
   /* ── Track geometry ──────────────────────────────────────────────────────
-     Viewport  : 100% wide, overflow hidden  →  2 slides visible at once
-     Track     : EXT_COUNT × 50%vw  (= 550% for 11 slides)
-     Each slide: 50% of viewport  =  100/EXT_COUNT % of track
-     Translate : -(idx × 100/EXT_COUNT)% of track
-                 = -(idx × 50)% of viewport  →  one full slide per step ✓
+     Each slide is exactly 50vw wide (CSS) with a 12px gap between slides.
+     Per-step translation = one slide width + one gap = 50vw + 12px.
   ─────────────────────────────────────────────────────────────────────── */
-  const translateX  = `${-(idx * 100) / EXT_COUNT}%`;
-  const trackWidth  = `${EXT_COUNT * 50}%`;
-  const slideWidth  = `${100 / EXT_COUNT}%`;
+  const translateX = `calc(${-idx} * (50vw + 12px))`;
 
   return (
     <div>
@@ -250,7 +245,6 @@ export default function HeroSection() {
           <div
             className="carousel-track"
             style={{
-              width:     trackWidth,
               transform: `translateX(${translateX})`,
               transition: animated
                 ? "transform 0.55s cubic-bezier(0.25, 0.46, 0.45, 0.94)"
@@ -261,7 +255,6 @@ export default function HeroSection() {
               <div
                 key={slide.id}
                 className="carousel-slide"
-                style={{ width: slideWidth }}
               >
                 <Image
                   src={slide.image}
