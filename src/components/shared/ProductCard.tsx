@@ -1,35 +1,25 @@
 "use client";
-import { ShoppingCart, Star } from "lucide-react";
+import Image from "next/image";
+import { ShoppingCart } from "lucide-react";
 
-type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
+export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
 
-interface ProductCategory {
-  id?: string;
-  name: string;
-  slug?: string;
-  description?: string;
-}
-
-interface Product {
-  id?: string;
-  name: string;
-  description?: string;
-  price: number;
-  stockQuantity: number;
-  sku?: string;
-  status: ProductStatus;
-  imageUrls?: string[];
-  category?: ProductCategory;
-  merchantId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  deleted?: boolean;
-  rating?: number | null;
+export interface ProductSummary {
+  id:              string;
+  name:            string;
+  price:           number;
+  stockQuantity:   number;
+  sku:             string;
+  status:          ProductStatus;
+  categoryName:    string;        // flat string — summary endpoint does NOT return category object
+  primaryImageUrl: string;        // single URL — summary endpoint does NOT return imageUrls array
+  merchantId:      string;
+  createdAt:       string;
 }
 
 interface ProductCardProps {
-  product: Product;
-  onAddToCart?: (product: Product) => void;
+  product:      ProductSummary;
+  onAddToCart?: (product: ProductSummary) => void;
 }
 
 const formatPrice = (price: number): string =>
@@ -39,40 +29,18 @@ const formatPrice = (price: number): string =>
     maximumFractionDigits: 0,
   }).format(price);
 
-function StarRating({ rating }: { rating: number }) {
-  const rounded = Math.round(rating);
-  return (
-    <div className="flex items-center gap-0.5">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star
-          key={i}
-          size={11}
-          className={
-            i < rounded
-              ? "fill-yellow-400 text-yellow-400"
-              : "fill-transparent text-gray-600"
-          }
-        />
-      ))}
-    </div>
-  );
-}
-
 export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
   const {
     name,
     price,
-    description,
     stockQuantity,
     status,
-    imageUrls = [],
-    category,
-    rating,
+    primaryImageUrl,
+    categoryName,
   } = product;
 
-  const displayImage: string | undefined = imageUrls?.[0];
-  const inStock: boolean  = stockQuantity > 0 && status === "ACTIVE";
-  const lowStock: boolean = inStock && stockQuantity < 10;
+  const inStock: boolean    = stockQuantity > 0 && status === "ACTIVE";
+  const lowStock: boolean   = inStock && stockQuantity < 10;
   const isArchived: boolean = status === "ARCHIVED" || status === "DRAFT";
 
   return (
@@ -86,11 +54,13 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
       )}
 
       <div className="product-card-image-wrap">
-        {displayImage ? (
-          <img
-            src={displayImage}
+        {primaryImageUrl ? (
+          <Image
+            src={primaryImageUrl}
             alt={name}
+            fill
             className="product-card-image"
+            sizes="(max-width: 768px) 50vw, 25vw"
           />
         ) : (
           <span className="product-card-placeholder">🛍️</span>
@@ -99,24 +69,11 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
       <div className="product-card-body">
 
-        {category?.name && (
-          <span className="product-card-category">{category.name}</span>
+        {categoryName && (
+          <span className="product-card-category">{categoryName}</span>
         )}
 
         <h3 className="product-card-name">{name}</h3>
-
-        {description && (
-          <p className="product-card-description">{description}</p>
-        )}
-
-        {rating !== null && rating !== undefined && (
-          <div className="product-card-rating">
-            <StarRating rating={rating} />
-            <span className="product-card-rating-value">
-              {rating.toFixed(1)}
-            </span>
-          </div>
-        )}
 
         <div className="product-card-price-row">
           <span className="product-card-price">{formatPrice(price)}</span>

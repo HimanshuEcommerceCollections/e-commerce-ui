@@ -1,29 +1,15 @@
 import HeroSection from "@/components/shared/HeroSection";
 import ProductCard from "@/components/shared/ProductCard";
+import type { ProductSummary } from "@/components/shared/ProductCard";
 
-type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-
-interface Product {
-  id?: string;
-  name: string;
-  description?: string;
-  price: number;
-  stockQuantity: number;
-  sku?: string;
-  status: ProductStatus;
-  imageUrls?: string[];
-  category?: { name: string };
-  rating?: number | null;
-}
-
-const SAMPLE_PRODUCTS: Product[] = [
-  { name: "boAt Rockerz 450 Bluetooth Headphone", price: 1299,  description: "Over-ear wireless headphone with 15hr playtime", stockQuantity: 24, status: "ACTIVE", imageUrls: [], category: { name: "Electronics" }, rating: 4.2 },
-  { name: "Levi's Men's 511 Slim Fit Jeans",       price: 2499,  description: "Classic slim-cut stretch denim",                stockQuantity: 8,  status: "ACTIVE", imageUrls: [], category: { name: "Fashion" },     rating: 4.5 },
-  { name: "Prestige Iris 750W Mixer Grinder",      price: 2195,  description: "3 jars, 3 speed control with incher & pulse",   stockQuantity: 0,  status: "ACTIVE", imageUrls: [], category: { name: "Kitchen" },     rating: 4.0 },
-  { name: "Redmi 13C 5G Midnight Black",           price: 11999, description: "Snapdragon 4 Gen 2, 50MP camera, 5000mAh",     stockQuantity: 15, status: "ACTIVE", imageUrls: [], category: { name: "Mobiles" },     rating: 4.3 },
-  { name: "Mamaearth Vitamin C Face Wash",         price: 299,   description: "With turmeric for natural skin illumination",   stockQuantity: 3,  status: "ACTIVE", imageUrls: [], category: { name: "Beauty" },      rating: 3.9 },
-  { name: "Adidas Running Shoes Ultraboost",       price: 7999,  description: "Responsive cushioning for long distance runs",  stockQuantity: 12, status: "ACTIVE", imageUrls: [], category: { name: "Sports" },      rating: 4.7 },
-  { name: "Sony WH-1000XM5 Headphones",           price: 24990, description: "Industry-leading noise cancellation",           stockQuantity: 6,  status: "ACTIVE", imageUrls: [], category: { name: "Electronics" }, rating: 4.8 },
+const SAMPLE_PRODUCTS: ProductSummary[] = [
+  { id: "1", name: "boAt Rockerz 450 Bluetooth Headphone", price: 1299,  stockQuantity: 24, status: "ACTIVE", sku: "BOAT-ROCKERZ-450",   primaryImageUrl: "", categoryName: "Electronics", merchantId: "m-1", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "2", name: "Levi's Men's 511 Slim Fit Jeans",       price: 2499,  stockQuantity: 8,  status: "ACTIVE", sku: "LEVIS-511-SLIM",    primaryImageUrl: "", categoryName: "Fashion",     merchantId: "m-2", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "3", name: "Prestige Iris 750W Mixer Grinder",      price: 2195,  stockQuantity: 0,  status: "ACTIVE", sku: "PRES-IRIS-750W",   primaryImageUrl: "", categoryName: "Kitchen",     merchantId: "m-3", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "4", name: "Redmi 13C 5G Midnight Black",           price: 11999, stockQuantity: 15, status: "ACTIVE", sku: "REDMI-13C-5G-BLK", primaryImageUrl: "", categoryName: "Mobiles",     merchantId: "m-4", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "5", name: "Mamaearth Vitamin C Face Wash",         price: 299,   stockQuantity: 3,  status: "ACTIVE", sku: "MAMA-VITC-FW",     primaryImageUrl: "", categoryName: "Beauty",      merchantId: "m-5", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "6", name: "Adidas Running Shoes Ultraboost",       price: 7999,  stockQuantity: 12, status: "ACTIVE", sku: "ADIDAS-UB-RUN",    primaryImageUrl: "", categoryName: "Sports",      merchantId: "m-6", createdAt: "2024-01-01T00:00:00Z" },
+  { id: "7", name: "Sony WH-1000XM5 Headphones",           price: 24990, stockQuantity: 6,  status: "ACTIVE", sku: "SONY-WH1000XM5",   primaryImageUrl: "", categoryName: "Electronics", merchantId: "m-7", createdAt: "2024-01-01T00:00:00Z" },
 ];
 
 export default function Home() {
