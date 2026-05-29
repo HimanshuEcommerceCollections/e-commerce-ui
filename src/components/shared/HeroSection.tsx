@@ -211,10 +211,11 @@ export default function HeroSection() {
   const dotIdx = ((idx - REAL_START) % REAL_COUNT + REAL_COUNT) % REAL_COUNT;
 
   /* ── Track geometry ──────────────────────────────────────────────────────
-     Each slide is exactly 50vw wide (CSS) with a 12px gap between slides.
-     Per-step translation = one slide width + one gap = 50vw + 12px.
+     Each slide is calc((100vw - 60px) / 2) wide (CSS) with a 12px gap.
+     Per-step translation = slide width + gap = (100vw - 60px)/2 + 12px
+                                               = (100vw - 36px) / 2.
   ─────────────────────────────────────────────────────────────────────── */
-  const translateX = `calc(${-idx} * (50vw + 12px))`;
+  const translateX = `calc(${-idx} * ((100vw - 36px) / 2))`;
 
   return (
     <div>

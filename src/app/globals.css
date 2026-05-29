@@ -260,7 +260,7 @@
   }
   .modal-title {
     @apply text-lg font-bold mt-3 mb-1;
-    color: var(--text-white);
+    color: var(--text-primary);
   }
   .modal-subtitle {
     @apply text-xs mb-6;
@@ -331,15 +331,19 @@
   .carousel-viewport {
     position: relative;
     overflow: hidden;
+    border-top-right-radius: var(--radius-2xl);
+    border-bottom-right-radius: var(--radius-2xl);
   }
   .carousel-track {
     display: flex;
+    align-items: stretch;
     gap: 12px;
+    height: 320px;
   }
   .carousel-slide {
     flex-shrink: 0;
-    width: 50vw;
-    min-height: 320px;
+    width: calc((100vw - 60px) / 2);
+    height: 100%;
     border-radius: var(--radius-2xl);
     overflow: hidden;
     cursor: pointer;
@@ -350,7 +354,7 @@
     background: linear-gradient(120deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 55%, rgba(0,0,0,0.10) 100%);
   }
   .carousel-slide-content {
-    @apply relative z-10 p-7 flex flex-col justify-between min-h-[320px];
+    @apply relative z-10 p-7 flex flex-col justify-between h-full;
   }
   .carousel-slide-title {
     @apply text-2xl font-black leading-tight mb-1 text-white;

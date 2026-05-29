@@ -49,10 +49,12 @@ const AuthModal = ({
     password: "",
   });
   const [loading, setLoading] = useState<boolean>(false);
+  const [isMerchant, setIsMerchant] = useState<boolean>(false);
 
   useEffect(() => {
     setMode(initialMode);
     setForm({ firstName: "", lastName: "", displayName: "", email: "", password: "" });
+    setIsMerchant(false);
   }, [initialMode, isOpen]);
 
   useEffect(() => {
@@ -79,7 +81,7 @@ const AuthModal = ({
       firstName: form.firstName,
       lastName: form.lastName,
       displayName: form.displayName.trim() || null,
-      role: "ROLE_CUSTOMER",
+      role: isMerchant ? "ROLE_MERCHANT" : "ROLE_CUSTOMER",
       issuedAt: new Date().toISOString(),
       mode,
     });
@@ -97,17 +99,10 @@ const AuthModal = ({
           <X size={15} />
         </button>
 
-        <p className="nexus-logo text-xl">
-          Nexus<span className="nexus-logo-dot">.</span>
-        </p>
-
         {/* ── SIGN UP ─────────────────────────────────────────── */}
         {mode === "signup" ? (
           <>
             <h2 className="modal-title">Create your account</h2>
-            <p className="modal-subtitle">
-              Join thousands shopping smarter on Nexus
-            </p>
 
             <div className="space-y-4">
 
@@ -178,6 +173,39 @@ const AuthModal = ({
                 />
               </div>
 
+              {/* Role toggle — Customer (left) / Merchant (right) */}
+              <div>
+                <label className="modal-label">I am a</label>
+                <div
+                  className="relative flex rounded-xl cursor-pointer select-none overflow-hidden"
+                  style={{
+                    background: "var(--bg-elevated)",
+                    border: "1.5px solid var(--border-default)",
+                  }}
+                  onClick={() => setIsMerchant((p) => !p)}
+                >
+                  <div
+                    className="absolute top-0 bottom-0 w-1/2 rounded-xl transition-all duration-300"
+                    style={{
+                      background: "var(--brand)",
+                      left: isMerchant ? "50%" : "0",
+                    }}
+                  />
+                  <span
+                    className="relative z-10 flex-1 text-center text-sm font-semibold py-2.5 transition-colors duration-300"
+                    style={{ color: !isMerchant ? "#ffffff" : "var(--text-muted)" }}
+                  >
+                    Customer
+                  </span>
+                  <span
+                    className="relative z-10 flex-1 text-center text-sm font-semibold py-2.5 transition-colors duration-300"
+                    style={{ color: isMerchant ? "#ffffff" : "var(--text-muted)" }}
+                  >
+                    Merchant
+                  </span>
+                </div>
+              </div>
+
             </div>
 
             <button
@@ -201,6 +229,7 @@ const AuthModal = ({
         /* ── LOGIN ──────────────────────────────────────────── */
           <>
             <h2 className="modal-title">Welcome back</h2>
+
             <p className="modal-subtitle">Login to continue shopping</p>
 
             <div className="space-y-4">
