@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import { ShoppingCart } from "lucide-react";
 
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
@@ -54,10 +55,12 @@ export default function ProductCard({ product, onAddToCart }: ProductCardProps) 
 
       <div className="product-card-image-wrap">
         {primaryImageUrl ? (
-          <img
+          <Image
             src={primaryImageUrl}
             alt={name}
+            fill
             className="product-card-image"
+            sizes="(max-width: 768px) 50vw, 25vw"
           />
         ) : (
           <span className="product-card-placeholder">🛍️</span>

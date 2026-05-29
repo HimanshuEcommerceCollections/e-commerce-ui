@@ -76,7 +76,7 @@ const SLIDES_EXT: CarouselSlide[] = [
   { ...CAROUSEL_SLIDES[0], id: 101 },               // clone of slide 0  (idx 9)
   { ...CAROUSEL_SLIDES[1], id: 102 },               // clone of slide 1  (idx 10)
 ];
-const EXT_COUNT = SLIDES_EXT.length; // 11
+// const EXT_COUNT = SLIDES_EXT.length; // 11 — reserved for future bounds checks
 
 const DEAL_BOXES: DealBox[] = [
   {
