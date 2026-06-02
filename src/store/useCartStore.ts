@@ -1,75 +1,35 @@
 "use client";
-
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
-import type { CartItem } from "@/types";
+import type { CartResponse } from "@/types/api/cart.types";
 
 interface CartState {
-  items: CartItem[];
+  cart: CartResponse | null;
+  loading: boolean;
+  error: string | null;
+  // Actions
+  setCart: (cart: CartResponse) => void;
+  clearCartState: () => void;
+  setLoading: (loading: boolean) => void;
+  setError: (error: string | null) => void;
   // Derived
   totalItems: () => number;
-  totalCents: () => number;
-  // Actions
-  addToCart: (item: CartItem) => void;
-  removeFromCart: (variantId: string) => void;
-  updateQuantity: (variantId: string, quantity: number) => void;
-  clearCart: () => void;
+  totalPrice: () => number;
 }
 
-export const useCartStore = create<CartState>()(
-  persist(
-    (set, get) => ({
-      items: [],
+export const useCartStore = create<CartState>()((set, get) => ({
+  cart: null,
+  loading: false,
+  error: null,
 
-      totalItems: () =>
-        get().items.reduce((sum, item) => sum + item.quantity, 0),
+  setCart: (cart) => set({ cart }),
 
-      totalCents: () =>
-        get().items.reduce(
-          (sum, item) => sum + item.price * item.quantity,
-          0
-        ),
+  clearCartState: () => set({ cart: null }),
 
-      addToCart: (incoming) =>
-        set((state) => {
-          const existing = state.items.find(
-            (i) => i.variantId === incoming.variantId
-          );
-          if (existing) {
-            return {
-              items: state.items.map((i) =>
-                i.variantId === incoming.variantId
-                  ? { ...i, quantity: i.quantity + incoming.quantity }
-                  : i
-              ),
-            };
-          }
-          return { items: [...state.items, incoming] };
-        }),
+  setLoading: (loading) => set({ loading }),
 
-      removeFromCart: (variantId) =>
-        set((state) => ({
-          items: state.items.filter((i) => i.variantId !== variantId),
-        })),
+  setError: (error) => set({ error }),
 
-      updateQuantity: (variantId, quantity) =>
-        set((state) => {
-          if (quantity <= 0) {
-            return {
-              items: state.items.filter((i) => i.variantId !== variantId),
-            };
-          }
-          return {
-            items: state.items.map((i) =>
-              i.variantId === variantId ? { ...i, quantity } : i
-            ),
-          };
-        }),
+  totalItems: () => get().cart?.totalItems ?? 0,
 
-      clearCart: () => set({ items: [] }),
-    }),
-    {
-      name: "nexus-cart",   // localStorage key
-    }
-  )
-);
+  totalPrice: () => get().cart?.totalPrice ?? 0,
+}));
