@@ -2,81 +2,39 @@
 @tailwind components;
 @tailwind utilities;
 
-/* ============================================================
-   ROOT — Design Tokens
-   ============================================================ */
 :root {
-  /* Background scale — cream to peach */
-  --bg-base:        #fefae0;
+  /* ── New homepage tokens ── */
+  --color-navy: #0F172A;
+  --color-navy-mid: #1E293B;
+  --color-blue-primary: #2563EB;
+  --color-blue-dark: #1E40AF;
+  --color-blue-light: #EFF6FF;
+  --color-red-badge: #DC2626;
+  --color-amber: #F59E0B;
+  --color-green-stock: #16A34A;
+  --color-slate-border: #E2E8F0;
+  --color-slate-muted: #94A3B8;
+  --color-slate-text: #475569;
+  --color-page-bg: #F8FAFC;
+
+  /* ── Legacy tokens — AuthModal depends on these ── */
   --bg-surface:     #ffffff;
   --bg-elevated:    #fff8f0;
-  --bg-overlay:     #fdefd8;
   --bg-muted:       #fde8cc;
-
-  /* Border scale */
-  --border-subtle:  #f0d9bc;
   --border-default: #e4c9a8;
-  --border-strong:  #c9a882;
-
-  /* Brand — Dusty Blue */
-  --brand:          #6b9ec7;
-  --brand-hover:    #5487b0;
-  --brand-muted:    #c8dff0;
-  --brand-soft:     #4a7fa8;
-  --brand-faint:    rgba(107, 158, 199, 0.15);
-
-  /* Text scale — dark warm charcoal on light bg */
   --text-primary:   #2c2416;
   --text-secondary: #5c4a30;
   --text-muted:     #8a7056;
   --text-faint:     #b89e80;
   --text-white:     #ffffff;
-
-  /* Semantic colours */
-  --success:        #3a8c5c;
-  --success-bg:     rgba(58, 140, 92, 0.12);
-  --success-text:   #2d7a4f;
-  --warning:        #c47c1a;
-  --warning-text:   #a86010;
-  --danger:         #c0392b;
-  --danger-text:    #a93226;
-
-  /* Category accent palette — muted, warm tones */
-  --accent-violet:  #8b6bb1;
-  --accent-pink:    #c9637a;
-  --accent-emerald: #3a8c6e;
-  --accent-yellow:  #c49a1a;
-  --accent-rose:    #c0504a;
-  --accent-lime:    #6a9e3a;
-  --accent-blue:    #6b9ec7;
-  --accent-orange:  #c97840;
-
-  /* Gradients — cream → peach → blue combos */
-  --grad-brand:     linear-gradient(135deg, #2c2416 40%, #6b9ec7);
-  --grad-violet:    linear-gradient(135deg, #e8d5f5 0%, #c9b0e8 100%);
-  --grad-pink:      linear-gradient(135deg, #fde0e8 0%, #f5b8c8 100%);
-  --grad-emerald:   linear-gradient(135deg, #d5f0e0 0%, #a8dcc0 100%);
-  --grad-stone:     linear-gradient(135deg, #fdefd8 0%, #f5d8b0 100%);
-  --grad-blue:      linear-gradient(135deg, #d0e8f8 0%, #a8cce8 100%);
-  --grad-lime:      linear-gradient(135deg, #e0f0d0 0%, #c0dca8 100%);
-  --grad-orange:    linear-gradient(135deg, #fde0c8 0%, #f5c0a0 100%);
-
-  /* Radius */
-  --radius-sm:   8px;
-  --radius-md:   10px;
-  --radius-lg:   14px;
-  --radius-xl:   18px;
-  --radius-2xl:  24px;
-  --radius-full: 9999px;
-
-  /* Shadow — warm peach toned */
-  --shadow-brand: 0 12px 32px rgba(107, 158, 199, 0.2);
-  --shadow-card:  0 4px 24px rgba(180, 130, 80, 0.12);
+  --brand:          #6b9ec7;
+  --brand-hover:    #5487b0;
+  --brand-soft:     #4a7fa8;
 }
 
-/* ============================================================
+/* ═══════════════════════════════════════════════════════════════
    BASE
-   ============================================================ */
+   ═══════════════════════════════════════════════════════════════ */
 @layer base {
   * {
     box-sizing: border-box;
@@ -85,160 +43,706 @@
   }
 
   body {
-    background-color: var(--bg-base);
-    color: var(--text-primary);
+    background-color: var(--color-page-bg);
     font-family: var(--font-sans), system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
 
-  ::-webkit-scrollbar {
-    height: 4px;
-    width: 4px;
-  }
+  ::-webkit-scrollbar { height: 4px; width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb {
-    background: var(--border-default);
-    border-radius: var(--radius-full);
+    background: var(--color-slate-border);
+    border-radius: 9999px;
   }
 }
 
-/* ============================================================
+/* ═══════════════════════════════════════════════════════════════
    COMPONENTS
-   ============================================================ */
+   ═══════════════════════════════════════════════════════════════ */
 @layer components {
 
-  /* ----------------------------------------------------------
-     LOGO
-  ---------------------------------------------------------- */
-  .nexus-logo {
-    @apply font-black text-2xl tracking-tight whitespace-nowrap select-none;
-    background: var(--grad-brand);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-  }
-  .nexus-logo-dot {
-    color: var(--brand);
-    -webkit-text-fill-color: var(--brand);
+  /* ── ANNOUNCEMENT BAR ── */
+  .ann-bar {
+    @apply w-full h-9 flex items-center justify-center text-white text-[13px] font-medium;
+    background-color: var(--color-blue-dark);
   }
 
-  /* ----------------------------------------------------------
-     NAVBAR
-  ---------------------------------------------------------- */
-  .navbar {
-    @apply sticky top-0 z-50 grid h-16 px-6;
-    grid-template-columns: auto 1fr auto;
-    align-items: center;
-    gap: 24px;
-    background: linear-gradient(135deg, #5a8db8 0%, #7aadd4 40%, #e8a87c 100%);
-    border-bottom: none;
-    box-shadow: 0 2px 20px rgba(90, 141, 184, 0.3);
+  /* ── NAVBAR ── */
+  .navbar-root {
+    background-color: var(--color-navy);
+    @apply w-full h-16 flex items-center px-20;
   }
-  .navbar-left {
-    @apply flex items-center gap-4 shrink-0;
+  /* Logo: inline-flex so the blue dot sits flush at the bottom-right of the text */
+  .navbar-logo {
+    @apply text-white font-extrabold flex-shrink-0;
+    font-size: 22px;
+    line-height: 27px;
+    letter-spacing: -0.5px;
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 3px;
   }
-  .navbar-center {
-    @apply flex items-center w-full;
-    min-width: 0;
+  .navbar-logo-dot {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 3.5px;
+    background-color: var(--color-blue-primary);
+    margin-bottom: 3px;
+    flex-shrink: 0;
   }
-  .navbar-right {
-    @apply flex items-center justify-end gap-2 shrink-0;
+  /* Fixed 752 × 40 search bar — matches Figma spec exactly */
+  .search-bar {
+    @apply flex h-10 bg-white rounded-lg overflow-hidden border flex-shrink-0;
+    width: 752px;
+    border-color: var(--color-slate-border);
   }
-
-  .navbar-deliver-label {
-    @apply text-[10px] uppercase tracking-wider;
-    color: rgba(255, 255, 255, 0.7);
+  .search-cat-btn {
+    @apply flex items-center justify-between h-full px-3 text-[11px] font-medium flex-shrink-0;
+    width: 128px;
+    background-color: var(--color-blue-light);
+    border-right: 1px solid rgba(37, 99, 235, 0.3);
+    color: var(--color-blue-primary);
   }
-  .navbar-deliver-location {
-    @apply text-[13px] font-semibold flex items-center gap-1;
-    color: #ffffff;
+  .search-input {
+    @apply flex-1 h-full px-3 text-[14px] outline-none;
+    color: var(--color-slate-muted);
   }
-  .navbar-deliver-icon {
-    color: #fdefd8;
-  }
-
-  .navbar-search {
-    @apply w-full flex items-center rounded-xl overflow-hidden transition-all;
-    background-color: rgba(255, 255, 255, 0.92);
-    border: 1.5px solid rgba(255, 255, 255, 0.6);
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  }
-  .navbar-search:focus-within {
-    border-color: #ffffff;
-    box-shadow: 0 2px 20px rgba(255, 255, 255, 0.3);
-  }
-  .navbar-search-select {
-    @apply text-xs h-11 px-3 outline-none cursor-pointer;
-    background-color: rgba(253, 239, 216, 0.8);
-    border-right: 1px solid rgba(200, 170, 130, 0.4);
-    color: #5c4a30;
-  }
-  .navbar-search-input {
-    @apply flex-1 text-sm h-11 px-4 outline-none bg-transparent;
-    color: #2c2416;
-  }
-  .navbar-search-input::placeholder {
-    color: #a89070;
-  }
-  .navbar-search-btn {
-    @apply h-11 w-12 flex items-center justify-center text-white transition-colors shrink-0;
-    background-color: #5a8db8;
-  }
-  .navbar-search-btn:hover {
-    background-color: #4a7aa8;
-  }
-
-  .navbar-divider {
-    @apply w-px h-7;
-    background-color: rgba(255, 255, 255, 0.3);
+  .search-submit-btn {
+    @apply flex-shrink-0 h-full flex items-center justify-center;
+    width: 45px;
+    background-color: var(--color-blue-primary);
   }
   .navbar-icon-btn {
-    @apply flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-all relative text-[10px];
-    color: rgba(255, 255, 255, 0.85);
+    @apply flex flex-col items-center cursor-pointer flex-shrink-0;
+    gap: 4px;
   }
-  .navbar-icon-btn:hover {
-    background-color: rgba(255, 255, 255, 0.15);
-    color: #ffffff;
+  .navbar-wishlist-label {
+    font-size: 10px;
+    line-height: 12px;
+    color: rgba(255, 255, 255, 0.5);
   }
-  .navbar-cart-badge {
-    @apply absolute top-0 right-1 text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center;
-    background-color: #e8734a;
-    color: #ffffff;
-  }
-
-  /* ----------------------------------------------------------
-     BUTTONS
-  ---------------------------------------------------------- */
-  .btn {
-    @apply px-5 py-2 rounded-full text-sm font-semibold transition-all;
-  }
-  .btn-outline {
-    border: 1.5px solid rgba(255, 255, 255, 0.7);
-    color: #ffffff;
+  /* Cart area: 56 × 40 rounded box */
+  .cart-area {
+    @apply relative flex items-center justify-center flex-shrink-0 rounded-lg;
+    width: 56px;
+    height: 40px;
     background: rgba(255, 255, 255, 0.1);
-    backdrop-filter: blur(4px);
   }
-  .btn-outline:hover {
-    background: rgba(255, 255, 255, 0.25);
-    border-color: #ffffff;
-    color: #ffffff;
+  .cart-badge {
+    @apply absolute flex items-center justify-center text-white font-bold;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    line-height: 12px;
+    top: -4px;
+    right: -4px;
+    background-color: var(--color-red-badge);
+    border-radius: 9px;
   }
-  .btn-primary {
-    @apply text-white;
-    background-color: #5a8db8;
-    border: 1.5px solid rgba(255,255,255,0.3);
-  }
-  .btn-primary:hover {
-    background-color: #4a7aa8;
-  }
-  .btn-primary:disabled {
-    background-color: var(--brand-muted);
-    cursor: not-allowed;
+  /* Sign-in pill: 122 × 32 */
+  .signin-btn {
+    @apply flex items-center justify-center text-white font-medium flex-shrink-0;
+    width: 122px;
+    height: 32px;
+    font-size: 12px;
+    line-height: 15px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.25);
   }
 
-  /* ----------------------------------------------------------
-     AUTH MODAL
-  ---------------------------------------------------------- */
+  /* ── CATEGORY NAV ── */
+  /* height: 44px = h-11; gap between deals-btn and links matches Figma (16px) */
+  .cat-nav {
+    @apply w-full h-11 flex items-center px-20;
+    background-color: var(--color-navy-mid);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    gap: 16px;
+  }
+  /* deals-btn: 154 × 28, pill (r-14), icon 6px from left, 13px gap to text */
+  .cat-nav-deals-btn {
+    @apply flex items-center text-white font-semibold flex-shrink-0;
+    width: 154px;
+    height: 28px;
+    border-radius: 14px;
+    background-color: var(--color-blue-primary);
+    padding-left: 6px;
+    gap: 13px;
+    font-size: 12px;
+    line-height: 15px;
+  }
+  /* link group — inner gap ≈ average from Figma positions (~28px) */
+  .cat-nav-links {
+    @apply flex items-center;
+    gap: 28px;
+  }
+  /* standard link: rgba(255,255,255,0.78) — cn-t0…cn-t6 */
+  .cat-nav-link {
+    @apply cursor-pointer hover:text-white transition-colors whitespace-nowrap flex-shrink-0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.78);
+  }
+  /* dimmed link: rgba(255,255,255,0.5) — cn-t7 "More" */
+  .cat-nav-link-dim {
+    @apply cursor-pointer whitespace-nowrap flex-shrink-0;
+    font-size: 13px;
+    font-weight: 500;
+    line-height: 16px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  /* ── HERO SECTION ── */
+  .hero-section {
+    @apply w-full flex gap-4 px-20;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    background-color: var(--color-page-bg);
+  }
+
+  /* 836 × 328 — all children are absolutely positioned inside this banner */
+  .hero-main-banner {
+    @apply relative overflow-hidden flex-shrink-0;
+    width: 836px;
+    height: 328px;
+    border-radius: 12px;
+    background: linear-gradient(90deg, #0F172A 0%, #162456 60%, #1E40AF 100%);
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
+  }
+
+  /* mb-tag: left 40, top 32, Inter 600 11px, letter-spacing 1.5px */
+  .hero-tag {
+    @apply absolute uppercase;
+    left: 40px;
+    top: 32px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 13px;
+    letter-spacing: 1.5px;
+    color: #2563EB;
+  }
+
+  /* mb-h: left 40, top 56, Inter 800 40px, letter-spacing -1.5px
+     No fixed width — the <br /> in JSX enforces the 2-line break.
+     Width: 255px from Figma was narrower than the rendered text, causing a 3rd line
+     that pushed the subtext and CTA buttons out of their Figma positions. */
+  .hero-headline {
+    @apply absolute text-white;
+    left: 40px;
+    top: 56px;
+    max-width: 420px;
+    font-size: 40px;
+    font-weight: 800;
+    line-height: 48px;
+    letter-spacing: -1.5px;
+  }
+
+  /* mb-s: left 40, top 160, Inter 400 14px/22px, rgba white 0.65 */
+  .hero-subtext {
+    position: absolute;
+    left: 40px;
+    top: 160px;
+    max-width: 380px;
+    font-size: 14px;
+    font-weight: 400;
+    line-height: 22px;
+    color: rgba(255, 255, 255, 0.65);
+  }
+
+  /* mb-cta: 164 × 44, left 40, top 214, pill r-22 */
+  .hero-cta-primary {
+    @apply absolute flex items-center justify-center text-white;
+    left: 40px;
+    top: 214px;
+    width: 164px;
+    height: 44px;
+    border-radius: 22px;
+    background-color: #2563EB;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    font-size: 15px;
+    font-weight: 600;
+    line-height: 18px;
+  }
+
+  /* mb-ex: 136 × 44, left 216, top 214, ghost pill */
+  .hero-cta-secondary {
+    @apply absolute flex items-center justify-center text-white;
+    left: 216px;
+    top: 214px;
+    width: 136px;
+    height: 44px;
+    border-radius: 22px;
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 17px;
+  }
+
+  /* img-hero: 348 × 292 at left 468, top 16 — contains img-hero.png */
+  .hero-product-img {
+    position: absolute;
+    left: 468px;
+    top: 16px;
+    width: 348px;
+    height: 292px;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+
+  /* glass-deal: 348 × 80 at left 468, top 220 — floats over img-hero */
+  .hero-glass-deal {
+    position: absolute;
+    left: 468px;
+    top: 220px;
+    width: 348px;
+    height: 80px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.14);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(8px);
+  }
+
+  /* All children below are absolutely positioned within the 348 × 80 glass card */
+
+  /* gc-t: left 34, top 10 — title starts after bolt icon (left 12 + width 16 + gap 6) */
+  .hero-glass-title {
+    position: absolute;
+    left: 34px;
+    top: 10px;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 13px;
+    color: #F59E0B;
+  }
+
+  /* gc-n: left 12, top 26 */
+  .hero-glass-product {
+    position: absolute;
+    left: 12px;
+    top: 26px;
+    font-size: 13px;
+    font-weight: 600;
+    line-height: 16px;
+    color: #FFFFFF;
+  }
+
+  /* gc-p: left 12, top 48 */
+  .hero-glass-price {
+    position: absolute;
+    left: 12px;
+    top: 48px;
+    font-size: 18px;
+    font-weight: 700;
+    line-height: 22px;
+    color: #2563EB;
+  }
+
+  /* gc-o: left 58, top 52 */
+  .hero-glass-original {
+    position: absolute;
+    left: 58px;
+    top: 52px;
+    font-size: 13px;
+    font-weight: 400;
+    line-height: 16px;
+    text-decoration: line-through;
+    color: #DC2626;
+  }
+
+  /* gc-btn: 100 × 26 at left 230, top 46, pill r-13 */
+  .hero-glass-btn {
+    position: absolute;
+    left: 230px;
+    top: 46px;
+    width: 100px;
+    height: 26px;
+    border-radius: 13px;
+    background-color: #2563EB;
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 13px;
+    color: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* ── SIDE BANNER CARD ── */
+  .side-banner-card {
+    @apply relative w-full h-[100px] rounded-xl overflow-hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+  .side-banner-title {
+    @apply absolute left-[14px] top-[18px] text-white text-[16px] font-bold;
+  }
+  .side-banner-subtitle {
+    @apply absolute left-[14px] top-[42px] text-[12px];
+    color: rgba(255,255,255,0.62);
+  }
+  .side-banner-btn {
+    @apply absolute left-[14px] bottom-[10px] flex items-center px-3 h-7 rounded-[14px] text-white text-[11px] font-semibold border;
+    background: rgba(255,255,255,0.16);
+    border-color: rgba(255,255,255,0.2);
+  }
+  .side-banner-img {
+    @apply absolute right-0 top-0 w-[108px] h-full rounded-[10px];
+  }
+
+  /* ── SECTION HEADER ── */
+  .section-header {
+    @apply flex items-center justify-between mb-4;
+  }
+  .section-header-left {
+    @apply flex items-center gap-3;
+  }
+  .section-icon-dot {
+    @apply w-[22px] h-[22px] rounded-full;
+  }
+  .section-title {
+    @apply text-[20px] font-bold tracking-tight;
+    color: var(--color-navy);
+    letter-spacing: -0.3px;
+  }
+  .section-view-all {
+    @apply text-[13px] font-medium cursor-pointer hover:underline;
+    color: var(--color-blue-primary);
+  }
+  .section-divider {
+    @apply w-full h-px mb-4;
+    background-color: var(--color-slate-border);
+  }
+
+  /* ── PRODUCT CARD ──
+     All children are absolutely positioned within the 243 × 264 card.
+     Positions match Figma fd-c0…fd-c4 node specs exactly. */
+  .product-card {
+    position: relative;
+    width: 243px;
+    height: 264px;
+    background: #FFFFFF;
+    border: 0.5px solid #E2E8F0;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.07);
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+  }
+  /* img-fd: 243 × 152, fills top of card */
+  .product-card-img {
+    position: absolute;
+    top: 0; left: 0;
+    width: 243px;
+    height: 152px;
+    border-radius: 10px 10px 0 0;
+    overflow: hidden;
+  }
+  /* fd-db: 56 × 20, left:8 top:8, bg red, r-4 */
+  .product-card-badge {
+    position: absolute;
+    top: 8px; left: 8px;
+    width: 56px; height: 20px;
+    background-color: #DC2626;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; line-height: 12px;
+    color: #FFFFFF;
+  }
+  /* fd-wi: 22 × 22, left:213 top:8, border slate */
+  .product-card-wishlist {
+    position: absolute;
+    top: 8px; left: 213px;
+    width: 22px; height: 22px;
+    border: 1.2px solid #475569;
+    border-radius: 50%;
+    background: #FFFFFF;
+    display: flex; align-items: center; justify-content: center;
+    overflow: hidden;
+  }
+  /* fd-b: left:10 top:160, 10px 500 blue */
+  .product-card-brand {
+    position: absolute;
+    top: 160px; left: 10px;
+    font-size: 10px; font-weight: 500; line-height: 12px;
+    color: #2563EB;
+  }
+  /* fd-n: left:10 top:174, w:223, 13px 600 / 18px, navy */
+  .product-card-name {
+    position: absolute;
+    top: 174px; left: 10px;
+    width: 223px;
+    font-size: 13px; font-weight: 600; line-height: 18px;
+    color: #0F172A;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+  }
+  /* fd-st: stars row at top:199 left:10, gap 2px between 12×12 stars */
+  .product-card-stars {
+    position: absolute;
+    top: 199px; left: 10px;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .product-card-star {
+    width: 12px; height: 12px;
+    flex-shrink: 0;
+  }
+  /* fd-rc: left:82 top:200, 11px 400 slate-muted */
+  .product-card-reviews {
+    position: absolute;
+    top: 200px; left: 82px;
+    font-size: 11px; font-weight: 400; line-height: 13px;
+    color: #94A3B8;
+  }
+  /* fd-p: left:10 top:218, 17px 700 navy */
+  .product-card-price {
+    position: absolute;
+    top: 218px; left: 10px;
+    font-size: 17px; font-weight: 700; line-height: 21px;
+    color: #0F172A;
+  }
+  /* fd-o: left:56 top:222, 12px 400 strike red */
+  .product-card-original {
+    position: absolute;
+    top: 222px; left: 56px;
+    font-size: 12px; font-weight: 400; line-height: 15px;
+    text-decoration: line-through;
+    color: #DC2626;
+  }
+  /* fd-acb: 223 × 18, left:10 top:240, blue, r-6 */
+  .product-card-atc-btn {
+    position: absolute;
+    top: 240px; left: 10px;
+    width: 223px; height: 18px;
+    background-color: #2563EB;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 600; line-height: 13px;
+    color: #FFFFFF;
+  }
+  /* Trending variant: taller button */
+  .product-card-shipping {
+    position: absolute;
+    top: 236px; left: 10px;
+    font-size: 11px; font-weight: 500; line-height: 13px;
+    color: #16A34A;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .product-card-atc-btn-lg {
+    position: absolute;
+    top: 252px; left: 10px;
+    width: 223px; height: 34px;
+    background-color: #2563EB;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 13px; font-weight: 600;
+    color: #FFFFFF;
+  }
+
+  /* ── FLASH DEALS SECTION ── */
+  /* Section: white, px-20, top:22px padding matches fd-bolt position */
+  .flash-deals-section {
+    @apply w-full bg-white px-20;
+    padding-top: 22px;
+    padding-bottom: 14px;
+  }
+  /* Header row: bolt + title + countdown + view-all */
+  .fd-header {
+    @apply flex items-center;
+    height: 40px;
+  }
+  /* fd-h: Inter 700 20px #0F172A, letter-spacing -0.3px */
+  .fd-title {
+    font-size: 20px;
+    font-weight: 700;
+    line-height: 24px;
+    letter-spacing: -0.3px;
+    color: #0F172A;
+    margin-left: 10px;
+  }
+  /* Countdown group: 47px gap from title end to match left:268 */
+  .countdown-block {
+    display: flex;
+    align-items: center;
+    margin-left: 47px;
+    gap: 0;
+  }
+  /* tm-x: 58 × 32 navy block, r-8, position:relative for abs children */
+  .countdown-digit {
+    position: relative;
+    width: 58px;
+    height: 32px;
+    border-radius: 8px;
+    background-color: #0F172A;
+    flex-shrink: 0;
+  }
+  /* tmt-x: value text, left:18 top:7 within block */
+  .countdown-val {
+    position: absolute;
+    left: 18px; top: 7px;
+    font-size: 14px; font-weight: 700; line-height: 17px;
+    color: #FFFFFF;
+  }
+  /* tml-x: label text, left:12 top:18 within block */
+  .countdown-label {
+    position: absolute;
+    left: 12px; top: 18px;
+    font-size: 8px; font-weight: 400; line-height: 10px;
+    color: rgba(255, 255, 255, 0.52);
+  }
+  /* tmc-x: ":" separator between blocks */
+  .countdown-sep {
+    font-size: 16px; font-weight: 700; line-height: 19px;
+    color: rgba(37, 99, 235, 0.7);
+    margin: 0 4px;
+    align-self: center;
+  }
+  /* fd-va: "View all →", ml-auto, 13px 500 blue */
+  .fd-view-all {
+    margin-left: auto;
+    font-size: 13px; font-weight: 500; line-height: 16px;
+    color: #2563EB;
+    cursor: pointer;
+  }
+  /* fd-rule: 1px divider, margin matches top:62 - header bottom */
+  .fd-rule {
+    width: 100%;
+    height: 1px;
+    background: #E2E8F0;
+    margin-top: 18px;
+    margin-bottom: 16px;
+  }
+  /* 5-column cards grid: 243px × 5 + 16px gaps × 4 = 1279px ≈ inner 1280px */
+  .fd-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 243px);
+    gap: 16px;
+  }
+
+  /* ── CATEGORIES SECTION ── */
+  .categories-section {
+    @apply w-full px-20 py-5;
+    background-color: var(--color-page-bg);
+  }
+  .category-card {
+    @apply flex flex-col items-center bg-white rounded-xl cursor-pointer hover:shadow-md transition-shadow py-5;
+    border: 0.5px solid var(--color-slate-border);
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+    min-width: 113px;
+  }
+  .category-icon-circle {
+    @apply w-14 h-14 rounded-full flex items-center justify-center mb-3;
+  }
+  .category-name {
+    @apply text-[11px] font-semibold text-center;
+    color: var(--color-navy);
+  }
+  .category-count {
+    @apply text-[10px] text-center;
+    color: var(--color-blue-primary);
+  }
+
+  /* ── TRENDING SECTION ── */
+  .trending-section {
+    @apply w-full bg-white px-20 py-5;
+  }
+  .trending-tab {
+    @apply flex items-center justify-center h-[30px] px-4 rounded-[15px] text-[12px] font-medium cursor-pointer transition-colors;
+  }
+  .trending-tab-active {
+    background-color: var(--color-navy);
+    @apply text-white;
+  }
+  .trending-tab-inactive {
+    background-color: var(--color-blue-light);
+    color: var(--color-blue-primary);
+  }
+
+  /* ── TRUST BAR ── */
+  .trust-bar {
+    @apply w-full flex items-center justify-between px-20 h-[72px];
+    background-color: var(--color-navy);
+  }
+  .trust-item {
+    @apply flex items-center gap-3 h-10 px-3 rounded-lg;
+    background: rgba(255,255,255,0.06);
+    min-width: 200px;
+  }
+  .trust-item-icon {
+    @apply w-[22px] h-[22px] flex items-center justify-center text-white border rounded;
+    border-color: rgba(255,255,255,0.6);
+  }
+  .trust-item-label {
+    @apply text-[12px] font-medium;
+    color: rgba(255,255,255,0.72);
+  }
+
+  /* ── APP BANNER ── */
+  .app-banner {
+    @apply w-full h-[140px] flex items-center px-20;
+    background: linear-gradient(90deg, #0F172A 0%, #1E40AF 100%);
+  }
+  .app-phone-icon {
+    @apply w-9 flex items-center justify-center rounded-xl mr-4;
+    height: 68px;
+    background: rgba(255,255,255,0.12);
+  }
+  .app-banner-title {
+    @apply text-white text-[22px] font-bold tracking-tight;
+  }
+  .app-banner-sub {
+    @apply text-[14px] mt-1;
+    color: rgba(255,255,255,0.6);
+  }
+  .app-btn-primary {
+    @apply flex items-center justify-center px-5 h-9 bg-white rounded-lg text-[12px] font-semibold mr-3;
+    color: var(--color-navy);
+  }
+  .app-btn-secondary {
+    @apply flex items-center justify-center px-5 h-9 rounded-lg border text-white text-[12px] font-semibold;
+    background: rgba(255,255,255,0.12);
+    border-color: rgba(255,255,255,0.28);
+  }
+
+  /* ── FOOTER ── */
+  .footer-root {
+    @apply w-full px-20 pt-11 pb-8;
+    background-color: var(--color-navy);
+    border-top: 4px solid var(--color-blue-primary);
+  }
+  .footer-logo {
+    @apply text-white text-[22px] font-extrabold tracking-tight relative inline-block;
+  }
+  .footer-tagline {
+    @apply text-[13px] mt-2 mb-10;
+    color: rgba(255,255,255,0.45);
+  }
+  .footer-col-heading {
+    @apply text-white text-[13px] font-semibold mb-4;
+  }
+  .footer-col-link {
+    @apply block text-[12px] mb-3 cursor-pointer hover:text-white transition-colors;
+    color: rgba(255,255,255,0.42);
+  }
+  .footer-trust-item {
+    @apply flex items-center gap-2 h-[30px] px-2 rounded-lg;
+    background: rgba(255,255,255,0.07);
+    min-width: 200px;
+  }
+  .footer-divider {
+    @apply w-full h-px my-6;
+    background: rgba(255,255,255,0.1);
+  }
+  .footer-copy {
+    @apply text-[12px];
+    color: rgba(255,255,255,0.3);
+  }
+
+  /* ── LEGACY AUTH MODAL — AuthModal component uses these classes ── */
   .modal-overlay {
     @apply fixed inset-0 z-[2000] flex items-center justify-center p-4;
     background: rgba(0, 0, 0, 0.7);
@@ -293,305 +797,4 @@
   .modal-footer-link:hover {
     color: var(--brand-soft);
   }
-
-  /* ----------------------------------------------------------
-     CATEGORY STRIP
-  ---------------------------------------------------------- */
-  .cat-strip {
-    @apply overflow-x-auto;
-    background-color: var(--bg-surface);
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .cat-strip-inner {
-    @apply flex items-stretch justify-center min-w-full;
-  }
-  .cat-item {
-    @apply flex flex-col items-center gap-1 px-5 py-3 text-xs font-medium whitespace-nowrap
-           border-b-2 border-transparent transition-all cursor-pointer;
-    color: var(--text-muted);
-  }
-  .cat-item:hover {
-    color: var(--text-primary);
-  }
-  .cat-item-active {
-    border-bottom-color: var(--brand);
-    color: var(--brand-soft);
-  }
-  .cat-item-icon {
-    @apply text-xl leading-none;
-  }
-
-  /* ----------------------------------------------------------
-     CAROUSEL
-  ---------------------------------------------------------- */
-  .carousel-section {
-    @apply px-6 py-5;
-    background-color: var(--bg-base);
-  }
-  .carousel-viewport {
-    position: relative;
-    overflow: hidden;
-    border-top-right-radius: var(--radius-2xl);
-    border-bottom-right-radius: var(--radius-2xl);
-  }
-  .carousel-track {
-    display: flex;
-    align-items: stretch;
-    gap: 12px;
-    height: 320px;
-  }
-  .carousel-slide {
-    flex-shrink: 0;
-    width: calc((100vw - 60px) / 2);
-    height: 100%;
-    border-radius: var(--radius-2xl);
-    overflow: hidden;
-    cursor: pointer;
-    position: relative;
-  }
-  .carousel-slide-overlay {
-    @apply absolute inset-0;
-    background: linear-gradient(120deg, rgba(0,0,0,0.78) 0%, rgba(0,0,0,0.40) 55%, rgba(0,0,0,0.10) 100%);
-  }
-  .carousel-slide-content {
-    @apply relative z-10 p-7 flex flex-col justify-between h-full;
-  }
-  .carousel-slide-title {
-    @apply text-2xl font-black leading-tight mb-1 text-white;
-    text-shadow: 0 1px 8px rgba(0,0,0,0.6);
-  }
-  .carousel-slide-subtitle {
-    @apply text-sm mb-4;
-    color: rgba(255, 255, 255, 0.85);
-    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
-  }
-  .carousel-slide-badge {
-    @apply inline-block px-3 py-1 rounded-full text-xs font-bold;
-  }
-  .carousel-nav-btn {
-    @apply absolute w-10 h-10 rounded-full flex items-center justify-center
-           transition-all shadow-xl z-20;
-    background: rgba(0, 0, 0, 0.52);
-    border: 1.5px solid rgba(255, 255, 255, 0.30);
-    color: #ffffff;
-    backdrop-filter: blur(6px);
-    top: 50%;
-    transform: translateY(-50%);
-  }
-  .carousel-nav-btn:hover {
-    background: rgba(0, 0, 0, 0.78);
-    border-color: rgba(255, 255, 255, 0.60);
-    transform: translateY(-50%) scale(1.08);
-  }
-  .carousel-nav-prev {
-    left: 18px;
-  }
-  .carousel-nav-next {
-    right: 18px;
-  }
-  .carousel-dots {
-    @apply flex justify-center gap-1.5 mt-1;
-  }
-  .carousel-dot {
-    @apply h-1.5 rounded-full transition-all;
-    background-color: var(--border-default);
-    width: 6px;
-  }
-  .carousel-dot:hover {
-    background-color: var(--border-strong);
-  }
-  .carousel-dot-active {
-    width: 20px;
-    background-color: var(--brand);
-  }
-
-  /* ----------------------------------------------------------
-     DEAL BOXES
-  ---------------------------------------------------------- */
-  .deals-section {
-    @apply px-6 pb-8;
-    background-color: var(--bg-base);
-  }
-  .deals-grid {
-    @apply grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3;
-  }
-  .deal-box {
-    @apply rounded-2xl overflow-hidden hover:-translate-y-1 transition-transform cursor-pointer;
-    background-color: var(--bg-surface);
-  }
-  .deal-box-header {
-    @apply px-4 py-3;
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .deal-box-title {
-    @apply text-sm font-bold leading-tight text-white;
-  }
-  .deal-box-subtitle {
-    @apply text-xs mt-0.5 font-medium;
-  }
-  .deal-box-products {
-    @apply grid grid-cols-2 divide-x divide-y;
-    divide-color: var(--border-subtle);
-  }
-  .deal-box-product-item {
-    @apply flex flex-col items-center gap-1.5 p-3 transition-colors;
-  }
-  .deal-box-product-item:hover {
-    background-color: #181818;
-  }
-  .deal-box-product-emoji {
-    @apply text-3xl leading-none;
-  }
-  .deal-box-product-name {
-    @apply text-[10px] text-center leading-tight;
-    color: var(--text-muted);
-  }
-
-  /* Deal box border accent variants */
-  .deal-border-violet { border: 1px solid rgba(124, 58, 237, 0.5); }
-  .deal-border-pink   { border: 1px solid rgba(219, 39, 119, 0.5); }
-  .deal-border-emerald{ border: 1px solid rgba(5, 150, 105, 0.5);  }
-  .deal-border-yellow { border: 1px solid rgba(217, 119, 6, 0.5);  }
-  .deal-border-rose   { border: 1px solid rgba(225, 29, 72, 0.5);  }
-  .deal-border-lime   { border: 1px solid rgba(101, 163, 13, 0.5); }
-
-  .deal-accent-violet  { color: var(--brand-soft); }
-  .deal-accent-pink    { color: #f472b6; }
-  .deal-accent-emerald { color: var(--success-text); }
-  .deal-accent-yellow  { color: var(--warning-text); }
-  .deal-accent-rose    { color: #fb7185; }
-  .deal-accent-lime    { color: #a3e635; }
-
-  /* Slide gradient variants */
-  .slide-grad-violet  { background: var(--grad-violet); }
-  .slide-grad-pink    { background: var(--grad-pink); }
-  .slide-grad-emerald { background: var(--grad-emerald); }
-  .slide-grad-stone   { background: var(--grad-stone); }
-  .slide-grad-blue    { background: var(--grad-blue); }
-  .slide-grad-lime    { background: var(--grad-lime); }
-  .slide-grad-orange  { background: var(--grad-orange); }
-
-  .slide-badge-violet  { background: rgba(109,40,217,0.4);  color: #c4b5fd; }
-  .slide-badge-pink    { background: rgba(157,23,77,0.4);   color: #f9a8d4; }
-  .slide-badge-emerald { background: rgba(6,78,59,0.4);     color: var(--success-text); }
-  .slide-badge-stone   { background: rgba(68,64,60,0.4);    color: var(--warning-text); }
-  .slide-badge-blue    { background: rgba(30,58,138,0.4);   color: #93c5fd; }
-  .slide-badge-lime    { background: rgba(54,83,20,0.4);    color: #a3e635; }
-  .slide-badge-orange  { background: rgba(124,45,18,0.4);   color: #fb923c; }
-
-  /* ----------------------------------------------------------
-     PRODUCT CARD
-  ---------------------------------------------------------- */
-  .product-card {
-    @apply rounded-2xl overflow-hidden cursor-pointer transition-all duration-200
-           w-48 shrink-0 flex flex-col relative;
-    background-color: var(--bg-surface);
-    border: 1px solid var(--border-subtle);
-  }
-  .product-card:hover {
-    border-color: rgba(124, 58, 237, 0.4);
-    transform: translateY(-4px);
-    box-shadow: var(--shadow-brand);
-  }
-  .product-card-badge {
-    @apply absolute top-2.5 left-2.5 z-10 text-[9px] font-bold px-2 py-0.5 rounded-full text-white;
-    background-color: var(--brand);
-  }
-  .product-card-badge-muted {
-    @apply absolute top-2.5 left-2.5 z-10 text-[9px] font-bold px-2 py-0.5 rounded-full capitalize;
-    background-color: #1f2937;
-    color: var(--text-muted);
-  }
-  .product-card-image-wrap {
-    @apply w-full aspect-square flex items-center justify-center overflow-hidden;
-    background-color: var(--bg-elevated);
-  }
-  .product-card-image {
-    @apply w-full h-full object-cover transition-transform duration-300;
-  }
-  .product-card:hover .product-card-image {
-    transform: scale(1.05);
-  }
-  .product-card-placeholder {
-    @apply text-5xl select-none opacity-20;
-  }
-  .product-card-body {
-    @apply p-3.5 flex flex-col flex-1;
-  }
-  .product-card-category {
-    @apply text-[10px] font-semibold uppercase tracking-wider mb-1;
-    color: var(--brand);
-  }
-  .product-card-name {
-    @apply text-[13px] font-semibold leading-snug mb-1 line-clamp-2;
-    color: var(--text-primary);
-  }
-  .product-card-description {
-    @apply text-[11px] leading-snug mb-2 line-clamp-1;
-    color: var(--text-muted);
-  }
-  .product-card-rating {
-    @apply flex items-center gap-1.5 mb-2;
-  }
-  .product-card-rating-value {
-    @apply text-[11px] font-semibold;
-    color: var(--warning-text);
-  }
-  .product-card-price-row {
-    @apply flex items-center justify-between mt-auto mb-2.5;
-  }
-  .product-card-price {
-    @apply text-base font-bold;
-    color: var(--text-white);
-  }
-  .product-card-stock-in {
-    @apply text-[10px] font-semibold px-2 py-0.5 rounded-full;
-    background-color: var(--success-bg);
-    color: var(--success-text);
-  }
-  .product-card-stock-out {
-    @apply text-[10px] font-semibold px-2 py-0.5 rounded-full;
-    background-color: var(--bg-muted);
-    color: var(--text-muted);
-  }
-  .product-card-btn-add {
-    @apply w-full flex items-center justify-center gap-1.5 py-2 rounded-xl
-           text-xs font-semibold transition-all active:scale-95 text-white;
-    background-color: var(--brand);
-  }
-  .product-card-btn-add:hover {
-    background-color: var(--brand-hover);
-  }
-  .product-card-btn-sold {
-    @apply w-full flex items-center justify-center gap-1.5 py-2 rounded-xl
-           text-xs font-semibold cursor-not-allowed;
-    background-color: var(--bg-muted);
-    color: var(--text-muted);
-  }
-
-  /* ----------------------------------------------------------
-     PAGE SECTIONS
-  ---------------------------------------------------------- */
-  .page-section {
-    @apply px-6 py-8;
-    background-color: var(--bg-base);
-  }
-  .section-header {
-    @apply flex items-center justify-between mb-5;
-  }
-  .section-title {
-    @apply text-xl font-black;
-    color: var(--text-white);
-  }
-  .section-title-accent {
-    color: var(--brand-soft);
-  }
-  .section-see-all {
-    @apply text-sm font-semibold transition-colors;
-    color: var(--brand-soft);
-  }
-  .section-see-all:hover {
-    color: var(--brand);
-  }
-  .horizontal-scroll { @apply flex gap-3 md:gap-4 overflow-x-auto pb-3; -webkit-overflow-scrolling: touch; }
 }

@@ -1,103 +1,84 @@
-"use client";
 import Image from "next/image";
-import { ShoppingCart } from "lucide-react";
 
-export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
-
-export interface ProductSummary {
-  id:              string;
-  name:            string;
-  price:           number;
-  stockQuantity:   number;
-  sku:             string;
-  status:          ProductStatus;
-  categoryName:    string;        // flat string — summary endpoint does NOT return category object
-  primaryImageUrl: string;        // single URL — summary endpoint does NOT return imageUrls array
-  merchantId:      string;
-  createdAt:       string;
+export interface ProductCardData {
+  badge: string;
+  brand: string;
+  name: string;
+  rating: number;
+  reviews: string;
+  price: string;
+  original: string;
+  imgGradient: string;
+  shipping?: string;
+  variant?: "flash" | "trending";
 }
 
-interface ProductCardProps {
-  product:      ProductSummary;
-  onAddToCart?: (product: ProductSummary) => void;
-}
-
-const formatPrice = (price: number): string =>
-  new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(price);
-
-export default function ProductCard({ product, onAddToCart }: ProductCardProps) {
-  const {
-    name,
-    price,
-    stockQuantity,
-    status,
-    primaryImageUrl,
-    categoryName,
-  } = product;
-
-  const inStock: boolean    = stockQuantity > 0 && status === "ACTIVE";
-  const lowStock: boolean   = inStock && stockQuantity < 10;
-  const isArchived: boolean = status === "ARCHIVED" || status === "DRAFT";
-
+export default function ProductCard({
+  badge,
+  brand,
+  name,
+  reviews,
+  price,
+  original,
+  imgGradient,
+  shipping,
+  variant = "flash",
+}: ProductCardData) {
   return (
-    <div className="product-card group">
+    <div className="product-card">
 
-      {lowStock && status === "ACTIVE" && (
-        <span className="product-card-badge">Only {stockQuantity} left</span>
-      )}
-      {isArchived && (
-        <span className="product-card-badge-muted">{status.toLowerCase()}</span>
-      )}
+      {/* img-fd: 243×152 gradient image area */}
+      <div className="product-card-img" style={{ background: imgGradient }} />
 
-      <div className="product-card-image-wrap">
-        {primaryImageUrl ? (
+      {/* fd-db: 56×20 red discount badge, left:8 top:8 */}
+      <div className="product-card-badge">{badge}</div>
+
+      {/* fd-wi: 22×22 wishlist heart, left:213 top:8 */}
+      <div className="product-card-wishlist">
+        <Image src="/flashicons/fd-wi4.png" alt="Wishlist" width={16} height={16} />
+      </div>
+
+      {/* fd-b: brand name, left:10 top:160 */}
+      <p className="product-card-brand">{brand}</p>
+
+      {/* fd-n: product name, left:10 top:174 */}
+      <p className="product-card-name">{name}</p>
+
+      {/* fd-st: 5 stars + review count row, top:199 left:10 */}
+      <div className="product-card-stars">
+        {Array.from({ length: 5 }).map((_, i) => (
           <Image
-            src={primaryImageUrl}
-            alt={name}
-            fill
-            className="product-card-image"
-            sizes="(max-width: 768px) 50vw, 25vw"
+            key={i}
+            src="/flashicons/fd-st4-3.png"
+            alt=""
+            width={12}
+            height={12}
+            className="product-card-star"
           />
-        ) : (
-          <span className="product-card-placeholder">🛍️</span>
-        )}
+        ))}
       </div>
 
-      <div className="product-card-body">
+      {/* fd-rc: review count, left:82 top:200 */}
+      <span className="product-card-reviews">({reviews})</span>
 
-        {categoryName && (
-          <span className="product-card-category">{categoryName}</span>
-        )}
+      {/* fd-p: price, left:10 top:218 */}
+      <span className="product-card-price">{price}</span>
 
-        <h3 className="product-card-name">{name}</h3>
+      {/* fd-o: original price struck, left:56 top:222 */}
+      <span className="product-card-original">{original}</span>
 
-        <div className="product-card-price-row">
-          <span className="product-card-price">{formatPrice(price)}</span>
-          <span className={inStock ? "product-card-stock-in" : "product-card-stock-out"}>
-            {inStock ? "In Stock" : "Out of Stock"}
-          </span>
-        </div>
+      {/* Shipping label for trending variant */}
+      {variant === "trending" && shipping && (
+        <p className="product-card-shipping">✓ {shipping}</p>
+      )}
 
-        {inStock ? (
-          <button
-            className="product-card-btn-add"
-            onClick={() => onAddToCart?.(product)}
-          >
-            <ShoppingCart size={12} />
-            Add to Cart
-          </button>
-        ) : (
-          <button className="product-card-btn-sold" disabled>
-            <ShoppingCart size={12} />
-            Sold Out
-          </button>
-        )}
+      {/* fd-acb: 223×18 Add to Cart button, left:10 top:240 */}
+      {variant === "flash" ? (
+        <button className="product-card-atc-btn">Add to Cart</button>
+      ) : (
+        <button className="product-card-atc-btn-lg">Add to Cart</button>
+      )}
 
-      </div>
     </div>
   );
 }
