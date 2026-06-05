@@ -7,3 +7,4 @@ export * from "./api/product.types";
 export * from "./api/category.types";
 export * from "./api/cart.types";
 export * from "./api/address.types";
+export * from "./api/order.types";
