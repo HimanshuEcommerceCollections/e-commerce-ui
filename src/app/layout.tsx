@@ -8,8 +8,9 @@ const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Nexus — Multi-Vendor Marketplace",
-  description: "The modern multi-vendor e-commerce platform.",
+  title: "ShopHub — Online Shopping for Everything You Need",
+  description:
+    "Your one-stop shop for everything you need. Quality products, unbeatable prices, and fast delivery.",
 };
 
 export default function RootLayout({

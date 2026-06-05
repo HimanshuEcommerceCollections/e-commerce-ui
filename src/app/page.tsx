@@ -1,23 +1,41 @@
-import Navbar from "@/components/Navbar";
-import HeroSection from "@/components/HeroSection";
-import FlashDeals from "@/components/FlashDeals";
-import Categories from "@/components/Categories";
-import TrendingNow from "@/components/TrendingNow";
-import TrustBar from "@/components/TrustBar";
-import AppBanner from "@/components/AppBanner";
-import Footer from "@/components/Footer";
+import PromoBar from "@/components/home/PromoBar";
+import Header from "@/components/home/Header";
+import Hero from "@/components/home/Hero";
+import TrustBar from "@/components/home/TrustBar";
+import FlashSale from "@/components/home/FlashSale";
+import ShopByCategory from "@/components/home/ShopByCategory";
+import TrendingProducts from "@/components/home/TrendingProducts";
+import PromoBanners from "@/components/home/PromoBanners";
+import BestSellers from "@/components/home/BestSellers";
+import ShopByRoom from "@/components/home/ShopByRoom";
+import PopularBrands from "@/components/home/PopularBrands";
+import RecommendedForYou from "@/components/home/RecommendedForYou";
+import Testimonials from "@/components/home/Testimonials";
+import AppDownload from "@/components/home/AppDownload";
+import Newsletter from "@/components/home/Newsletter";
+import Footer from "@/components/home/Footer";
 
 export default function Home() {
   return (
-    <main style={{ minHeight: "100vh" }}>
-      <Navbar />
-      <HeroSection />
-      <FlashDeals />
-      <Categories />
-      <TrendingNow />
-      <TrustBar />
-      <AppBanner />
+    <div className="min-h-screen bg-slate-50">
+      <PromoBar />
+      <Header />
+      <main>
+        <Hero />
+        <TrustBar />
+        <FlashSale />
+        <ShopByCategory />
+        <TrendingProducts />
+        <PromoBanners />
+        <BestSellers />
+        <ShopByRoom />
+        <PopularBrands />
+        <RecommendedForYou />
+        <Testimonials />
+        <AppDownload />
+        <Newsletter />
+      </main>
       <Footer />
-    </main>
+    </div>
   );
 }
