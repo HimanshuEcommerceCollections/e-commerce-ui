@@ -25,7 +25,7 @@ export default function ProductCard({
   variant = "flash",
 }: ProductCardData) {
   return (
-    <div className="product-card">
+    <div className={`product-card${variant === "trending" ? " product-card--trending" : ""}`}>
 
       {/* img-fd: 243×152 gradient image area */}
       <div className="product-card-img" style={{ background: imgGradient }} />
