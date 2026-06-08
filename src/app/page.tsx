@@ -3,11 +3,11 @@ import Navbar from "@/components/home/Navbar";
 import HeroSection from "@/components/home/sections/HeroSection";
 import TrustBar from "@/components/home/sections/TrustBar";
 import FlashSaleSection from "@/components/home/sections/FlashSaleSection";
-import ShopByCategory from "@/components/home/ShopByCategory";
-import TrendingProducts from "@/components/home/TrendingProducts";
-import PromoBanners from "@/components/home/PromoBanners";
-import BestSellers from "@/components/home/BestSellers";
-import ShopByRoom from "@/components/home/ShopByRoom";
+import ShopByCategorySection from "@/components/home/sections/ShopByCategorySection";
+import TrendingProductsSection from "@/components/home/sections/TrendingProductsSection";
+import PromoBannersSection from "@/components/home/sections/PromoBannersSection";
+import BestSellersSection from "@/components/home/sections/BestSellersSection";
+import ShopByRoomSection from "@/components/home/sections/ShopByRoomSection";
 import PopularBrands from "@/components/home/PopularBrands";
 import RecommendedForYou from "@/components/home/RecommendedForYou";
 import Testimonials from "@/components/home/Testimonials";
@@ -24,11 +24,11 @@ export default function Home() {
         <HeroSection />
         <TrustBar />
         <FlashSaleSection />
-        <ShopByCategory />
-        <TrendingProducts />
-        <PromoBanners />
-        <BestSellers />
-        <ShopByRoom />
+        <ShopByCategorySection />
+        <TrendingProductsSection />
+        <PromoBannersSection />
+        <BestSellersSection />
+        <ShopByRoomSection />
         <PopularBrands />
         <RecommendedForYou />
         <Testimonials />
