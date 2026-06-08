@@ -1,13 +1,13 @@
-import PromoBar from "@/components/home/PromoBar";
-import Header from "@/components/home/Header";
-import Hero from "@/components/home/Hero";
-import TrustBar from "@/components/home/TrustBar";
-import FlashSale from "@/components/home/FlashSale";
-import ShopByCategory from "@/components/home/ShopByCategory";
-import TrendingProducts from "@/components/home/TrendingProducts";
-import PromoBanners from "@/components/home/PromoBanners";
-import BestSellers from "@/components/home/BestSellers";
-import ShopByRoom from "@/components/home/ShopByRoom";
+import AnnouncementBar from "@/components/home/AnnouncementBar";
+import Navbar from "@/components/home/Navbar";
+import HeroSection from "@/components/home/sections/HeroSection";
+import TrustBar from "@/components/home/sections/TrustBar";
+import FlashSaleSection from "@/components/home/sections/FlashSaleSection";
+import ShopByCategorySection from "@/components/home/sections/ShopByCategorySection";
+import TrendingProductsSection from "@/components/home/sections/TrendingProductsSection";
+import PromoBannersSection from "@/components/home/sections/PromoBannersSection";
+import BestSellersSection from "@/components/home/sections/BestSellersSection";
+import ShopByRoomSection from "@/components/home/sections/ShopByRoomSection";
 import PopularBrands from "@/components/home/PopularBrands";
 import RecommendedForYou from "@/components/home/RecommendedForYou";
 import Testimonials from "@/components/home/Testimonials";
@@ -18,17 +18,17 @@ import Footer from "@/components/home/Footer";
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <PromoBar />
-      <Header />
+      <AnnouncementBar />
+      <Navbar />
       <main>
-        <Hero />
+        <HeroSection />
         <TrustBar />
-        <FlashSale />
-        <ShopByCategory />
-        <TrendingProducts />
-        <PromoBanners />
-        <BestSellers />
-        <ShopByRoom />
+        <FlashSaleSection />
+        <ShopByCategorySection />
+        <TrendingProductsSection />
+        <PromoBannersSection />
+        <BestSellersSection />
+        <ShopByRoomSection />
         <PopularBrands />
         <RecommendedForYou />
         <Testimonials />
