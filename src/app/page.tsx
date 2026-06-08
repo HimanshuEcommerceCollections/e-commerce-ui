@@ -1,8 +1,8 @@
-import PromoBar from "@/components/home/PromoBar";
-import Header from "@/components/home/Header";
-import Hero from "@/components/home/Hero";
-import TrustBar from "@/components/home/TrustBar";
-import FlashSale from "@/components/home/FlashSale";
+import AnnouncementBar from "@/components/home/AnnouncementBar";
+import Navbar from "@/components/home/Navbar";
+import HeroSection from "@/components/home/sections/HeroSection";
+import TrustBar from "@/components/home/sections/TrustBar";
+import FlashSaleSection from "@/components/home/sections/FlashSaleSection";
 import ShopByCategory from "@/components/home/ShopByCategory";
 import TrendingProducts from "@/components/home/TrendingProducts";
 import PromoBanners from "@/components/home/PromoBanners";
@@ -18,12 +18,12 @@ import Footer from "@/components/home/Footer";
 export default function Home() {
   return (
     <div className="min-h-screen bg-slate-50">
-      <PromoBar />
-      <Header />
+      <AnnouncementBar />
+      <Navbar />
       <main>
-        <Hero />
+        <HeroSection />
         <TrustBar />
-        <FlashSale />
+        <FlashSaleSection />
         <ShopByCategory />
         <TrendingProducts />
         <PromoBanners />
