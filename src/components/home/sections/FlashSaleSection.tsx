@@ -23,7 +23,7 @@ const flashProducts = [
     reviews: '5821',
     stockLeft: 28,
     stockPercent: 28,
-    imageSrc: '/flashsaleimages/smartwatch.jpg',
+    imageSrc: '/products/smart-watch.png',
   },
   {
     name: 'Premium Laptop 15"',
@@ -45,7 +45,7 @@ const flashProducts = [
     reviews: '3892',
     stockLeft: 67,
     stockPercent: 67,
-    imageSrc: '/flashsaleimages/speaker.jpg',
+    imageSrc: '', // TODO: add a real Bluetooth Speaker image to /public
   },
   {
     name: 'Gaming Mouse RGB',
@@ -56,7 +56,7 @@ const flashProducts = [
     reviews: '4521',
     stockLeft: 89,
     stockPercent: 89,
-    imageSrc: '/flashsaleimages/mouse.jpg',
+    imageSrc: '', // TODO: add a real Gaming Mouse image to /public
   },
   {
     name: '4K Webcam Ultra',
@@ -67,7 +67,7 @@ const flashProducts = [
     reviews: '1876',
     stockLeft: 34,
     stockPercent: 34,
-    imageSrc: '/flashsaleimages/webcam.jpg',
+    imageSrc: '', // TODO: add a real 4K Webcam image to /public
   },
   {
     name: 'Wireless Keyboard',

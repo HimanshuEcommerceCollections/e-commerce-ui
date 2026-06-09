@@ -5,10 +5,8 @@ import type { UserRole } from "./common.types";
 export interface RegisterRequest {
   email: string;
   password: string;
-  firstName: string;
-  lastName: string;
-  displayName?: string;
-  role?: UserRole;
+  fullName: string;
+  phoneNumber: string;
 }
 
 export interface LoginRequest {
@@ -24,9 +22,8 @@ export interface AuthResponse {
   expiresIn: number;        // milliseconds, e.g. 86400000 = 24h
   userId: string;
   email: string;
-  firstName: string;
-  lastName: string;
-  displayName: string | null;
+  fullName: string;
+  phoneNumber: string | null; // null for legacy accounts created before phone was required
   role: UserRole;
   issuedAt: string;         // ISO-8601 UTC
 }

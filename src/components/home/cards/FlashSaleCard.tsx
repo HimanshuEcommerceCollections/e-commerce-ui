@@ -1,4 +1,6 @@
 import Image from 'next/image';
+import AddToCartButton from '@/components/shared/AddToCartButton';
+import SafeImage from '@/components/shared/SafeImage';
 
 interface FlashSaleCardProps {
   name: string;
@@ -21,7 +23,7 @@ export default function FlashSaleCard({
 
       {/* Image */}
       <div className="flash-card-image-wrap">
-        <Image src={imageSrc} alt={name} fill style={{ objectFit: 'cover' }} />
+        <SafeImage src={imageSrc} alt={name} fill style={{ objectFit: 'cover' }} />
         <span className="flash-card-discount-badge">{discount}</span>
         <button className="flash-card-wishlist-btn" aria-label="Add to wishlist">
           <Image src="/flashsale/wishlist.png" width={19} height={19} alt="wishlist" />
@@ -59,7 +61,7 @@ export default function FlashSaleCard({
           </div>
         </div>
 
-        <button className="flash-card-add-btn">Add to Cart</button>
+        <AddToCartButton />
 
       </div>
     </div>
