@@ -102,39 +102,47 @@
     height: 96px;
   }
 
-  .navbar-logo {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
+  /* ── BRAND LOGO (shared <Logo /> component) ── */
+  .logo {
+    @apply inline-flex flex-row items-center;
     gap: 9.61px;
   }
-
-  .navbar-logo-icon-box {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 48px;
-    height: 48px;
+  .logo-icon {
+    @apply flex items-center justify-center flex-shrink-0;
+    width: 40px;
+    height: 40px;
+    border-radius: 14px;
     background: #2563EB;
-    border-radius: 19px;
-    flex-shrink: 0;
+    color: #FFFFFF; /* icon color — the masked mark uses currentColor */
   }
-
-  .navbar-logo-icon-box svg {
-    width: 28.83px;
-    height: 28.83px;
+  /* ShopHub_Icon.svg masked so it recolors with currentColor for contrast */
+  .logo-mark {
+    width: 60%;
+    height: 60%;
+    background-color: currentColor;
+    -webkit-mask: url('/icons/ShopHub_Icon.svg') center / contain no-repeat;
+    mask: url('/icons/ShopHub_Icon.svg') center / contain no-repeat;
   }
-
-  .navbar-logo-text {
-    font-family: 'Inter', sans-serif;
-    font-style: normal;
-    font-weight: 700;
-    font-size: 28.83px;
-    line-height: 38px;
-    letter-spacing: -0.72px;
+  .logo-text {
+    @apply font-bold whitespace-nowrap;
+    font-size: 22px;
+    line-height: 1.2;
+    letter-spacing: -0.5px;
     color: #0F172A;
-    white-space: nowrap;
   }
+
+  /* tone: flip for contrast on dark surfaces */
+  .logo--on-dark .logo-icon { background: #FFFFFF; color: #2563EB; }
+  .logo--on-dark .logo-text { color: #FFFFFF; }
+
+  /* sizes */
+  .logo--sm { gap: 8px; }
+  .logo--sm .logo-icon { width: 32px; height: 32px; border-radius: 11px; }
+  .logo--sm .logo-text { font-size: 18px; letter-spacing: -0.4px; }
+
+  .logo--lg { gap: 9.61px; }
+  .logo--lg .logo-icon { width: 48px; height: 48px; border-radius: 19px; }
+  .logo--lg .logo-text { font-size: 28.83px; line-height: 38px; letter-spacing: -0.72px; }
 
   .navbar-search-wrapper {
     display: flex;
@@ -2031,4 +2039,141 @@
   .modal-footer-link:hover {
     color: var(--brand-soft);
   }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   AUTH SCREENS  (/login, /signup) — shared by both routes
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Card shell ── */
+  .auth-card {
+    @apply grid w-full grid-cols-1 overflow-hidden rounded-2xl bg-white shadow-2xl;
+    max-width: 1180px;
+  }
+  /* lg+: 55/45 split matching the 649:531 Figma container ratio (promo : form) */
+  @media (min-width: 1024px) {
+    .auth-card { grid-template-columns: 649fr 531fr; }
+  }
+  .auth-pane {
+    @apply flex flex-col justify-center rounded-3xl bg-white px-6 py-10 shadow-xl sm:px-12;
+  }
+  .auth-col        { @apply flex flex-col justify-center bg-slate-50 p-8; }
+  .auth-trust-wrap { @apply pt-6; }
+
+  /* ── Brand (form side) ── */
+  .auth-brand { @apply mb-6; }
+
+  /* ── Headings ── */
+  .auth-title    { @apply text-2xl font-bold text-slate-900; }
+  .auth-subtitle { @apply mt-1 text-sm text-slate-500; }
+
+  /* ── Form fields ── */
+  .auth-form  { @apply mt-6 space-y-4; }
+  .auth-label { @apply mb-1.5 block text-sm font-medium text-slate-700; }
+  .auth-input {
+    @apply w-full border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm text-slate-900 transition-colors placeholder:text-slate-400 focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20;
+    border-radius: 15px;
+  }
+  .auth-input[aria-invalid="true"] { @apply border-red-400; }
+  .auth-error { @apply mt-1 text-xs text-red-600; }
+
+  .auth-password-wrap { @apply relative; }
+  .auth-password-wrap .auth-input { @apply pr-10; }
+  .auth-password-toggle {
+    @apply absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 transition-colors hover:text-slate-600;
+  }
+
+  /* ── Inline rows (remember/forgot, terms) ── */
+  .auth-row            { @apply flex items-center justify-between text-sm; }
+  .auth-checkbox       { @apply h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500; }
+  .auth-checkbox-label { @apply flex items-center gap-2 text-slate-600; }
+  .auth-terms          { @apply flex items-start gap-2 text-xs text-slate-500; }
+  .auth-link           { @apply font-medium text-blue-600 hover:underline; }
+
+  /* ── Primary action ── */
+  .auth-submit {
+    @apply w-full bg-blue-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60;
+    border-radius: 15px;
+  }
+
+  /* ── Divider ── */
+  .auth-divider      { @apply my-5 flex items-center gap-3 text-xs text-slate-400; }
+  .auth-divider-line { @apply h-px flex-1 bg-slate-200; }
+
+  /* ── Social ── */
+  .auth-social     { @apply grid grid-cols-3 gap-3; }
+  .auth-social-btn { @apply flex items-center justify-center gap-2 border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50; border-radius: 9999px; }
+
+  .auth-footer { @apply mt-6 text-center text-sm text-slate-500; }
+
+  /* ── Trust badges (beneath form) ── */
+  .auth-trust       { @apply grid grid-cols-3 gap-2 text-center; }
+  .auth-trust-item  { @apply flex flex-col items-center gap-1; }
+  .auth-trust-icon  { @apply text-blue-600; }
+  .auth-trust-title { @apply text-xs font-semibold text-slate-700; }
+  .auth-trust-sub   { @apply text-[10px] text-slate-400; }
+
+  /* ── Promo panel ── */
+  .auth-promo          { @apply relative hidden flex-col justify-between overflow-hidden p-8 text-white lg:flex; }
+  /* Raw linear-gradient (not @apply bg-gradient-*) — avoids Tailwind's
+     shared --tw-gradient-* variable quirk that dropped the background-image. */
+  .auth-promo--login   { background-image: linear-gradient(to bottom right, #0D1B4B, #1A3A8F, #2874F0); }
+  .auth-promo--signup  { background-image: linear-gradient(to bottom right, #1E40AF, #1E3A8A, #0F172A); }
+
+  .auth-promo-header { @apply flex items-center gap-3; }
+  .auth-promo-pill   { @apply inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90; }
+  .auth-promo-dot    { @apply h-2 w-2 shrink-0 rounded-full; background: #22C55E; }
+
+  .auth-promo-body         { @apply my-8; }
+  .auth-promo-eyebrow      { @apply inline-flex items-center gap-1.5 rounded-full bg-amber-500/90 px-3 py-1 text-xs font-semibold; }
+  .auth-promo-eyebrow-text { @apply text-sm text-blue-200; }
+  .auth-promo-title        { @apply mt-4 text-4xl font-extrabold leading-tight; }
+  .auth-promo-title-lg     { @apply block text-5xl; }
+  .auth-promo-text         { @apply mt-3 text-sm text-blue-100; }
+
+  .auth-promo-features     { @apply mt-6 space-y-3; }
+  .auth-promo-feature      { @apply flex items-center gap-3 text-sm; }
+  .auth-promo-feature-icon { @apply flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500; }
+
+  .auth-promo-tags { @apply mt-6 flex flex-wrap gap-2; }
+  .auth-promo-tag  { @apply rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs; }
+
+  /* Floating product cards — staggered cluster pinned to the top-right */
+  .auth-promo-products {
+    @apply absolute z-20;
+    top: 60px;
+    right: 12px;
+    width: 335px;
+    height: 300px;
+  }
+  .auth-promo-card {
+    @apply absolute flex flex-col overflow-hidden backdrop-blur-md;
+    padding: 16px;
+    border-radius: 16px;
+    background: rgba(15, 23, 42, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+  }
+  /* Earbuds — front, fixed 180 × 263; image flexes to fill the card height */
+  .auth-promo-card--main { left: 0; top: 36px; width: 180px; height: 263px; z-index: 2; transform: rotate(-2deg); }
+  .auth-promo-card--main .auth-promo-card-img { flex: 1 1 auto; min-height: 0; }
+  /* Watch — behind/right, raised, content-sized */
+  .auth-promo-card--alt  { left: 178px; top: 10px; width: 150px; z-index: 1; transform: rotate(3deg); }
+  .auth-promo-card--alt .auth-promo-card-img { height: 110px; }
+
+  .auth-promo-card-img      { @apply relative overflow-hidden rounded-xl; margin-bottom: 16px; }
+  .auth-promo-card-badge    { @apply absolute left-2 top-2 z-10 rounded bg-red-600 px-2 py-0.5 text-[10px] font-bold; }
+  .auth-promo-card-name     { @apply truncate text-[13px] font-medium; }
+  .auth-promo-card-price    { @apply text-sm font-bold text-amber-300; margin-top: 2px; }
+  .auth-promo-card-original { @apply ml-1 text-[11px] font-normal text-white/50 line-through; }
+  .auth-promo-card-btn      { @apply w-full rounded-lg bg-blue-600 py-1.5 text-xs font-semibold transition-colors hover:bg-blue-500; margin-top: 16px; }
+
+  .auth-stats      { @apply mt-8 grid grid-cols-3 gap-3; }
+  .auth-stat       { @apply rounded-xl bg-white/10 p-4 text-center backdrop-blur-sm; }
+  .auth-stat-value { @apply text-2xl font-extrabold; }
+  .auth-stat-label { @apply mt-1 text-[11px] text-blue-100; }
+
+  .auth-promo-footer      { @apply flex items-center justify-between border-t border-white/15 pt-4 text-xs text-blue-100; }
+  .auth-promo-footer-item { @apply flex items-center gap-1.5; }
 }
