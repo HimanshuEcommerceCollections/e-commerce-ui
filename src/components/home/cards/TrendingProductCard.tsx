@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import SafeImage from '@/components/shared/SafeImage';
 
 interface TrendingProductCardProps {
   badge: string;
@@ -24,14 +25,7 @@ export default function TrendingProductCard({
   return (
     <div className="trend-card">
       <div className="trend-card-image-box">
-        {image && (
-          <Image
-            src={image}
-            alt={name}
-            fill
-            style={{ objectFit: 'cover' }}
-          />
-        )}
+        <SafeImage src={image} alt={name} fill style={{ objectFit: 'cover' }} />
         <div className="trend-card-badge">
           <span className="trend-card-badge-text">{badge}</span>
         </div>

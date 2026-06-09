@@ -1,15 +1,19 @@
+import Link from "next/link";
+
 /**
  * Canonical ShopHub logo — the icon from /public/icons/ShopHub_Icon.svg
  * (masked so it recolors for contrast) + the "ShopHub" wordmark.
- * Use this everywhere the brand appears so it stays consistent.
+ * Renders as a link to the homepage; use this everywhere the brand appears.
  *
  *  - `size`: sm (compact headers) · md (default) · lg (primary navbar)
  *  - `tone`: "light" on light surfaces (blue box, white icon, dark text);
  *            "dark" on dark surfaces (white box, blue icon, white text)
+ *  - `href`: link target (defaults to the homepage)
  */
 type LogoProps = {
   size?: "sm" | "md" | "lg";
   tone?: "light" | "dark";
+  href?: string;
   className?: string;
 };
 
@@ -21,16 +25,21 @@ const SIZE_CLASS: Record<NonNullable<LogoProps["size"]>, string> = {
   lg: "logo logo--lg",
 };
 
-export default function Logo({ size = "md", tone = "light", className = "" }: LogoProps) {
+export default function Logo({
+  size = "md",
+  tone = "light",
+  href = "/",
+  className = "",
+}: LogoProps) {
   const cls = [SIZE_CLASS[size], tone === "dark" ? "logo--on-dark" : "", className]
     .filter(Boolean)
     .join(" ");
   return (
-    <span className={cls}>
+    <Link href={href} className={cls} aria-label="ShopHub — go to homepage">
       <span className="logo-icon">
         <span className="logo-mark" />
       </span>
       <span className="logo-text">ShopHub</span>
-    </span>
+    </Link>
   );
 }

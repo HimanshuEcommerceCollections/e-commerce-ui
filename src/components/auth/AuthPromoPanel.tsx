@@ -10,6 +10,7 @@ import {
   Clock,
 } from "lucide-react";
 import Logo from "@/components/shared/Logo";
+import AddToCartButton from "@/components/shared/AddToCartButton";
 
 /* Static marketing content for the side panel of the auth screens.
    Shared shell (brand header + trust footer); the body differs per variant.
@@ -85,7 +86,7 @@ export default function AuthPromoPanel({ variant }: { variant: "login" | "signup
                 {p.price}
                 {p.original && <span className="auth-promo-card-original">{p.original}</span>}
               </p>
-              <button className="auth-promo-card-btn">Add to Cart</button>
+              <AddToCartButton size="sm" className="mt-4" />
             </div>
           ))}
         </div>

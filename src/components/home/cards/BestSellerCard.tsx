@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import SafeImage from '@/components/shared/SafeImage';
 
 interface BestSellerCardProps {
   rank: string;
@@ -26,14 +27,7 @@ export default function BestSellerCard({
       </div>
 
       <div className="bestseller-image-box">
-        {image && (
-          <Image
-            src={image}
-            alt={name}
-            fill
-            style={{ objectFit: 'cover' }}
-          />
-        )}
+        <SafeImage src={image} alt={name} fill style={{ objectFit: 'cover' }} />
       </div>
 
       <div className="bestseller-info">

@@ -1832,9 +1832,9 @@
     border-radius: 9999px;
   }
 
-  .flash-card-add-btn {
+  /* Canonical "Add to Cart" button — shared <AddToCartButton /> (blue pill) */
+  .add-to-cart-btn {
     width: 100%;
-    height: 43.25px;
     background: #2563EB;
     border-radius: 9999px;
     border: none;
@@ -1843,12 +1843,16 @@
     font-weight: 600;
     font-size: 16.82px;
     line-height: 24px;
-    text-align: center;
     color: #FFFFFF;
     display: flex;
     justify-content: center;
     align-items: center;
+    gap: 8px;
+    padding: 9.6px 16px;
+    transition: background-color 0.15s ease;
   }
+  .add-to-cart-btn:hover { background: #1D4ED8; }
+  .add-to-cart-btn--sm { padding: 6px 12px; font-size: 12px; line-height: 18px; }
 
   /* ── SHOP BY CATEGORY SECTION ── */
   .shop-cat-section {
@@ -2119,7 +2123,7 @@
   /* Raw linear-gradient (not @apply bg-gradient-*) — avoids Tailwind's
      shared --tw-gradient-* variable quirk that dropped the background-image. */
   .auth-promo--login   { background-image: linear-gradient(to bottom right, #0D1B4B, #1A3A8F, #2874F0); }
-  .auth-promo--signup  { background-image: linear-gradient(to bottom right, #1E40AF, #1E3A8A, #0F172A); }
+  .auth-promo--signup  { background-image: linear-gradient(to bottom right, #0D1B4B, #1A3A8F, #2874F0); }
 
   .auth-promo-header { @apply flex items-center gap-3; }
   .auth-promo-pill   { @apply inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90; }
@@ -2167,7 +2171,6 @@
   .auth-promo-card-name     { @apply truncate text-[13px] font-medium; }
   .auth-promo-card-price    { @apply text-sm font-bold text-amber-300; margin-top: 2px; }
   .auth-promo-card-original { @apply ml-1 text-[11px] font-normal text-white/50 line-through; }
-  .auth-promo-card-btn      { @apply w-full rounded-lg bg-blue-600 py-1.5 text-xs font-semibold transition-colors hover:bg-blue-500; margin-top: 16px; }
 
   .auth-stats      { @apply mt-8 grid grid-cols-3 gap-3; }
   .auth-stat       { @apply rounded-xl bg-white/10 p-4 text-center backdrop-blur-sm; }
