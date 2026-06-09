@@ -8,12 +8,12 @@ import TrendingProductsSection from "@/components/home/sections/TrendingProducts
 import PromoBannersSection from "@/components/home/sections/PromoBannersSection";
 import BestSellersSection from "@/components/home/sections/BestSellersSection";
 import ShopByRoomSection from "@/components/home/sections/ShopByRoomSection";
-import PopularBrands from "@/components/home/PopularBrands";
-import RecommendedForYou from "@/components/home/RecommendedForYou";
-import Testimonials from "@/components/home/Testimonials";
-import AppDownload from "@/components/home/AppDownload";
-import Newsletter from "@/components/home/Newsletter";
-import Footer from "@/components/home/Footer";
+import PopularBrandsSection from "@/components/home/sections/PopularBrandsSection";
+import RecommendedSection from "@/components/home/sections/RecommendedSection";
+import TestimonialsSection from "@/components/home/sections/TestimonialsSection";
+import DownloadAppSection from "@/components/home/sections/DownloadAppSection";
+import NewsletterSection from "@/components/home/sections/NewsletterSection";
+import Footer from "@/components/Footer";
 
 export default function Home() {
   return (
@@ -29,11 +29,11 @@ export default function Home() {
         <PromoBannersSection />
         <BestSellersSection />
         <ShopByRoomSection />
-        <PopularBrands />
-        <RecommendedForYou />
-        <Testimonials />
-        <AppDownload />
-        <Newsletter />
+        <PopularBrandsSection />
+        <RecommendedSection />
+        <TestimonialsSection />
+        <DownloadAppSection />
+        <NewsletterSection />
       </main>
       <Footer />
     </div>
