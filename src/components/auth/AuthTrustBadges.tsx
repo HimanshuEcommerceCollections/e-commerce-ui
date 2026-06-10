@@ -1,4 +1,4 @@
-import { Lock, ShieldCheck, BadgeCheck, Truck, RotateCcw } from "lucide-react";
+import { Lock, Truck, RotateCcw } from "lucide-react";
 
 const LOGIN_BADGES = [
   {

@@ -1,7 +1,5 @@
 import {
-  Sparkles,
   Truck,
-  RotateCcw,
   ShieldCheck,
   Lock,
   Star,
