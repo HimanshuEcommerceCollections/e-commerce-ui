@@ -415,224 +415,6 @@
     color: #FFFFFF;
   }
 
-  /* ── CATEGORY NAV ── */
-  /* height: 44px = h-11; gap between deals-btn and links matches Figma (16px) */
-  .cat-nav {
-    @apply w-full h-11 flex items-center px-20;
-    background-color: var(--color-navy-mid);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    gap: 16px;
-  }
-  /* deals-btn: 154 × 28, pill (r-14), icon 6px from left, 13px gap to text */
-  .cat-nav-deals-btn {
-    @apply flex items-center text-white font-semibold flex-shrink-0;
-    width: 154px;
-    height: 28px;
-    border-radius: 14px;
-    background-color: var(--color-blue-primary);
-    padding-left: 6px;
-    gap: 13px;
-    font-size: 12px;
-    line-height: 15px;
-  }
-  /* link group — inner gap ≈ average from Figma positions (~28px) */
-  .cat-nav-links {
-    @apply flex items-center;
-    gap: 28px;
-  }
-  /* standard link: rgba(255,255,255,0.78) — cn-t0…cn-t6 */
-  .cat-nav-link {
-    @apply cursor-pointer hover:text-white transition-colors whitespace-nowrap flex-shrink-0;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 16px;
-    color: rgba(255, 255, 255, 0.78);
-  }
-  /* dimmed link: rgba(255,255,255,0.5) — cn-t7 "More" */
-  .cat-nav-link-dim {
-    @apply cursor-pointer whitespace-nowrap flex-shrink-0;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 16px;
-    color: rgba(255, 255, 255, 0.5);
-  }
-
-  /* ── HERO SECTION ── */
-  .hero-section {
-    @apply w-full flex gap-4 px-20;
-    padding-top: 16px;
-    padding-bottom: 16px;
-    background-color: var(--color-page-bg);
-  }
-
-  /* 836 × 328 — all children are absolutely positioned inside this banner */
-  .hero-main-banner {
-    @apply relative overflow-hidden flex-shrink-0;
-    width: 836px;
-    height: 328px;
-    border-radius: 12px;
-    background: linear-gradient(90deg, #0F172A 0%, #162456 60%, #1E40AF 100%);
-    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.15);
-  }
-
-  /* mb-tag: left 40, top 32, Inter 600 11px, letter-spacing 1.5px */
-  .hero-tag {
-    @apply absolute uppercase;
-    left: 40px;
-    top: 32px;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 13px;
-    letter-spacing: 1.5px;
-    color: #2563EB;
-  }
-
-  /* mb-h: left 40, top 56, Inter 800 40px, letter-spacing -1.5px
-     No fixed width — the <br /> in JSX enforces the 2-line break.
-     Width: 255px from Figma was narrower than the rendered text, causing a 3rd line
-     that pushed the subtext and CTA buttons out of their Figma positions. */
-  .hero-headline {
-    @apply absolute text-white;
-    left: 40px;
-    top: 56px;
-    max-width: 420px;
-    font-size: 40px;
-    font-weight: 800;
-    line-height: 48px;
-    letter-spacing: -1.5px;
-  }
-
-  /* mb-s: left 40, top 160, Inter 400 14px/22px, rgba white 0.65 */
-  .hero-subtext {
-    position: absolute;
-    left: 40px;
-    top: 160px;
-    max-width: 380px;
-    font-size: 14px;
-    font-weight: 400;
-    line-height: 22px;
-    color: rgba(255, 255, 255, 0.65);
-  }
-
-  /* mb-cta: 164 × 44, left 40, top 214, pill r-22 */
-  .hero-cta-primary {
-    @apply absolute flex items-center justify-center text-white;
-    left: 40px;
-    top: 214px;
-    width: 164px;
-    height: 44px;
-    border-radius: 22px;
-    background-color: #2563EB;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
-    font-size: 15px;
-    font-weight: 600;
-    line-height: 18px;
-  }
-
-  /* mb-ex: 136 × 44, left 216, top 214, ghost pill */
-  .hero-cta-secondary {
-    @apply absolute flex items-center justify-center text-white;
-    left: 216px;
-    top: 214px;
-    width: 136px;
-    height: 44px;
-    border-radius: 22px;
-    background: rgba(255, 255, 255, 0.12);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    font-size: 14px;
-    font-weight: 500;
-    line-height: 17px;
-  }
-
-  /* img-hero: 348 × 292 at left 468, top 16 — contains img-hero.png */
-  .hero-product-img {
-    position: absolute;
-    left: 468px;
-    top: 16px;
-    width: 348px;
-    height: 292px;
-    border-radius: 10px;
-    overflow: hidden;
-  }
-
-  /* glass-deal: 348 × 80 at left 468, top 220 — floats over img-hero */
-  .hero-glass-deal {
-    position: absolute;
-    left: 468px;
-    top: 220px;
-    width: 348px;
-    height: 80px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.2);
-    backdrop-filter: blur(8px);
-  }
-
-  /* All children below are absolutely positioned within the 348 × 80 glass card */
-
-  /* gc-t: left 34, top 10 — title starts after bolt icon (left 12 + width 16 + gap 6) */
-  .hero-glass-title {
-    position: absolute;
-    left: 34px;
-    top: 10px;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 13px;
-    color: #F59E0B;
-  }
-
-  /* gc-n: left 12, top 26 */
-  .hero-glass-product {
-    position: absolute;
-    left: 12px;
-    top: 26px;
-    font-size: 13px;
-    font-weight: 600;
-    line-height: 16px;
-    color: #FFFFFF;
-  }
-
-  /* gc-p: left 12, top 48 */
-  .hero-glass-price {
-    position: absolute;
-    left: 12px;
-    top: 48px;
-    font-size: 18px;
-    font-weight: 700;
-    line-height: 22px;
-    color: #2563EB;
-  }
-
-  /* gc-o: left 58, top 52 */
-  .hero-glass-original {
-    position: absolute;
-    left: 58px;
-    top: 52px;
-    font-size: 13px;
-    font-weight: 400;
-    line-height: 16px;
-    text-decoration: line-through;
-    color: #DC2626;
-  }
-
-  /* gc-btn: 100 × 26 at left 230, top 46, pill r-13 */
-  .hero-glass-btn {
-    position: absolute;
-    left: 230px;
-    top: 46px;
-    width: 100px;
-    height: 26px;
-    border-radius: 13px;
-    background-color: #2563EB;
-    font-size: 11px;
-    font-weight: 600;
-    line-height: 13px;
-    color: #FFFFFF;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
   /* ── SIDE BANNER CARD ── */
   .side-banner-card {
     @apply relative w-full h-[100px] rounded-xl overflow-hidden;
@@ -806,91 +588,7 @@
     height: 296px;
   }
 
-  /* ── FLASH DEALS SECTION ── */
-  /* Section: white, px-20, top:22px padding matches fd-bolt position */
-  .flash-deals-section {
-    @apply w-full bg-white px-20;
-    padding-top: 22px;
-    padding-bottom: 14px;
-  }
-  /* Header row: bolt + title + countdown + view-all */
-  .fd-header {
-    @apply flex items-center;
-    height: 40px;
-  }
-  /* fd-h: Inter 700 20px #0F172A, letter-spacing -0.3px */
-  .fd-title {
-    font-size: 20px;
-    font-weight: 700;
-    line-height: 24px;
-    letter-spacing: -0.3px;
-    color: #0F172A;
-    margin-left: 10px;
-  }
-  /* Countdown group: 47px gap from title end to match left:268 */
-  .countdown-block {
-    display: flex;
-    align-items: center;
-    margin-left: 47px;
-    gap: 0;
-  }
-  /* tm-x: 58 × 32 navy block, r-8, position:relative for abs children */
-  .countdown-digit {
-    position: relative;
-    width: 58px;
-    height: 32px;
-    border-radius: 8px;
-    background-color: #0F172A;
-    flex-shrink: 0;
-  }
-  /* tmt-x: value text, left:18 top:7 within block */
-  .countdown-val {
-    position: absolute;
-    left: 18px; top: 7px;
-    font-size: 14px; font-weight: 700; line-height: 17px;
-    color: #FFFFFF;
-  }
-  /* tml-x: label text, left:12 top:18 within block */
-  .countdown-label {
-    position: absolute;
-    left: 12px; top: 18px;
-    font-size: 8px; font-weight: 400; line-height: 10px;
-    color: rgba(255, 255, 255, 0.52);
-  }
-  /* tmc-x: ":" separator between blocks */
-  .countdown-sep {
-    font-size: 16px; font-weight: 700; line-height: 19px;
-    color: rgba(37, 99, 235, 0.7);
-    margin: 0 4px;
-    align-self: center;
-  }
-  /* fd-va: "View all →", ml-auto, 13px 500 blue */
-  .fd-view-all {
-    margin-left: auto;
-    font-size: 13px; font-weight: 500; line-height: 16px;
-    color: #2563EB;
-    cursor: pointer;
-  }
-  /* fd-rule: 1px divider, margin matches top:62 - header bottom */
-  .fd-rule {
-    width: 100%;
-    height: 1px;
-    background: #E2E8F0;
-    margin-top: 18px;
-    margin-bottom: 16px;
-  }
-  /* 5-column cards grid: 243px × 5 + 16px gaps × 4 = 1279px ≈ inner 1280px */
-  .fd-grid {
-    display: grid;
-    grid-template-columns: repeat(5, 243px);
-    gap: 16px;
-  }
-
   /* ── CATEGORIES SECTION ── */
-  .categories-section {
-    @apply w-full px-20 py-5;
-    background-color: var(--color-page-bg);
-  }
   .category-card {
     @apply flex flex-col items-center bg-white rounded-xl cursor-pointer hover:shadow-md transition-shadow py-5;
     border: 0.5px solid var(--color-slate-border);
@@ -2690,67 +2388,6 @@
     padding-top: 4.81px;
   }
 
-  /* ── APP BANNER ── */
-  .app-banner {
-    @apply w-full h-[140px] flex items-center px-20;
-    background: linear-gradient(90deg, #0F172A 0%, #1E40AF 100%);
-  }
-  .app-phone-icon {
-    @apply w-9 flex items-center justify-center rounded-xl mr-4;
-    height: 68px;
-    background: rgba(255,255,255,0.12);
-  }
-  .app-banner-title {
-    @apply text-white text-[22px] font-bold tracking-tight;
-  }
-  .app-banner-sub {
-    @apply text-[14px] mt-1;
-    color: rgba(255,255,255,0.6);
-  }
-  .app-btn-primary {
-    @apply flex items-center justify-center px-5 h-9 bg-white rounded-lg text-[12px] font-semibold mr-3;
-    color: var(--color-navy);
-  }
-  .app-btn-secondary {
-    @apply flex items-center justify-center px-5 h-9 rounded-lg border text-white text-[12px] font-semibold;
-    background: rgba(255,255,255,0.12);
-    border-color: rgba(255,255,255,0.28);
-  }
-
-  /* ── FOOTER ── */
-  .footer-root {
-    @apply w-full px-20 pt-11 pb-8;
-    background-color: var(--color-navy);
-    border-top: 4px solid var(--color-blue-primary);
-  }
-  .footer-logo {
-    @apply text-white text-[22px] font-extrabold tracking-tight relative inline-block;
-  }
-  .footer-tagline {
-    @apply text-[13px] mt-2 mb-10;
-    color: rgba(255,255,255,0.45);
-  }
-  .footer-col-heading {
-    @apply text-white text-[13px] font-semibold mb-4;
-  }
-  .footer-col-link {
-    @apply block text-[12px] mb-3 cursor-pointer hover:text-white transition-colors;
-    color: rgba(255,255,255,0.42);
-  }
-  .footer-trust-item {
-    @apply flex items-center gap-2 h-[30px] px-2 rounded-lg;
-    background: rgba(255,255,255,0.07);
-    min-width: 200px;
-  }
-  .footer-divider {
-    @apply w-full h-px my-6;
-    background: rgba(255,255,255,0.1);
-  }
-  .footer-copy {
-    @apply text-[12px];
-    color: rgba(255,255,255,0.3);
-  }
-
   /* ── LEGACY AUTH MODAL — AuthModal component uses these classes ── */
   .modal-overlay {
     @apply fixed inset-0 z-[2000] flex items-center justify-center p-4;
@@ -2942,4 +2579,214 @@
 
   .auth-promo-footer      { @apply flex items-center justify-between border-t border-white/15 pt-4 text-xs text-blue-100; }
   .auth-promo-footer-item { @apply flex items-center gap-1.5; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOGIN PAGE  (/login) — lp-* namespace, full rewrite
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ── Root shell ── */
+  .lp-page { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; display: flex; flex-direction: row; overflow: hidden; }
+
+  /* ── LEFT PANEL ── */
+  .lp-left { width: 55%; height: 100vh; overflow: hidden; position: relative; }
+  .lp-left-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #0D1B4B 0%, #1A3A8F 50%, #2874F0 100%); z-index: 0; }
+  .lp-left-radial { position: absolute; inset: 0; background: radial-gradient(75.09% 67.02% at 50% 50%, rgba(255,159,0,0.15) 0%, rgba(0,0,0,0) 70%); z-index: 1; pointer-events: none; }
+
+  .lp-navbar { position: absolute; top: 0; left: 0; right: 0; height: 88px; display: flex; flex-direction: row; align-items: center; padding: 48px 56px 0; gap: 12px; z-index: 3; }
+  .lp-logo-white-circle { width: 40px; height: 40px; background: #FFFFFF; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .lp-brand { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; line-height: 33px; letter-spacing: -0.5px; color: #FFFFFF; }
+  .lp-trust-badge { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 4px 12px; background: rgba(255,255,255,0.15); border-radius: 9999px; margin-left: 16px; }
+  .lp-trust-dot { width: 8px; height: 8px; background: #388E3C; border-radius: 9999px; }
+  .lp-trust-text { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 11px; color: #FFFFFF; }
+
+  .lp-content { position: absolute; left: 56px; right: 56px; top: 88px; bottom: 56px; z-index: 2; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 56px; overflow: hidden; }
+
+  .lp-sale-badge { display: inline-flex; flex-direction: row; align-items: center; padding: 8px 16px; gap: 8px; background: rgba(255,159,0,0.2); border: 0.8px solid rgba(255,159,0,0.4); border-radius: 9999px; flex-shrink: 0; align-self: flex-start; }
+  .lp-sale-star { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; color: #FF9F00; }
+  .lp-sale-text { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 13px; color: #FF9F00; }
+
+  /* Headline block: fixed-height container; text and cards are all absolute inside */
+  .lp-headline { position: relative; isolation: isolate; margin-top: 16px; width: 100%; height: 173px; flex-shrink: 0; }
+  .lp-upto { position: absolute; top: 0px; left: 0; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 42px; line-height: 46px; color: #FFFFFF; opacity: 0.85; z-index: 5; }
+  .lp-percent { position: absolute; top: 54px; left: 0; font-family: 'Inter', sans-serif; font-weight: 800; font-size: 64px; line-height: 64px; letter-spacing: -2px; color: #FFFFFF; z-index: 6; }
+  .lp-everything { position: absolute; top: 127px; left: 0; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 42px; line-height: 46px; color: #FFFFFF; opacity: 0.85; z-index: 5; }
+
+  /* Product cards — absolute inside .lp-headline, text layers win at z-index 3-4 */
+  .lp-cards-wrap { position: absolute; right: 56px; top: 195px; width: 340px; height: 263px; z-index: 4; display: flex; flex-direction: row; align-items: flex-start; overflow: visible; }
+  .lp-card-slot-1 { width: 180px; height: 263px; position: relative; z-index: 2; flex-shrink: 0; overflow: visible; }
+  .lp-card-inner-1 { position: absolute; left: -6.75px; top: -4.53px; width: 180px; height: 263px; background: rgba(255,255,255,0.14); border: 0.8px solid rgba(255,255,255,0.22); border-radius: 16px; transform: rotate(-3deg); padding: 16px; display: flex; flex-direction: column; box-sizing: border-box; }
+  .lp-card-slot-2 { width: 160px; height: 263px; position: relative; z-index: 1; flex-shrink: 0; overflow: visible; }
+  .lp-card-inner-2 { position: absolute; left: -4.55px; top: -22.71px; width: 160px; height: 263px; background: rgba(255,255,255,0.14); opacity: 0.85; border: 0.8px solid rgba(255,255,255,0.22); border-radius: 16px; transform: rotate(2deg); padding: 16px; display: flex; flex-direction: column; box-sizing: border-box; }
+  .lp-product-img-1 { width: 146px; height: 120px; background: rgba(200,220,255,0.2); border-radius: 14px; flex-shrink: 0; overflow: hidden; position: relative; }
+  .lp-product-img-2 { width: 126px; height: 105px; background: rgba(200,220,255,0.2); border-radius: 14px; flex-shrink: 0; overflow: hidden; position: relative; }
+  .lp-discount-badge { width: 58px; height: 24px; background: #D32F2F; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin-top: 4px; flex-shrink: 0; }
+  .lp-discount-text { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; color: #FFFFFF; }
+  .lp-product-name-1 { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #FFFFFF; margin-top: 12px; }
+  .lp-product-name-2 { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; line-height: 16px; color: #FFFFFF; margin-top: 12px; }
+  .lp-price-row-1 { display: flex; align-items: center; gap: 8px; padding: 8px 0 12px; }
+  .lp-price-row-2 { display: flex; align-items: center; gap: 8px; padding: 8px 0 12px; }
+  .lp-price-current { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; color: #FF9F00; }
+  .lp-price-original { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 12px; color: #FFFFFF; opacity: 0.6; text-decoration: line-through; }
+  .lp-add-cart-1 { width: 146px; height: 32px; background: #2874F0; border-radius: 16px; border: none; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; color: #FFFFFF; cursor: pointer; flex-shrink: 0; }
+  .lp-add-cart-2 { width: 126px; height: 32px; background: #2874F0; border-radius: 16px; border: none; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; color: #FFFFFF; cursor: pointer; flex-shrink: 0; }
+
+  .lp-subtext { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 18px; line-height: 27px; color: rgba(255,255,255,0.7); margin-top: 20px; position: relative; z-index: 5; flex-shrink: 0; }
+
+  .lp-features { display: flex; flex-direction: column; margin-top: 32px; position: relative; z-index: 5; flex-shrink: 0; }
+  .lp-feature-row { display: flex; flex-direction: row; align-items: center; gap: 12px; padding-top: 12px; }
+  .lp-feature-row:first-child { padding-top: 0; }
+  .lp-feature-icon { width: 28px; height: 28px; background: #FF9F00; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .lp-feature-text { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 15px; line-height: 22px; color: #FFFFFF; }
+
+  .lp-pills-container { position: relative; width: 100%; height: 82px; margin-top: 40px; margin-bottom: 24px; z-index: 5; flex-shrink: 0; }
+  .lp-pill { position: absolute; height: 37px; background: rgba(255,255,255,0.12); border: 0.8px solid rgba(255,255,255,0.22); border-radius: 9999px; display: inline-flex; align-items: center; padding: 0 20px; white-space: nowrap; }
+  .lp-pill-text { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; color: #FFFFFF; white-space: nowrap; }
+
+  .lp-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 56px; background: rgba(0,0,0,0.2); z-index: 3; }
+  .lp-bottom-item { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 8px; top: 16px; opacity: 0.8; }
+  .lp-bottom-emoji { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 16px; color: #FFFFFF; }
+  .lp-bottom-label { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px; color: #FFFFFF; }
+
+  /* ── RIGHT PANEL ── */
+  .lp-right { width: 45%; height: 100vh; overflow: hidden; position: relative; background: radial-gradient(84.79% 61.91% at 50% 50%, rgba(40,116,240,0.04) 0.19%, rgba(0,0,0,0) 0.19%), #F5F7FA; }
+
+  /* Login form card — centered via translate trick */
+  .lp-card { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 320px; max-height: calc(100vh - 140px); overflow-y: auto; background: #FFFFFF; border-top: 1px solid #E8EDF5; box-shadow: 0px 6px 30px rgba(0,0,0,0.1), 0px 1.5px 6px rgba(0,0,0,0.05); border-radius: 18px; padding: 32px; display: flex; flex-direction: column; align-items: flex-start; box-sizing: border-box; }
+  .lp-card-logo-row { display: flex; flex-direction: row; align-items: center; gap: 9px; width: 100%; }
+  .lp-card-logo-icon { width: 27px; height: 27px; background: #2874F0; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .lp-card-brand { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 14px; letter-spacing: -0.23px; color: #212121; }
+  .lp-card-heading { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 21px; line-height: 32px; letter-spacing: -0.38px; color: #212121; margin-top: 21px; }
+  .lp-card-para { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 11px; line-height: 16px; color: #757575; margin-top: 6px; }
+
+  .lp-form { display: flex; flex-direction: column; align-items: flex-start; margin-top: 21px; width: 100%; }
+  .lp-field-label { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 10px; color: #424242; }
+  .lp-input-wrap { position: relative; width: 100%; height: 37px; margin-top: 4.5px; }
+  .lp-input { width: 100%; height: 37px; background: #FAFAFA; border: 0.61px solid #E0E0E0; border-radius: 15px; padding: 0 12px 0 34px; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 11px; color: rgba(17,24,39,0.8); outline: none; box-sizing: border-box; }
+  .lp-input::placeholder { color: rgba(17,24,39,0.5); }
+  .lp-input:focus { border-color: #2874F0; background: #FFFFFF; }
+  .lp-input[aria-invalid="true"] { border-color: #ef4444; }
+  .lp-input-padded-both { padding: 0 34px; }
+  .lp-icon-left { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; pointer-events: none; }
+  .lp-icon-right { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+  .lp-pw-field { margin-top: 15px; width: 100%; }
+
+  .lp-remember-row { display: flex; flex-direction: row; justify-content: space-between; align-items: center; width: 100%; margin-top: 12px; }
+  .lp-remember-label { display: flex; flex-direction: row; align-items: center; gap: 6px; cursor: pointer; }
+  .lp-checkbox { width: 12px; height: 12px; accent-color: #2874F0; }
+  .lp-remember-text { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 10px; color: #424242; }
+  .lp-forgot { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 10px; color: #2874F0; background: none; border: none; cursor: pointer; padding: 0; }
+
+  .lp-signin-btn { width: 100%; height: 43px; background: linear-gradient(90deg, #2874F0 0%, #1A65E0 100%); border-radius: 15px; border: none; font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; letter-spacing: 0.15px; color: #FFFFFF; cursor: pointer; margin-top: 18px; }
+  .lp-signin-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+
+  .lp-create-row { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 4px; width: 100%; margin-top: 18px; }
+  .lp-create-text { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 11px; color: #757575; }
+  .lp-create-link { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 11px; color: #2874F0; text-decoration: none; }
+
+  /* Bottom trust badges — centered absolutely at panel bottom */
+  .lp-right-badges { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; gap: 16px; justify-content: center; align-items: flex-start; }
+  .lp-badge-col { display: flex; flex-direction: column; align-items: center; }
+  .lp-badge-icon { width: 40px; height: 40px; background: #EBF3FF; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin-bottom: 6px; }
+  .lp-badge-bold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 10px; line-height: 15px; color: #424242; text-align: center; }
+  .lp-badge-sub { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 9px; line-height: 14px; color: #9E9E9E; text-align: center; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SIGNUP PAGE  (/signup) — signup-* namespace
+   ═══════════════════════════════════════════════════════════════ */
+@layer components {
+
+  .signup-page { width: 100%; min-height: 100vh; display: flex; flex-direction: row; background: #F5F7FA; }
+
+  /* ── LEFT PANEL (scrollable form) ── */
+  .signup-left { width: 45%; min-height: 100vh; background: radial-gradient(84.79% 61.91% at 50% 50%, rgba(40,116,240,0.04) 0.19%, rgba(0,0,0,0) 0.19%), #F5F7FA; position: relative; display: flex; flex-direction: column; align-items: center; padding-top: 21px; padding-bottom: 40px; }
+
+  .signup-form-card { display: flex; flex-direction: column; align-items: flex-start; padding: 40px 48px; background: #FFFFFF; box-shadow: 0px 8px 40px rgba(0,0,0,0.1); border-radius: 24px; width: calc(100% - 128px); max-width: 403px; box-sizing: border-box; }
+
+  .signup-logo-row { display: flex; flex-direction: row; align-items: center; gap: 12px; width: 100%; }
+  .signup-logo-icon { width: 36px; height: 36px; background: #2874F0; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .signup-brand-name { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 18px; line-height: 27px; color: #212121; }
+
+  .signup-heading { font-family: 'Inter', sans-serif; font-weight: 700; font-size: 26px; line-height: 39px; color: #212121; margin-top: 24px; width: 100%; }
+  .signup-subtext { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 21px; color: #757575; margin-top: 8px; width: 100%; }
+
+  .signup-form { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin-top: 24px; }
+
+  .signup-field-group { display: flex; flex-direction: column; align-items: flex-start; width: 100%; margin-top: 16px; }
+  .signup-field-group:first-child { margin-top: 0; }
+
+  .signup-field-label { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 13px; line-height: 20px; color: #424242; }
+
+  .signup-input-wrapper { position: relative; width: 100%; height: 48px; margin-top: 6px; }
+
+  .signup-input { position: absolute; width: 100%; height: 48px; left: 0; top: 0; background: #FAFAFA; border: 0.8px solid #E0E0E0; border-radius: 20px; font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; color: rgba(33,33,33,0.8); outline: none; box-sizing: border-box; padding: 0 16px 0 44px; }
+  .signup-input::placeholder { color: rgba(33,33,33,0.5); }
+  .signup-input:focus { border-color: #2874F0; background: #FFFFFF; }
+  .signup-input[aria-invalid="true"] { border-color: #ef4444; }
+
+  .signup-input-icon-left { position: absolute; width: 16px; height: 16px; left: 16px; top: 16px; z-index: 1; pointer-events: none; }
+  .signup-input-icon-right { position: absolute; width: 16px; height: 16px; right: 16px; top: 16px; cursor: pointer; background: none; border: none; padding: 0; z-index: 1; display: flex; align-items: center; justify-content: center; }
+
+  .signup-email-input { padding: 0 44px; }
+  .signup-password-input { padding: 0 44px; }
+  .signup-phone-input { padding: 0 16px 0 80px; }
+
+  .signup-phone-prefix { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); display: flex; flex-direction: row; align-items: center; gap: 6px; z-index: 1; }
+  .signup-phone-flag { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; color: #424242; }
+  .signup-phone-code { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 13px; color: #757575; }
+
+  .signup-terms-row { display: flex; flex-direction: row; align-items: flex-start; gap: 8px; width: 100%; margin-top: 24px; }
+  .signup-checkbox { width: 13px; height: 16px; margin-top: 2px; flex-shrink: 0; accent-color: #2874F0; }
+  .signup-terms-text { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 13px; line-height: 18px; color: #424242; }
+  .signup-terms-link { color: #2874F0; font-weight: 500; text-decoration: underline; }
+
+  .signup-create-btn { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 8px; width: 100%; height: 56px; background: linear-gradient(90deg, #2874F0 0%, #1A65E0 100%); border-radius: 20px; border: none; cursor: pointer; margin-top: 20px; }
+  .signup-create-btn:disabled { opacity: 0.7; cursor: not-allowed; }
+  .signup-create-btn-text { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 16px; line-height: 24px; text-align: center; color: #FFFFFF; }
+
+  .signup-signin-row { display: flex; flex-direction: row; justify-content: center; align-items: center; width: 100%; margin-top: 20px; gap: 4px; }
+  .signup-signin-text { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 14px; line-height: 21px; color: #757575; }
+  .signup-signin-link { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 14px; line-height: 21px; color: #2874F0; display: flex; align-items: center; gap: 4px; text-decoration: none; }
+
+  .signup-trust-badges-row { display: flex; flex-direction: row; justify-content: center; align-items: center; gap: 32px; width: calc(100% - 128px); max-width: 403px; padding-top: 24px; }
+  .signup-trust-badge-col { display: flex; flex-direction: column; align-items: center; }
+  .signup-trust-icon-circle { width: 40px; height: 40px; background: #EBF3FF; border-radius: 9999px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+  .signup-trust-emoji { font-size: 18px; line-height: 27px; }
+  .signup-trust-bold { font-family: 'Inter', sans-serif; font-weight: 600; font-size: 12px; line-height: 18px; text-align: center; color: #424242; }
+  .signup-trust-sub { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 11px; line-height: 16px; text-align: center; color: #9E9E9E; }
+
+  /* ── RIGHT PANEL (sticky) ── */
+  .signup-right { width: 55%; height: 100vh; position: sticky; top: 0; background: linear-gradient(135deg, #0D1B4B 0%, #1A3A8F 50%, #2874F0 100%); display: flex; flex-direction: column; align-items: flex-start; overflow: hidden; }
+
+  .signup-right-navbar { display: flex; flex-direction: row; align-items: center; padding: 48px 56px 0px; gap: 12px; width: 100%; height: 88px; flex-shrink: 0; }
+  .signup-right-logo-icon { width: 40px; height: 40px; background: #FFFFFF; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .signup-right-brand-name { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 22px; line-height: 33px; letter-spacing: -0.5px; color: #FFFFFF; }
+  .signup-right-trust-badge { display: flex; flex-direction: row; align-items: center; gap: 8px; padding: 4px 12px; background: rgba(255,255,255,0.15); border-radius: 9999px; margin-left: 16px; }
+  .signup-right-trust-dot { width: 8px; height: 8px; background: #388E3C; border-radius: 9999px; }
+  .signup-right-trust-text { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 11px; line-height: 16px; color: #FFFFFF; }
+
+  .signup-right-content { flex: 1; display: flex; align-items: flex-start; padding: 48px 56px 0; width: 100%; }
+  .signup-right-inner { display: flex; flex-direction: column; align-items: flex-start; width: 100%; max-width: 502px; }
+
+  .signup-new-here { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 18px; line-height: 27px; color: #FFFFFF; opacity: 0.8; }
+  .signup-join-heading { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 52px; line-height: 57px; letter-spacing: -1.5px; color: #FFFFFF; margin-top: 12px; }
+  .signup-join-subtext { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 18px; line-height: 27px; color: rgba(255,255,255,0.7); margin-top: 20px; }
+
+  .signup-right-features { display: flex; flex-direction: column; align-items: flex-start; margin-top: 40px; width: 100%; }
+  .signup-right-feature-row { display: flex; flex-direction: row; align-items: center; gap: 12px; padding-top: 16px; width: 100%; }
+  .signup-right-feature-row:first-child { padding-top: 0; }
+  .signup-right-feature-icon { width: 28px; height: 28px; background: #FF9F00; border-radius: 9999px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 14px; }
+  .signup-right-feature-text { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 15px; line-height: 22px; color: #FFFFFF; }
+
+  .signup-stats-row { position: absolute; display: flex; flex-direction: row; align-items: flex-start; gap: 16px; left: 56px; right: 56px; bottom: 100px; justify-content: center; }
+  .signup-stat-card { box-sizing: border-box; display: flex; flex-direction: column; align-items: flex-start; padding: 16px; min-width: 120px; height: 97.6px; background: rgba(255,255,255,0.14); border: 0.8px solid rgba(255,255,255,0.22); border-radius: 16px; }
+  .signup-stat-number { font-family: 'Inter', sans-serif; font-weight: 800; font-size: 28px; line-height: 42px; text-align: center; color: #FFFFFF; width: 100%; }
+  .signup-stat-label { font-family: 'Inter', sans-serif; font-weight: 400; font-size: 12px; line-height: 18px; text-align: center; color: rgba(255,255,255,0.8); width: 100%; margin-top: 4px; }
+
+  .signup-right-bottom-bar { width: 100%; height: 56px; background: rgba(0,0,0,0.2); flex-shrink: 0; position: relative; }
+  .signup-bottom-trust-item { position: absolute; display: flex; flex-direction: row; align-items: center; gap: 8px; top: 16px; opacity: 0.8; }
+  .signup-bottom-trust-emoji { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 16px; color: #FFFFFF; }
+  .signup-bottom-trust-label { font-family: 'Inter', sans-serif; font-weight: 500; font-size: 12px; line-height: 18px; color: #FFFFFF; }
 }
