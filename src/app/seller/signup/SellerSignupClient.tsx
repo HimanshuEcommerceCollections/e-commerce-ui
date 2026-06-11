@@ -3,6 +3,10 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { useAuth } from '@/hooks/useAuth';
+import { getApiErrorMessage } from '@/lib/apiError';
 
 type PasswordStrength = 0 | 1 | 2 | 3 | 4;
 
@@ -16,7 +20,27 @@ function getPasswordStrength(password: string): PasswordStrength {
   return score as PasswordStrength;
 }
 
+type FormErrors = Partial<Record<'name' | 'email' | 'phone' | 'password' | 'confirmPassword', string>>;
+
+function validate(formData: {
+  name: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+}): FormErrors {
+  const errors: FormErrors = {};
+  if (formData.name.trim().length < 2) errors.name = 'Enter your full name';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) errors.email = 'Enter a valid email address';
+  if (!/^\d{10}$/.test(formData.phone.replace(/[\s()-]/g, ''))) errors.phone = 'Enter a valid 10-digit phone number';
+  if (formData.password.length < 8) errors.password = 'Password must be at least 8 characters';
+  if (formData.confirmPassword !== formData.password) errors.confirmPassword = 'Passwords do not match';
+  return errors;
+}
+
 export default function SellerSignupClient() {
+  const router = useRouter();
+  const { register } = useAuth();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -25,6 +49,7 @@ export default function SellerSignupClient() {
     confirmPassword: '',
     agreed: false,
   });
+  const [errors, setErrors] = useState<FormErrors>({});
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -37,13 +62,32 @@ export default function SellerSignupClient() {
       ...prev,
       [name]: type === 'checkbox' ? checked : value,
     }));
+    setErrors(prev => ({ ...prev, [name]: undefined }));
   };
 
   const handleSubmit = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     if (!formData.agreed) return;
+    const validationErrors = validate(formData);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
     setIsLoading(true);
-    setTimeout(() => setIsLoading(false), 1500);
+    try {
+      await register({
+        fullName: formData.name.trim(),
+        email: formData.email.trim(),
+        phoneNumber: `+91${formData.phone.replace(/[\s()-]/g, '')}`,
+        password: formData.password,
+        role: 'ROLE_MERCHANT',
+      });
+      toast.success('Seller account created — welcome to ShopHub!');
+      router.push('/merchant');
+    } catch (err) {
+      toast.error(getApiErrorMessage(err, 'Sign up failed. Please try again.'));
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const strengthColors: string[] = [
@@ -190,6 +234,7 @@ export default function SellerSignupClient() {
                     autoComplete="name"
                   />
                 </div>
+                {errors.name && <p className="auth-error">{errors.name}</p>}
               </div>
 
               {/* Email Address */}
@@ -209,6 +254,7 @@ export default function SellerSignupClient() {
                     autoComplete="email"
                   />
                 </div>
+                {errors.email && <p className="auth-error">{errors.email}</p>}
               </div>
 
               {/* Phone Number */}
@@ -228,6 +274,7 @@ export default function SellerSignupClient() {
                     autoComplete="tel"
                   />
                 </div>
+                {errors.phone && <p className="auth-error">{errors.phone}</p>}
               </div>
 
               {/* Password */}
@@ -256,6 +303,7 @@ export default function SellerSignupClient() {
                     {showPassword ? <EyeIcon /> : <EyeOffIcon />}
                   </button>
                 </div>
+                {errors.password && <p className="auth-error">{errors.password}</p>}
                 {formData.password && (
                   <div className="seller-signup__password-strength">
                     {[1, 2, 3, 4].map(i => (
@@ -294,6 +342,7 @@ export default function SellerSignupClient() {
                     {showConfirm ? <EyeIcon /> : <EyeOffIcon />}
                   </button>
                 </div>
+                {errors.confirmPassword && <p className="auth-error">{errors.confirmPassword}</p>}
               </div>
 
             </div>
