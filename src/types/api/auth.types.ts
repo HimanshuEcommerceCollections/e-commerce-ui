@@ -7,6 +7,7 @@ export interface RegisterRequest {
   password: string;
   fullName: string;
   phoneNumber: string;
+  role?: UserRole; // omitted → backend defaults to ROLE_CUSTOMER
 }
 
 export interface LoginRequest {
