@@ -5,7 +5,10 @@ interface TrustItemProps {
 }
 
 export default function TrustItem({ icon, label, variant = "dark" }: TrustItemProps) {
-  const cls = variant === "footer" ? "footer-trust-item" : "trust-item";
+  const cls =
+    variant === "footer"
+      ? "footer-trust-item"
+      : "flex flex-col items-center gap-[12px] w-[180px]";
   const labelCls = variant === "footer" ? "text-[12px] font-medium" : "trust-item-label";
   const labelColor = variant === "footer" ? "rgba(255,255,255,0.65)" : undefined;
 

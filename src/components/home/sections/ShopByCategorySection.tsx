@@ -17,10 +17,10 @@ const categories = [
 
 export default function ShopByCategorySection() {
   return (
-    <section className="shop-cat-section">
-      <h2 className="shop-cat-title">Shop By Category</h2>
-      <div className="shop-cat-grid-wrapper">
-        <div className="shop-cat-grid">
+    <section className="w-full py-12 px-[48.06px] max-md:px-4 max-md:py-6">
+      <h2 className="[font-family:'Inter',sans-serif] not-italic font-bold text-[36.04px] leading-[43px] text-[#0F172A] max-md:text-[26px] max-md:leading-[32px]">Shop By Category</h2>
+      <div className="pt-[38.44px]">
+        <div className="grid grid-cols-6 gap-[28.83px] max-lg:grid-cols-3 max-md:gap-4 max-sm:grid-cols-2">
           {categories.map((cat) => (
             <CategoryCard
               key={cat.name}

@@ -75,40 +75,40 @@ export default function SellerProfileClient() {
   ];
 
   return (
-    <div className="seller-profile__page">
+    <div className="min-h-screen bg-[#F5F7FA] pb-[100px]">
 
       {/* ── Top navbar ── */}
-      <nav className="seller-profile__topbar">
-        <div className="seller-profile__topbar-logo">
-          <div className="seller-profile__topbar-logo-icon">
+      <nav className="fixed top-0 left-0 right-0 z-50 flex flex-row justify-between items-center px-12 h-16 bg-white border-b-[0.8px] border-[#E8EDF5]">
+        <div className="flex flex-row items-center gap-3">
+          <div className="flex justify-center items-center w-9 h-9 bg-[#2874F0] rounded-[18px] shrink-0">
             <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
               <path d="M2.5 3.5H4.5L7 14H16L18.5 6H7" stroke="#FFFFFF" strokeWidth="1.67" strokeLinecap="round" strokeLinejoin="round"/>
               <circle cx="8.5" cy="17" r="1.2" stroke="#FFFFFF" strokeWidth="1.67"/>
               <circle cx="14.5" cy="17" r="1.2" stroke="#FFFFFF" strokeWidth="1.67"/>
             </svg>
           </div>
-          <span className="seller-profile__topbar-logo-name">ShopHub</span>
-          <span className="seller-profile__topbar-badge">Seller Center</span>
+          <span className="[font-family:'Inter',sans-serif] font-bold text-[18px] leading-[27px] tracking-[-0.3px] text-[#212121]">ShopHub</span>
+          <span className="bg-[#FF9F00] rounded-[20px] px-[10px] py-[3px] [font-family:'Inter',sans-serif] font-semibold text-[12px] text-[#FFFFFF]">Seller Center</span>
         </div>
 
-        <span className="seller-profile__topbar-title">Complete Your Seller Profile</span>
+        <span className="absolute left-1/2 -translate-x-1/2 [font-family:'Inter',sans-serif] font-semibold text-[18px] leading-[27px] text-[#212121] whitespace-nowrap">Complete Your Seller Profile</span>
 
-        <div className="seller-profile__topbar-actions">
-          <span className="seller-profile__topbar-step">Step 2 of 4</span>
-          <button className="seller-profile__topbar-save-btn">Save &amp; Exit</button>
+        <div className="flex flex-row items-center gap-4">
+          <span className="[font-family:'Inter',sans-serif] font-normal text-[14px] leading-[21px] text-[#757575]">Step 2 of 4</span>
+          <button className="border-[0.8px] border-[#E0E0E0] rounded-[8px] px-4 py-[7px] [font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] bg-transparent cursor-pointer">Save &amp; Exit</button>
         </div>
       </nav>
 
       {/* ── Progress bar ── */}
-      <div className="seller-profile__progress-bar">
-        <div className="seller-profile__progress-fill" />
+      <div className="fixed top-16 left-0 right-0 z-50 h-1 bg-[#E0E0E0]">
+        <div className="w-1/2 h-1 bg-[linear-gradient(90deg,#FF9F00_0%,#F57C00_100%)]" />
       </div>
 
       {/* ── Scrollable content ── */}
-      <div className="seller-profile__content">
+      <div className="pt-[68px] flex flex-col items-center px-6">
 
         {/* Step indicator */}
-        <div className="seller-profile__steps">
+        <div className="flex flex-row items-start pt-8 gap-0 w-full max-w-[1100px]">
           {steps.map((step, i) => (
             <div
               key={i}
@@ -119,9 +119,9 @@ export default function SellerProfileClient() {
                 flex: i < steps.length - 1 ? 1 : undefined,
               }}
             >
-              <div className="seller-profile__step-item">
+              <div className="flex flex-col items-center gap-2">
                 <div
-                  className="seller-profile__step-circle"
+                  className="flex justify-center items-center w-9 h-9 rounded-[18px]"
                   style={{
                     background: step.done ? '#4CAF50' : step.active ? '#FF9F00' : '#E0E0E0',
                     color: step.done || step.active ? '#FFFFFF' : '#9E9E9E',
@@ -132,7 +132,7 @@ export default function SellerProfileClient() {
                     : <span style={{ fontFamily: 'Inter,sans-serif', fontWeight: 600, fontSize: 14 }}>{i + 1}</span>}
                 </div>
                 <span
-                  className="seller-profile__step-label"
+                  className="[font-family:'Inter',sans-serif] text-[13px] leading-[20px] text-center"
                   style={{
                     color: step.done ? '#4CAF50' : step.active ? '#FF9F00' : '#9E9E9E',
                     fontWeight: step.active ? 600 : 400,
@@ -143,9 +143,9 @@ export default function SellerProfileClient() {
                 </span>
               </div>
               {i < steps.length - 1 && (
-                <div className="seller-profile__step-connector">
+                <div className="flex flex-row items-center pb-7 flex-1">
                   <div
-                    className="seller-profile__step-line"
+                    className="min-w-[60px] flex-1 h-0.5"
                     style={{ background: step.done ? '#4CAF50' : '#E0E0E0' }}
                   />
                 </div>
@@ -155,36 +155,36 @@ export default function SellerProfileClient() {
         </div>
 
         {/* Success banner */}
-        <div className="seller-profile__success-banner">
+        <div className="flex flex-row items-center px-4 py-[6px] gap-[6px] bg-[#FFF8E1] border-[0.8px] border-[#FF9F00] rounded-[20px] mt-5 self-center w-fit">
           <span style={{ fontSize: 14 }}>🎉</span>
-          <span className="seller-profile__success-text">
+          <span className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#92400E]">
             Account created! Complete your profile to start selling
           </span>
         </div>
 
         {/* ── Form card ── */}
-        <div className="seller-profile__card">
+        <div className="flex flex-col items-start py-12 px-14 w-full max-w-[1400px] bg-white shadow-[0px_8px_32px_rgba(0,0,0,0.08)] rounded-[20px] mt-7">
 
-          <h1 className="seller-profile__card-title">Business Information</h1>
-          <p className="seller-profile__card-subtitle">
+          <h1 className="[font-family:'Inter',sans-serif] font-bold text-[22px] leading-[33px] text-[#212121]">Business Information</h1>
+          <p className="[font-family:'Inter',sans-serif] font-normal text-[14px] leading-[21px] text-[#757575] mt-[6px]">
             Provide your business details to set up your seller account. This information is used for verification.
           </p>
 
           {/* ── Section 1: Business Details ── */}
           <div style={{ width: '100%', marginTop: 36 }}>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span className="seller-profile__section-title">Business Details</span>
-              <span className="seller-profile__section-note">Required</span>
+              <span className="[font-family:'Inter',sans-serif] font-semibold text-[16px] leading-[24px] text-[#212121]">Business Details</span>
+              <span className="inline-flex items-center px-[10.8px] py-[2.8px] bg-[#FFF8E1] border-[0.8px] border-[#FF9F00] rounded-[20px] [font-family:'Inter',sans-serif] font-medium text-[12px] leading-[18px] text-[#92400E]">Required</span>
             </div>
-            <p className="seller-profile__section-hint">Enter your official business registration details.</p>
+            <p className="[font-family:'Inter',sans-serif] font-normal text-[13px] leading-[20px] text-[#9E9E9E] mt-[6px]">Enter your official business registration details.</p>
           </div>
 
           {/* Business Type */}
           <div style={{ width: '100%', marginTop: 20 }}>
-            <label className="seller-profile__label">Business Type</label>
-            <div className="seller-profile__input-wrap">
+            <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Business Type</label>
+            <div className="relative">
               <select
-                className="seller-profile__input seller-profile__input--icon-right"
+                className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                 name="businessType"
                 value={formData.businessType}
                 onChange={handleChange}
@@ -197,7 +197,7 @@ export default function SellerProfileClient() {
                 <option value="private_limited">Private Limited</option>
                 <option value="public_limited">Public Limited</option>
               </select>
-              <span className="seller-profile__input-icon-right">
+              <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none">
                 <ChevronDown size={16} />
               </span>
             </div>
@@ -206,31 +206,31 @@ export default function SellerProfileClient() {
           {/* Legal Name + Trade Name */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%', marginTop: 16 }}>
             <div>
-              <label className="seller-profile__label">Legal Business Name</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Legal Business Name</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="legalName"
                   placeholder="As per registration"
                   value={formData.legalName}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><Building2 size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><Building2 size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">Trade / Brand Name</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Trade / Brand Name</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="tradeName"
                   placeholder="Name customers see"
                   value={formData.tradeName}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><User size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><User size={16} /></span>
               </div>
             </div>
           </div>
@@ -238,31 +238,31 @@ export default function SellerProfileClient() {
           {/* Phone + Email */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%', marginTop: 16 }}>
             <div>
-              <label className="seller-profile__label">Business Phone</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Business Phone</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="tel"
                   name="businessPhone"
                   placeholder="+91 98765 43210"
                   value={formData.businessPhone}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><Phone size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><Phone size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">Business Email</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Business Email</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="email"
                   name="businessEmail"
                   placeholder="business@example.com"
                   value={formData.businessEmail}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><Mail size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><Mail size={16} /></span>
               </div>
             </div>
           </div>
@@ -270,66 +270,66 @@ export default function SellerProfileClient() {
           {/* Tax ID + Year Established */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%', marginTop: 16 }}>
             <div>
-              <label className="seller-profile__label">GST / Tax ID</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">GST / Tax ID</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="taxId"
                   placeholder="22AAAAA0000A1Z5"
                   value={formData.taxId}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><FileText size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><FileText size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">Year Established</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Year Established</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="yearEstablished"
                   placeholder="e.g. 2015"
                   value={formData.yearEstablished}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><Calendar size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><Calendar size={16} /></span>
               </div>
             </div>
           </div>
 
-          <div className="seller-profile__divider" />
+          <div className="w-full h-px bg-[#F0F0F0] mt-9" />
 
           {/* ── Section 2: Business Address ── */}
           <div style={{ width: '100%', marginTop: 36 }}>
-            <span className="seller-profile__section-title">Business Address</span>
-            <p className="seller-profile__section-hint" style={{ marginTop: 6 }}>
+            <span className="[font-family:'Inter',sans-serif] font-semibold text-[16px] leading-[24px] text-[#212121]">Business Address</span>
+            <p className="[font-family:'Inter',sans-serif] font-normal text-[13px] leading-[20px] text-[#9E9E9E] mt-[6px]" style={{ marginTop: 6 }}>
               Your registered business or pickup location.
             </p>
           </div>
 
           <div style={{ width: '100%', marginTop: 20 }}>
-            <label className="seller-profile__label">Street Address</label>
-            <div className="seller-profile__input-wrap">
+            <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Street Address</label>
+            <div className="relative">
               <input
-                className="seller-profile__input seller-profile__input--icon-right"
+                className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                 type="text"
                 name="address"
                 placeholder="Building, street, area"
                 value={formData.address}
                 onChange={handleChange}
               />
-              <span className="seller-profile__input-icon-right"><MapPin size={16} /></span>
+              <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><MapPin size={16} /></span>
             </div>
           </div>
 
           {/* City + State + ZIP */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, width: '100%', marginTop: 16 }}>
             <div>
-              <label className="seller-profile__label">City</label>
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">City</label>
               <input
-                className="seller-profile__input"
+                className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0]"
                 type="text"
                 name="city"
                 placeholder="Mumbai"
@@ -338,10 +338,10 @@ export default function SellerProfileClient() {
               />
             </div>
             <div>
-              <label className="seller-profile__label">State</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">State</label>
+              <div className="relative">
                 <select
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   name="state"
                   value={formData.state}
                   onChange={handleChange}
@@ -358,13 +358,13 @@ export default function SellerProfileClient() {
                   <option value="WB">West Bengal</option>
                   <option value="TS">Telangana</option>
                 </select>
-                <span className="seller-profile__input-icon-right"><ChevronDown size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><ChevronDown size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">PIN Code</label>
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">PIN Code</label>
               <input
-                className="seller-profile__input"
+                className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0]"
                 type="text"
                 name="zip"
                 placeholder="400001"
@@ -374,20 +374,20 @@ export default function SellerProfileClient() {
             </div>
           </div>
 
-          <div className="seller-profile__divider" />
+          <div className="w-full h-px bg-[#F0F0F0] mt-9" />
 
           {/* ── Section 3: Store Description & Branding ── */}
           <div style={{ width: '100%', marginTop: 36 }}>
-            <span className="seller-profile__section-title">Store Description &amp; Branding</span>
-            <p className="seller-profile__section-hint" style={{ marginTop: 6 }}>
+            <span className="[font-family:'Inter',sans-serif] font-semibold text-[16px] leading-[24px] text-[#212121]">Store Description &amp; Branding</span>
+            <p className="[font-family:'Inter',sans-serif] font-normal text-[13px] leading-[20px] text-[#9E9E9E] mt-[6px]" style={{ marginTop: 6 }}>
               Help buyers discover what makes your store unique.
             </p>
           </div>
 
           <div style={{ width: '100%', marginTop: 20 }}>
-            <label className="seller-profile__label">Store Description</label>
+            <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Store Description</label>
             <textarea
-              className="seller-profile__textarea"
+              className="w-full h-24 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 py-3 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none resize-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0]"
               name="description"
               placeholder="Tell buyers about your business, products, and what sets you apart…"
               value={formData.description}
@@ -396,71 +396,71 @@ export default function SellerProfileClient() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'row', gap: 16, width: '100%', marginTop: 16 }}>
-            <div className="seller-profile__upload-zone">
-              <div className="seller-profile__upload-icon">
+            <div className="flex flex-col items-center px-6 py-8 gap-2 bg-[#FAFAFA] border-[1.6px] border-dashed border-[#E0E0E0] rounded-xl cursor-pointer flex-1 transition-[border-color] duration-200 [transition-timing-function:ease] hover:border-[#FF9F00]">
+              <div className="flex justify-center items-center w-11 h-11 bg-[#FF9F00] rounded-[22px] text-[#FFFFFF] shrink-0">
                 <Upload size={20} />
               </div>
-              <span className="seller-profile__upload-label">Store Logo</span>
-              <span className="seller-profile__upload-sublabel">PNG, JPG up to 2MB · 200×200px</span>
+              <span className="[font-family:'Inter',sans-serif] font-semibold text-[13px] leading-[20px] text-[#212121] text-center">Store Logo</span>
+              <span className="[font-family:'Inter',sans-serif] font-normal text-[12px] leading-[18px] text-[#9E9E9E] text-center">PNG, JPG up to 2MB · 200×200px</span>
             </div>
-            <div className="seller-profile__upload-zone">
-              <div className="seller-profile__upload-icon">
+            <div className="flex flex-col items-center px-6 py-8 gap-2 bg-[#FAFAFA] border-[1.6px] border-dashed border-[#E0E0E0] rounded-xl cursor-pointer flex-1 transition-[border-color] duration-200 [transition-timing-function:ease] hover:border-[#FF9F00]">
+              <div className="flex justify-center items-center w-11 h-11 bg-[#FF9F00] rounded-[22px] text-[#FFFFFF] shrink-0">
                 <Upload size={20} />
               </div>
-              <span className="seller-profile__upload-label">Store Banner</span>
-              <span className="seller-profile__upload-sublabel">PNG, JPG up to 5MB · 1200×300px</span>
+              <span className="[font-family:'Inter',sans-serif] font-semibold text-[13px] leading-[20px] text-[#212121] text-center">Store Banner</span>
+              <span className="[font-family:'Inter',sans-serif] font-normal text-[12px] leading-[18px] text-[#9E9E9E] text-center">PNG, JPG up to 5MB · 1200×300px</span>
             </div>
           </div>
 
-          <div className="seller-profile__divider" />
+          <div className="w-full h-px bg-[#F0F0F0] mt-9" />
 
           {/* ── Section 4: Banking Information ── */}
           <div style={{ width: '100%', marginTop: 36 }}>
             <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-              <span className="seller-profile__section-title">Banking Information</span>
-              <span className="seller-profile__section-note">Required for payouts</span>
+              <span className="[font-family:'Inter',sans-serif] font-semibold text-[16px] leading-[24px] text-[#212121]">Banking Information</span>
+              <span className="inline-flex items-center px-[10.8px] py-[2.8px] bg-[#FFF8E1] border-[0.8px] border-[#FF9F00] rounded-[20px] [font-family:'Inter',sans-serif] font-medium text-[12px] leading-[18px] text-[#92400E]">Required for payouts</span>
             </div>
-            <p className="seller-profile__section-hint">Your payments will be deposited to this account.</p>
+            <p className="[font-family:'Inter',sans-serif] font-normal text-[13px] leading-[20px] text-[#9E9E9E] mt-[6px]">Your payments will be deposited to this account.</p>
           </div>
 
           {/* Account Holder + Bank Name */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%', marginTop: 20 }}>
             <div>
-              <label className="seller-profile__label">Account Holder Name</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Account Holder Name</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="accountHolderName"
                   placeholder="As per bank records"
                   value={formData.accountHolderName}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><User size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><User size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">Bank Name</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Bank Name</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="bankName"
                   placeholder="e.g. HDFC Bank"
                   value={formData.bankName}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><Building2 size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><Building2 size={16} /></span>
               </div>
             </div>
           </div>
 
           {/* Account Type */}
           <div style={{ width: '100%', marginTop: 16 }}>
-            <label className="seller-profile__label">Account Type</label>
-            <div className="seller-profile__input-wrap">
+            <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Account Type</label>
+            <div className="relative">
               <select
-                className="seller-profile__input seller-profile__input--icon-right"
+                className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                 name="accountType"
                 value={formData.accountType}
                 onChange={handleChange}
@@ -470,46 +470,46 @@ export default function SellerProfileClient() {
                 <option value="savings">Savings</option>
                 <option value="current">Current / Checking</option>
               </select>
-              <span className="seller-profile__input-icon-right"><ChevronDown size={16} /></span>
+              <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><ChevronDown size={16} /></span>
             </div>
           </div>
 
           {/* Account Number + IFSC */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, width: '100%', marginTop: 16 }}>
             <div>
-              <label className="seller-profile__label">Account Number</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">Account Number</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="accountNumber"
                   placeholder="Enter account number"
                   value={formData.accountNumber}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><CreditCard size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><CreditCard size={16} /></span>
               </div>
             </div>
             <div>
-              <label className="seller-profile__label">IFSC / Routing Code</label>
-              <div className="seller-profile__input-wrap">
+              <label className="[font-family:'Inter',sans-serif] font-medium text-[13px] leading-[20px] text-[#424242] mb-[6px] block">IFSC / Routing Code</label>
+              <div className="relative">
                 <input
-                  className="seller-profile__input seller-profile__input--icon-right"
+                  className="w-full h-12 bg-[#FAFAFA] border-[0.8px] border-[#E0E0E0] rounded-[10px] px-4 [font-family:'Inter',sans-serif] font-normal text-[14px] text-[#212121] outline-none appearance-none placeholder:text-[rgba(33,33,33,0.5)] focus:border-[#2874F0] pr-11"
                   type="text"
                   name="routingNumber"
                   placeholder="e.g. HDFC0001234"
                   value={formData.routingNumber}
                   onChange={handleChange}
                 />
-                <span className="seller-profile__input-icon-right"><FileText size={16} /></span>
+                <span className="absolute right-[14px] top-1/2 -translate-y-1/2 text-[#9E9E9E] pointer-events-none"><FileText size={16} /></span>
               </div>
             </div>
           </div>
 
           {/* Encryption notice */}
-          <div className="seller-profile__enc-notice" style={{ width: '100%', marginTop: 20 }}>
+          <div className="flex flex-row items-start px-4 py-3 gap-2 bg-[#F5F7FA] rounded-[10px]" style={{ width: '100%', marginTop: 20 }}>
             <Lock size={14} color="#9E9E9E" style={{ flexShrink: 0, marginTop: 2 }} />
-            <span className="seller-profile__enc-text">
+            <span className="[font-family:'Inter',sans-serif] font-normal text-[12px] leading-[19px] text-[#757575]">
               Your banking information is encrypted with 256-bit SSL and stored securely. ShopHub uses
               this only for processing seller payouts and never shares it with third parties.
             </span>
@@ -519,18 +519,18 @@ export default function SellerProfileClient() {
       </div>{/* end content */}
 
       {/* ── Bottom footer bar ── */}
-      <div className="seller-profile__bottombar">
-        <button className="seller-profile__back-btn">
+      <div className="fixed bottom-0 left-0 right-0 z-50 flex flex-row justify-between items-center px-12 h-[72px] bg-white border-t-[0.8px] border-[#E8EDF5]">
+        <button className="flex flex-row items-center gap-[6px] px-5 py-2.5 border-[0.8px] border-[#E0E0E0] rounded-[8px] bg-transparent cursor-pointer [font-family:'Inter',sans-serif] font-medium text-[14px] leading-[21px] text-[#424242]">
           <ChevronLeft size={16} />
           Back
         </button>
 
-        <div className="seller-profile__enc-footer">
+        <div className="flex flex-row items-center gap-[6px]">
           <Shield size={14} color="#9E9E9E" />
-          <span className="seller-profile__enc-footer-text">256-bit SSL encrypted</span>
+          <span className="[font-family:'Inter',sans-serif] font-normal text-[12px] leading-[18px] text-[#9E9E9E]">256-bit SSL encrypted</span>
         </div>
 
-        <button className="seller-profile__continue-btn">
+        <button className="flex flex-row items-center gap-2 px-7 h-12 bg-[linear-gradient(135deg,#FF9F00_0%,#F57C00_100%)] shadow-[0px_2px_8px_rgba(255,159,0,0.2)] rounded-[10px] border-none cursor-pointer [font-family:'Inter',sans-serif] font-semibold text-[16px] leading-[24px] text-[#FFFFFF] transition-opacity duration-200 [transition-timing-function:ease] hover:opacity-90">
           Save &amp; Continue
           <ChevronRight size={16} />
         </button>

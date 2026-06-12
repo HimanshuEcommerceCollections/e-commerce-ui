@@ -9,7 +9,7 @@ const categories = [
 
 export default function HeroRight() {
   return (
-    <div className="hero-right">
+    <div className="flex flex-1 flex-col gap-[28.83px] max-lg:grid max-lg:w-full max-lg:grid-cols-2 max-lg:gap-4 max-sm:grid-cols-1">
       {categories.map((cat) => (
         <HeroCategoryCard
           key={cat.label}

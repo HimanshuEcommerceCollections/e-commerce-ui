@@ -53,12 +53,12 @@ export default function AuthTrustBadges({ variant }: { variant: "login" | "signu
   }
 
   return (
-    <div className="auth-trust">
+    <div className="grid grid-cols-3 gap-2 text-center">
       {SIGNUP_BADGES.map(({ icon: Icon, title, subtitle }) => (
-        <div key={title} className="auth-trust-item">
-          <Icon size={18} className="auth-trust-icon" />
-          <span className="auth-trust-title">{title}</span>
-          <span className="auth-trust-sub">{subtitle}</span>
+        <div key={title} className="flex flex-col items-center gap-1">
+          <Icon size={18} className="text-blue-600" />
+          <span className="text-xs font-semibold text-slate-700">{title}</span>
+          <span className="text-[10px] text-slate-400">{subtitle}</span>
         </div>
       ))}
     </div>

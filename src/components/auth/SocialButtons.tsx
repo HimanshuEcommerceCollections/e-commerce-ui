@@ -47,13 +47,13 @@ const PROVIDERS = [
 
 export default function SocialButtons() {
   return (
-    <div className="auth-social">
+    <div className="grid grid-cols-3 gap-3">
       {PROVIDERS.map((p) => (
         <button
           key={p.name}
           type="button"
           onClick={() => toast.info(`${p.name} sign-in is coming soon`)}
-          className="auth-social-btn"
+          className="flex items-center justify-center gap-2 border border-slate-200 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50 rounded-[9999px]"
         >
           {p.icon}
           <span className="hidden sm:inline">{p.name}</span>

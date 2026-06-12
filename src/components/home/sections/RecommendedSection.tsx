@@ -61,11 +61,11 @@ const recommendedProducts = [
 
 export default function RecommendedSection() {
   return (
-    <section className="recom-section">
-      <div className="recom-container">
-        <h2 className="recom-heading">Recommended For You</h2>
-        <p className="recom-subtext">Based on your browsing history</p>
-        <div className="recom-grid">
+    <section className="flex w-full flex-col items-center bg-white p-12 max-md:px-4 max-md:py-6">
+      <div className="mx-auto flex w-full max-w-[1384px] flex-col items-start">
+        <h2 className="m-0 text-[36px] font-bold leading-[43px] text-[#0F172A] [font-family:'Inter',sans-serif] max-md:text-[26px] max-md:leading-[32px]">Recommended For You</h2>
+        <p className="mb-[38px] mt-[10px] text-[19px] font-normal leading-[29px] text-[#6B7280] [font-family:'Inter',sans-serif]">Based on your browsing history</p>
+        <div className="grid w-full grid-cols-4 gap-[29px] max-lg:grid-cols-2 max-md:gap-4 max-sm:grid-cols-1">
           {recommendedProducts.map((product, index) => (
             <RecommendedCard key={index} {...product} />
           ))}
