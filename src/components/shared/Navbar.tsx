@@ -53,7 +53,7 @@ export default function Navbar({
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search products, brands and more..."
-            className="navbar-search-input"
+            className="absolute w-full h-full left-0 top-0 bg-[#F8FAFC] border border-[#E5E7EB] rounded-full py-0 pl-[58px] pr-[19px] [font-family:'Inter',sans-serif] not-italic font-normal text-[19.22px] leading-[23px] text-[rgba(17,24,39,1)] outline-none box-border placeholder:text-[rgba(17,24,39,0.5)]"
           />
           <button className="navbar-search-btn">
             <Search size={16} strokeWidth={2.5} />
@@ -74,7 +74,7 @@ export default function Navbar({
               <ShoppingCart size={18} />
               <span>Cart</span>
               {cartCount > 0 && (
-                <span className="navbar-cart-badge">{cartCount}</span>
+                <span className="flex justify-center items-center absolute w-[24px] h-[24px] bg-[#F97316] rounded-full left-[9.61px] top-[-4.81px] z-[2]">{cartCount}</span>
               )}
             </button>
             <div className="navbar-divider" />

@@ -19,43 +19,43 @@ export default function FlashSaleCard({
   rating, reviews, stockLeft, stockPercent, imageSrc,
 }: FlashSaleCardProps) {
   return (
-    <div className="flash-card">
+    <div className="flex flex-col overflow-hidden rounded-[19.22px] border border-[#E5E7EB] bg-white shadow-[0px_4.81px_19.22px_rgba(0,0,0,0.06)]">
 
       {/* Image */}
-      <div className="flash-card-image-wrap">
+      <div className="relative isolate w-full h-[278.72px] shrink-0">
         <SafeImage src={imageSrc} alt={name} fill style={{ objectFit: 'cover' }} />
-        <span className="flash-card-discount-badge">{discount}</span>
-        <button className="flash-card-wishlist-btn" aria-label="Add to wishlist">
+        <span className="absolute top-[14.42px] right-[14.42px] z-[2] rounded-full bg-[#F97316] py-[4.57px] px-[14.42px] [font-family:'Inter',sans-serif] font-semibold text-[16.82px] leading-6 text-white">{discount}</span>
+        <button className="absolute top-[14.42px] left-[14.42px] z-[2] flex h-[38.44px] w-[38.44px] cursor-pointer items-center justify-center rounded-full border-none bg-white" aria-label="Add to wishlist">
           <Image src="/flashsale/wishlist.png" width={19} height={19} alt="wishlist" />
         </button>
       </div>
 
       {/* Body */}
-      <div className="flash-card-body">
+      <div className="flex flex-1 flex-col p-[19.22px]">
 
-        <span className="flash-card-name">{name}</span>
+        <span className="[font-family:'Inter',sans-serif] font-normal text-[16.82px] leading-6 text-[#111827]">{name}</span>
 
-        <div className="flash-card-price-row">
-          <span className="flash-card-price">{price}</span>
-          <span className="flash-card-original-price">{originalPrice}</span>
+        <div className="flex flex-row items-baseline gap-2 pt-[9.61px]">
+          <span className="[font-family:'Inter',sans-serif] font-bold text-[24.03px] leading-[34px] text-[#0F172A]">{price}</span>
+          <span className="[font-family:'Inter',sans-serif] font-normal text-[16.82px] leading-6 line-through text-[#6B7280]">{originalPrice}</span>
         </div>
 
-        <div className="flash-card-rating-row">
-          <div className="flash-card-star-group">
+        <div className="flex flex-row items-center gap-[9.61px] pt-[9.61px]">
+          <div className="flex flex-row items-center gap-[4.81px]">
             <Image src="/flashsale/star.png" width={19} height={19} alt="star" />
-            <span className="flash-card-rating-num">{rating}</span>
+            <span className="[font-family:'Inter',sans-serif] font-semibold text-[16.82px] leading-6 text-[#111827]">{rating}</span>
           </div>
-          <span className="flash-card-reviews">({reviews})</span>
+          <span className="[font-family:'Inter',sans-serif] font-normal text-[14.42px] leading-[19px] text-[#6B7280]">({reviews})</span>
         </div>
 
-        <div className="flash-card-stock-section">
-          <div className="flash-card-stock-row">
-            <span className="flash-card-stock-left">Only {stockLeft} left</span>
-            <span className="flash-card-stock-pct">{stockPercent}%</span>
+        <div className="py-[14.42px]">
+          <div className="flex flex-row items-center justify-between pb-[4.81px]">
+            <span className="[font-family:'Inter',sans-serif] font-normal text-[14.42px] leading-[19px] text-[#6B7280]">Only {stockLeft} left</span>
+            <span className="[font-family:'Inter',sans-serif] font-semibold text-[14.42px] leading-[19px] text-[#F97316]">{stockPercent}%</span>
           </div>
-          <div className="flash-card-progress-track">
+          <div className="w-full h-[9.61px] overflow-hidden rounded-full bg-[#F8FAFC]">
             <div
-              className="flash-card-progress-fill"
+              className="h-full rounded-full bg-[#F97316]"
               style={{ width: `${stockPercent}%` }}
             />
           </div>

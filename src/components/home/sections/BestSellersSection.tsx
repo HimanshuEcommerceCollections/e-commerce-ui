@@ -59,10 +59,10 @@ const bestSellers = [
 
 export default function BestSellersSection() {
   return (
-    <section className="bestsellers-section">
-      <div className="bestsellers-container">
-        <h2 className="bestsellers-heading">Best Sellers</h2>
-        <div className="bestsellers-grid">
+    <section className="flex w-full flex-col items-center bg-white py-12 max-md:py-6">
+      <div className="mx-auto flex w-full max-w-[1384px] flex-col items-start px-12 max-md:px-4">
+        <h2 className="mb-[38px] text-[36px] font-bold leading-[43px] text-[#0F172A] [font-family:'Inter',sans-serif] max-md:text-[26px] max-md:leading-[32px]">Best Sellers</h2>
+        <div className="grid w-full grid-cols-3 gap-[29px] max-lg:grid-cols-2 max-md:grid-cols-1">
           {bestSellers.map((item, index) => (
             <BestSellerCard key={index} {...item} />
           ))}

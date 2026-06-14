@@ -15,11 +15,11 @@ export default function SectionHeader({
 }: SectionHeaderProps) {
   return (
     <>
-      <div className="section-header">
-        <div className="section-header-left">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-3">
           {icon && (
             <div
-              className="section-icon-dot"
+              className="w-[22px] h-[22px] rounded-full"
               style={{
                 backgroundColor: iconBg ?? "#F59E0B",
                 display: "flex",
@@ -30,12 +30,12 @@ export default function SectionHeader({
               {icon}
             </div>
           )}
-          <h2 className="section-title">{title}</h2>
+          <h2 className="text-[20px] font-bold text-[var(--color-navy)] tracking-[-0.3px]">{title}</h2>
           {extra}
         </div>
-        <span className="section-view-all">{viewAllLabel}</span>
+        <span className="text-[13px] font-medium cursor-pointer hover:underline text-[var(--color-blue-primary)]">{viewAllLabel}</span>
       </div>
-      <div className="section-divider" />
+      <div className="w-full h-px mb-4 bg-[var(--color-slate-border)]" />
     </>
   );
 }

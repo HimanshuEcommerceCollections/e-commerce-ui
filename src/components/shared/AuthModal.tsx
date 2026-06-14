@@ -90,28 +90,28 @@ const AuthModal = ({
 
   return (
     <div
-      className="modal-overlay"
+      className="fixed inset-0 z-[2000] flex items-center justify-center p-4 bg-[rgba(0,0,0,0.7)] backdrop-blur-[8px]"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="modal-box">
+      <div className="w-full max-w-md relative rounded-2xl p-8 bg-[var(--bg-surface)] border border-[#222222]">
 
-        <button onClick={onClose} className="modal-close-btn">
+        <button onClick={onClose} className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center transition-all bg-[var(--bg-muted)] text-[var(--text-muted)] hover:bg-[var(--border-default)] hover:text-[var(--text-white)]">
           <X size={15} />
         </button>
 
         {/* ── SIGN UP ─────────────────────────────────────────── */}
         {mode === "signup" ? (
           <>
-            <h2 className="modal-title">Create your account</h2>
+            <h2 className="text-lg font-bold mt-3 mb-1 text-[var(--text-primary)]">Create your account</h2>
 
             <div className="space-y-4">
 
               {/* First + Last name — side by side, matches backend firstName / lastName */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="modal-label">First Name</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">First Name</label>
                   <input
-                    className="modal-input"
+                    className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                     name="firstName"
                     placeholder="John"
                     autoComplete="given-name"
@@ -120,9 +120,9 @@ const AuthModal = ({
                   />
                 </div>
                 <div>
-                  <label className="modal-label">Last Name</label>
+                  <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Last Name</label>
                   <input
-                    className="modal-input"
+                    className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                     name="lastName"
                     placeholder="Doe"
                     autoComplete="family-name"
@@ -134,9 +134,9 @@ const AuthModal = ({
 
               {/* Display Name — optional, backend displayName field */}
               <div>
-                <label className="modal-label">Display Name (optional)</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Display Name (optional)</label>
                 <input
-                  className="modal-input"
+                  className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                   name="displayName"
                   placeholder="How should we call you?"
                   autoComplete="nickname"
@@ -147,9 +147,9 @@ const AuthModal = ({
 
               {/* Email — matches backend email field (unique, max 255) */}
               <div>
-                <label className="modal-label">Email Address</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Email Address</label>
                 <input
-                  className="modal-input"
+                  className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                   name="email"
                   type="email"
                   placeholder="you@email.com"
@@ -161,9 +161,9 @@ const AuthModal = ({
 
               {/* Password — hashed on backend */}
               <div>
-                <label className="modal-label">Password</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Password</label>
                 <input
-                  className="modal-input"
+                  className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                   type="password"
                   name="password"
                   placeholder="Create a strong password"
@@ -175,7 +175,7 @@ const AuthModal = ({
 
               {/* Role toggle — Customer (left) / Merchant (right) */}
               <div>
-                <label className="modal-label">I am a</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">I am a</label>
                 <div
                   className="relative flex rounded-xl cursor-pointer select-none overflow-hidden"
                   style={{
@@ -216,9 +216,9 @@ const AuthModal = ({
               {loading ? "Creating account..." : "Sign Up"}
             </button>
 
-            <p className="modal-footer">
+            <p className="text-center text-sm mt-5 text-[var(--text-muted)]">
               Already have an account?{" "}
-              <span onClick={() => setMode("login")} className="modal-footer-link">
+              <span onClick={() => setMode("login")} className="font-semibold cursor-pointer transition-colors text-[var(--brand)] hover:text-[var(--brand-soft)]">
                 Login
               </span>
             </p>
@@ -228,17 +228,17 @@ const AuthModal = ({
 
         /* ── LOGIN ──────────────────────────────────────────── */
           <>
-            <h2 className="modal-title">Welcome back</h2>
+            <h2 className="text-lg font-bold mt-3 mb-1 text-[var(--text-primary)]">Welcome back</h2>
 
-            <p className="modal-subtitle">Login to continue shopping</p>
+            <p className="text-xs mb-6 text-[var(--text-muted)]">Login to continue shopping</p>
 
             <div className="space-y-4">
 
               {/* Email — backend authenticates only via email, no phone */}
               <div>
-                <label className="modal-label">Email Address</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Email Address</label>
                 <input
-                  className="modal-input"
+                  className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                   name="email"
                   type="email"
                   placeholder="you@email.com"
@@ -249,9 +249,9 @@ const AuthModal = ({
               </div>
 
               <div>
-                <label className="modal-label">Password</label>
+                <label className="block text-[11px] font-semibold uppercase tracking-wider mb-1.5 text-[var(--text-muted)]">Password</label>
                 <input
-                  className="modal-input"
+                  className="w-full text-sm px-4 py-3 rounded-xl outline-none transition-colors bg-[var(--bg-elevated)] border-[1.5px] border-[var(--border-default)] text-[var(--text-primary)] placeholder:text-[var(--text-faint)] focus:border-[var(--brand)]"
                   type="password"
                   name="password"
                   placeholder="Enter your password"
@@ -271,9 +271,9 @@ const AuthModal = ({
               {loading ? "Logging in..." : "Login"}
             </button>
 
-            <p className="modal-footer">
+            <p className="text-center text-sm mt-5 text-[var(--text-muted)]">
               Don&apos;t have an account?{" "}
-              <span onClick={() => setMode("signup")} className="modal-footer-link">
+              <span onClick={() => setMode("signup")} className="font-semibold cursor-pointer transition-colors text-[var(--brand)] hover:text-[var(--brand-soft)]">
                 Create one
               </span>
             </p>

@@ -16,8 +16,8 @@ export default function RecommendedCard({
   reviews,
 }: RecommendedCardProps) {
   return (
-    <div className="recom-card">
-      <div className="recom-card-image-box">
+    <div className="flex flex-col overflow-hidden rounded-[19px] border border-[#E5E7EB] bg-white shadow-[0px_5px_19px_rgba(0,0,0,0.06)]">
+      <div className="relative h-[298px] w-full shrink-0 bg-[#D1D5DB]">
         {image && (
           <Image
             src={image}
@@ -27,18 +27,18 @@ export default function RecommendedCard({
           />
         )}
       </div>
-      <div className="recom-card-body">
-        <p className="recom-card-name">{name}</p>
-        <p className="recom-card-price">{price}</p>
-        <div className="recom-card-rating-row">
+      <div className="flex flex-col items-start p-[19px]">
+        <p className="m-0 text-[17px] font-normal leading-6 text-[#111827] [font-family:'Inter',sans-serif]">{name}</p>
+        <p className="mt-[10px] text-[24px] font-bold leading-[34px] text-[#0F172A] [font-family:'Inter',sans-serif]">{price}</p>
+        <div className="mt-[10px] flex flex-row items-center gap-[5px]">
           <Image
             src="/flashsale/star.png"
             alt="Star"
             width={19}
             height={19}
           />
-          <span className="recom-card-rating-num">{rating}</span>
-          <span className="recom-card-review-count">{reviews}</span>
+          <span className="text-[17px] font-semibold leading-6 text-[#111827] [font-family:'Inter',sans-serif]">{rating}</span>
+          <span className="ml-[5px] text-[14px] font-normal leading-[19px] text-[#6B7280] [font-family:'Inter',sans-serif]">{reviews}</span>
         </div>
       </div>
     </div>

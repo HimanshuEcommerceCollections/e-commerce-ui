@@ -126,18 +126,18 @@ const trendingProducts = [
 
 export default function TrendingProductsSection() {
   return (
-    <section className="trending-section">
-      <div className="trending-container">
-        <div className="trending-header">
-          <div className="trending-header-left">
-            <div className="trending-header-icon">
+    <section className="flex w-full flex-col items-center bg-white py-12 max-md:py-6">
+      <div className="mx-auto flex w-full max-w-[1384px] flex-col items-start px-12 max-md:px-4">
+        <div className="mb-[38px] flex w-full flex-row items-center justify-between max-md:flex-col max-md:items-start max-md:gap-3">
+          <div className="flex flex-row items-center gap-[14px]">
+            <div className="relative flex h-[38px] w-[38px] shrink-0 items-center justify-center">
               <Image
                 src="/trending/trendingicons/increase.png"
                 alt="Trending icon"
                 width={38}
                 height={38}
               />
-              <div className="trending-header-icon-badge">
+              <div className="absolute right-0 top-[6px] flex h-[14px] w-[14px] items-center justify-center">
                 <Image
                   src="/trending/trendingicons/halfsquare.png"
                   alt=""
@@ -146,17 +146,17 @@ export default function TrendingProductsSection() {
                 />
               </div>
             </div>
-            <h2 className="trending-heading">Trending Products</h2>
+            <h2 className="m-0 text-[36px] font-bold leading-[38px] text-[#0F172A] [font-family:'Inter',sans-serif] max-md:text-[26px] max-md:leading-[32px]">Trending Products</h2>
           </div>
-          <div className="trending-view-all">
-            <span className="trending-view-all-text">View All</span>
-            <svg className="trending-view-all-chevron" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <div className="flex cursor-pointer flex-row items-center gap-[10px] no-underline">
+            <span className="text-[19px] font-medium leading-[29px] text-[#2563EB] [font-family:'Inter',sans-serif]">View All</span>
+            <svg className="shrink-0" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M9 18L15 12L9 6" stroke="#2563EB" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
           </div>
         </div>
 
-        <div className="trending-grid">
+        <div className="grid w-full grid-cols-4 gap-[29px] max-lg:grid-cols-2 max-md:gap-4 max-sm:grid-cols-1">
           {trendingProducts.map((product, index) => (
             <TrendingProductCard key={index} {...product} />
           ))}

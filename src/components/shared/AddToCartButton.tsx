@@ -2,15 +2,19 @@ import { cn } from "@/lib/utils";
 
 type AddToCartButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
   label?: string;
-  /** "md" = homepage flash-card size (default); "sm" = compact (small cards). */
+  /** "md" = homepage flash sale card size (default); "sm" = compact (small cards). */
   size?: "sm" | "md";
 };
 
-// Full literal class names — Tailwind tree-shakes @layer component classes by
-// scanning source for complete strings, so don't build them dynamically.
+/** Canonical ShopHub "Add to Cart" button (blue pill) — shared base styles. */
+const BASE_CLASS =
+  "flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-none bg-[#2563EB] [font-family:'Inter',sans-serif] font-semibold text-white transition-[background-color] duration-150 [transition-timing-function:ease] hover:bg-[#1D4ED8]";
+
+// Full literal class names — Tailwind scans source for complete strings,
+// so don't build them dynamically.
 const SIZE_CLASS: Record<NonNullable<AddToCartButtonProps["size"]>, string> = {
-  sm: "add-to-cart-btn add-to-cart-btn--sm",
-  md: "add-to-cart-btn",
+  sm: "py-[6px] px-3 text-[12px] leading-[18px]",
+  md: "py-[9.6px] px-4 text-[16.82px] leading-6",
 };
 
 /** Canonical ShopHub "Add to Cart" button (blue pill). Use everywhere. */
@@ -22,7 +26,7 @@ export default function AddToCartButton({
   ...props
 }: AddToCartButtonProps) {
   return (
-    <button type={type} className={cn(SIZE_CLASS[size], className)} {...props}>
+    <button type={type} className={cn(BASE_CLASS, SIZE_CLASS[size], className)} {...props}>
       {label}
     </button>
   );

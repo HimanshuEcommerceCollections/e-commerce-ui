@@ -95,30 +95,30 @@ const flashProducts = [
 
 export default function FlashSaleSection() {
   return (
-    <section className="flash-sale-section">
-      <div className="flash-sale-wrapper">
+    <section className="w-full py-12 px-[48.06px] max-md:px-4 max-md:py-6">
+      <div className="box-border w-full rounded-[28.83px] border border-[rgba(249,115,22,0.2)] bg-[linear-gradient(135deg,rgba(249,115,22,0.05)_0%,rgba(249,115,22,0.1)_50%,rgba(37,99,235,0.05)_100%)] p-[38.44px] max-md:p-5">
 
         {/* Header */}
-        <div className="flash-sale-header">
-          <div className="flash-sale-title-group">
+        <div className="flex w-full flex-row items-center justify-between max-md:flex-col max-md:items-start max-md:gap-4">
+          <div className="flex flex-row items-center gap-[19.22px]">
             <Image
               src="/flashsale/clock.png"
               width={38}
               height={38}
               alt="flash sale"
-              className="flash-sale-clock-icon"
+              className="w-[38.44px] h-[38.44px] shrink-0"
             />
             <div>
-              <div className="flash-sale-title">Flash Sale</div>
-              <div className="flash-sale-subtitle">Deals ending soon - Don&apos;t miss out!</div>
+              <div className="[font-family:'Inter',sans-serif] font-bold text-[36.04px] leading-[43px] text-[#0F172A] max-md:text-[26px] max-md:leading-[32px]">Flash Sale</div>
+              <div className="pt-[9.61px] [font-family:'Inter',sans-serif] font-normal text-[19.22px] leading-[29px] text-[#6B7280] max-md:text-[15px] max-md:leading-[22px]">Deals ending soon - Don&apos;t miss out!</div>
             </div>
           </div>
           <FlashCountdown />
         </div>
 
         {/* Product Grid */}
-        <div className="flash-sale-grid-wrapper">
-          <div className="flash-sale-grid">
+        <div className="pt-[38.44px]">
+          <div className="grid grid-cols-4 gap-[28.83px] max-lg:grid-cols-2 max-md:gap-4 max-sm:grid-cols-1">
             {flashProducts.map((product) => (
               <FlashSaleCard key={product.name} {...product} />
             ))}

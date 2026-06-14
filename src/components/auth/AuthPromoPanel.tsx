@@ -155,24 +155,24 @@ export default function AuthPromoPanel({ variant }: { variant: "login" | "signup
 
   /* ── SIGNUP VARIANT (unchanged) ── */
   return (
-    <div className="auth-promo auth-promo--signup">
-      <div className="auth-promo-header">
+    <div className="relative hidden flex-col justify-between overflow-hidden p-8 text-white lg:flex bg-[linear-gradient(to_bottom_right,#0D1B4B,#1A3A8F,#2874F0)]">
+      <div className="flex items-center gap-3">
         <Logo size="md" tone="dark" />
-        <span className="auth-promo-pill">
-          <span className="auth-promo-dot" />
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white/90">
+          <span className="h-2 w-2 shrink-0 rounded-full bg-[#22C55E]" />
           Trusted by 5M+ shoppers
         </span>
       </div>
 
-      <div className="auth-promo-body">
-        <span className="auth-promo-eyebrow-text">New here?</span>
-        <h2 className="auth-promo-title">Join ShopHub Today</h2>
-        <p className="auth-promo-text">Your one-stop shop for everything you love.</p>
+      <div className="my-8">
+        <span className="text-sm text-blue-200">New here?</span>
+        <h2 className="mt-4 text-4xl font-extrabold leading-tight">Join ShopHub Today</h2>
+        <p className="mt-3 text-sm text-blue-100">Your one-stop shop for everything you love.</p>
 
-        <ul className="auth-promo-features">
+        <ul className="mt-6 space-y-3">
           {SIGNUP_FEATURES.map(({ icon: Icon, label }) => (
-            <li key={label} className="auth-promo-feature">
-              <span className="auth-promo-feature-icon">
+            <li key={label} className="flex items-center gap-3 text-sm">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-amber-500">
                 <Icon size={13} />
               </span>
               {label}
@@ -180,19 +180,19 @@ export default function AuthPromoPanel({ variant }: { variant: "login" | "signup
           ))}
         </ul>
 
-        <div className="auth-stats">
+        <div className="mt-8 grid grid-cols-3 gap-3">
           {STATS.map((s) => (
-            <div key={s.label} className="auth-stat">
-              <p className="auth-stat-value">{s.value}</p>
-              <p className="auth-stat-label">{s.label}</p>
+            <div key={s.label} className="rounded-xl bg-white/10 p-4 text-center backdrop-blur-sm">
+              <p className="text-2xl font-extrabold">{s.value}</p>
+              <p className="mt-1 text-[11px] text-blue-100">{s.label}</p>
             </div>
           ))}
         </div>
       </div>
 
-      <div className="auth-promo-footer">
+      <div className="flex items-center justify-between border-t border-white/15 pt-4 text-xs text-blue-100">
         {FOOTER_SIGNUP.map(({ icon: Icon, label, starred }) => (
-          <span key={label} className="auth-promo-footer-item">
+          <span key={label} className="flex items-center gap-1.5">
             <Icon size={13} className={starred ? "fill-amber-300 text-amber-300" : ""} />
             {label}
           </span>
