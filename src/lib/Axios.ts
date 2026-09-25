@@ -23,7 +23,11 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     if (error.response?.status === 401) {
       localStorage.removeItem("accessToken");
-      window.location.replace("/login");
+      // Admin pages have their own sign-in page.
+      const inAdmin = window.location.pathname.startsWith("/admin");
+      if (window.location.pathname !== "/admin/login") {
+        window.location.replace(inAdmin ? "/admin/login" : "/login");
+      }
     }
     return Promise.reject(error);
   }
