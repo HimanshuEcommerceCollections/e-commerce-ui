@@ -60,21 +60,14 @@ export const useCart = () => {
     }
   };
 
-  // Optimistic remove — server confirms via CartResponse; fall back to re-fetch on error
+  // Remove, then re-read the cart: tax, shipping and totals are the server's to compute.
   const removeItem = async (productId: string) => {
     setLoading(true);
     setError(null);
     try {
       await cartService.removeItem(productId);
-      if (cart) {
-        const removed = cart.items.find((i) => i.productId === productId);
-        setCart({
-          ...cart,
-          items: cart.items.filter((i) => i.productId !== productId),
-          totalItems: cart.totalItems - (removed?.quantity ?? 0),
-          totalPrice: cart.totalPrice - (removed?.subtotal ?? 0),
-        });
-      }
+      const res = await cartService.getCart();
+      if (res.data.data) setCart(res.data.data);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Failed to remove item";
       setError((err as { response?: { data?: { message?: string } } }).response?.data?.message ?? message);

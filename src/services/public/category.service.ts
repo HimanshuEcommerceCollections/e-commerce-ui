@@ -1,10 +1,14 @@
 import api from "@/lib/Axios";
 import type { ApiResponse } from "@/types/api/common.types";
-import type { CategoryResponse } from "@/types/api/category.types";
+import type { CategoryResponse, CategoryTreeNode } from "@/types/api/category.types";
 
 const publicCategoryService = {
   getAll: () =>
     api.get<ApiResponse<CategoryResponse[]>>("/api/categories"),
+
+  /** Categories with their subcategories and live product counts (FR-ST-02). */
+  getTree: () =>
+    api.get<ApiResponse<CategoryTreeNode[]>>("/api/categories/tree"),
 
   getById: (id: string) =>
     api.get<ApiResponse<CategoryResponse>>(`/api/categories/${id}`),

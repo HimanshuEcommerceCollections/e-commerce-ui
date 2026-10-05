@@ -77,7 +77,7 @@ export const useOrder = () => {
     setError(null);
     try {
       const res = await orderService.checkout(request);
-      const order = res.data.data!;
+      const { order } = res.data.data!;
       prependOrder(order);
       setCurrentOrder(order);
       return order;
