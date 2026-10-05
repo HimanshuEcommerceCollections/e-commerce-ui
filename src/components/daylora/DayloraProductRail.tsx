@@ -15,7 +15,8 @@ interface DayloraProductRailProps {
   isDeal?: boolean;
   isBand?: boolean;
   dataNote?: string;
-  onAddToCart?: (p: ProductItem) => void;
+  onAddToCart?: (p: ProductItem) => void | Promise<boolean | void>;
+  loading?: boolean;
 }
 
 export function DayloraProductRail({
@@ -30,6 +31,7 @@ export function DayloraProductRail({
   isBand = false,
   dataNote,
   onAddToCart,
+  loading = false,
 }: DayloraProductRailProps) {
   const sectionClass = isBand ? "band deals" : "section";
 
@@ -47,6 +49,14 @@ export function DayloraProductRail({
           </Link>
         </div>
         <div className="rail">
+          {loading && Array.from({ length: 6 }, (_, i) => (
+            <div key={i} className="skel-card" aria-hidden="true">
+              <div className="skel" style={{ aspectRatio: "1", borderRadius: 12 }} />
+              <div className="skel" style={{ height: 12, width: "40%" }} />
+              <div className="skel" style={{ height: 16, width: "85%" }} />
+              <div className="skel" style={{ height: 20, width: "30%" }} />
+            </div>
+          ))}
           {products.map((p) => (
             <DayloraProductCard
               key={p.id}
