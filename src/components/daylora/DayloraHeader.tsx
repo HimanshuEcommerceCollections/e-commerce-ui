@@ -4,7 +4,16 @@ import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { DayloraIcon } from "./DayloraIcons";
-import { BRAND_NAME, CATEGORIES } from "./dayloraData";
+import { BRAND_NAME, CATEGORIES, type CategoryItem } from "./dayloraData";
+import { CLOTHING, clothingHref } from "./shop/taxonomy";
+
+/** Departments with a sections pane in the mega menu. Only Clothing has a taxonomy so far. */
+const hasPane = (c: CategoryItem) => c.shortName === "Clothing";
+
+const SHOP_BY = [
+  { t: "New arrivals", href: "/catalog?category=clothing&new=1" },
+  { t: "Deals", href: "/catalog?category=clothing&deals=1", deals: true },
+];
 
 interface DayloraHeaderProps {
   cartCount: number;
@@ -15,6 +24,9 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deptMenuOpen, setDeptMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  // Mega menu opens on Clothing, the department with sections (design default).
+  const [activeDept, setActiveDept] = useState<string | null>(CATEGORIES.find(hasPane)?.name ?? null);
+  const [drawerDeptOpen, setDrawerDeptOpen] = useState(false);
   const deptRef = useRef<HTMLLIElement>(null);
 
   // Close menus on Escape key
@@ -161,29 +173,67 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
                   All departments
                   <DayloraIcon name="chev" className="icon chev" />
                 </button>
-                <div className={`dept-menu ${deptMenuOpen ? "open" : ""}`} id="deptMenu">
-                  {CATEGORIES.map((c) => (
-                    <Link
-                      key={c.name}
-                      href={c.href}
-                      onClick={() => setDeptMenuOpen(false)}
-                    >
-                      <DayloraIcon name={c.icon} />
-                      {c.name}
-                    </Link>
-                  ))}
+                <div
+                  className={`dept-menu ${deptMenuOpen ? "open" : ""} ${
+                    CATEGORIES.some((c) => c.name === activeDept && hasPane(c)) ? "has-pane" : ""
+                  }`}
+                  id="deptMenu"
+                >
+                  <div className="dm-list">
+                    {CATEGORIES.map((c) => (
+                      <Link
+                        key={c.name}
+                        href={hasPane(c) ? clothingHref() : c.href}
+                        className={c.name === activeDept ? "active" : undefined}
+                        aria-haspopup={hasPane(c) ? "true" : undefined}
+                        onMouseEnter={() => setActiveDept(c.name)}
+                        onFocus={() => setActiveDept(c.name)}
+                        onClick={() => setDeptMenuOpen(false)}
+                      >
+                        <DayloraIcon name={c.icon} />
+                        {c.name}
+                        {hasPane(c) && <DayloraIcon name="chev" className="icon sub-chev" />}
+                      </Link>
+                    ))}
+                  </div>
+                  <div className="dm-pane" aria-label="Department sections">
+                    {CLOTHING.map((s) => (
+                      <div key={s.key} className="dm-col">
+                        <h4>{s.label}</h4>
+                        <Link href={clothingHref(s)} className="dm-all" onClick={() => setDeptMenuOpen(false)}>
+                          Shop all {s.label.toLowerCase()}
+                        </Link>
+                        {s.types.map((t) => (
+                          <Link key={t.name} href={clothingHref(s, t)} onClick={() => setDeptMenuOpen(false)}>
+                            {t.name}
+                          </Link>
+                        ))}
+                      </div>
+                    ))}
+                    <div className="dm-col">
+                      <h4>Shop by</h4>
+                      {SHOP_BY.map((i) => (
+                        <Link key={i.t} href={i.href} className={i.deals ? "dm-deals" : undefined} onClick={() => setDeptMenuOpen(false)}>
+                          {i.t}
+                        </Link>
+                      ))}
+                      <Link href={clothingHref()} className="dm-all" onClick={() => setDeptMenuOpen(false)}>
+                        All clothing
+                      </Link>
+                    </div>
+                  </div>
                 </div>
               </li>
               <li>
-                <a href="#deals" className="deals-link">
+                <Link href="/catalog?deals=1" className="deals-link">
                   Today&apos;s deals
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#new">New arrivals</a>
+                <Link href="/catalog?new=1">New arrivals</Link>
               </li>
               <li className="nav-sell">
-                <Link href="/seller/register">
+                <Link href="/seller/signup">
                   <DayloraIcon name="store" />
                   Sell on {BRAND_NAME}
                 </Link>
@@ -222,37 +272,66 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
         <div className="drawer-body">
           <h3 className="t-eyebrow">Shop by department</h3>
           <div id="drawerList">
-            <a
-              href="#deals"
+            <Link
+              href="/catalog?deals=1"
               className="deals-link"
               onClick={() => setDrawerOpen(false)}
             >
               <DayloraIcon name="tag" />
               Deals
-            </a>
-            {CATEGORIES.map((c) => (
-              <Link
-                key={c.name}
-                href={c.href}
-                onClick={() => setDrawerOpen(false)}
-              >
-                <DayloraIcon name={c.icon} />
-                {c.name}
-              </Link>
-            ))}
+            </Link>
+            {CATEGORIES.map((c) =>
+              hasPane(c) ? (
+                <React.Fragment key={c.name}>
+                  <button
+                    className="dr-sub"
+                    aria-expanded={drawerDeptOpen}
+                    aria-controls="drawer-clothing"
+                    onClick={() => setDrawerDeptOpen(!drawerDeptOpen)}
+                  >
+                    <DayloraIcon name={c.icon} />
+                    {c.name}
+                    <DayloraIcon name="chev" className="icon chev" />
+                  </button>
+                  <div className="dr-panel" id="drawer-clothing">
+                    <Link href={clothingHref()} className="dm-all" style={{ marginTop: 8 }} onClick={() => setDrawerOpen(false)}>
+                      Shop all clothing
+                    </Link>
+                    {CLOTHING.map((s) => (
+                      <React.Fragment key={s.key}>
+                        <h4>{s.label}</h4>
+                        <Link href={clothingHref(s)} className="dm-all" onClick={() => setDrawerOpen(false)}>
+                          Shop all {s.label.toLowerCase()}
+                        </Link>
+                        {s.types.map((t) => (
+                          <Link key={t.name} href={clothingHref(s, t)} onClick={() => setDrawerOpen(false)}>
+                            {t.name}
+                          </Link>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </div>
+                </React.Fragment>
+              ) : (
+                <Link key={c.name} href={c.href} onClick={() => setDrawerOpen(false)}>
+                  <DayloraIcon name={c.icon} />
+                  {c.name}
+                </Link>
+              ),
+            )}
           </div>
           <h3 className="t-eyebrow">Help</h3>
-          <Link href="/catalog" onClick={() => setDrawerOpen(false)}>
+          <Link href="/orders" onClick={() => setDrawerOpen(false)}>
             Orders &amp; tracking
           </Link>
-          <Link href="/catalog" onClick={() => setDrawerOpen(false)}>
+          <Link href="/help/shipping" onClick={() => setDrawerOpen(false)}>
             Shipping &amp; returns
           </Link>
-          <Link href="/catalog" onClick={() => setDrawerOpen(false)}>
+          <Link href="/help/contact" onClick={() => setDrawerOpen(false)}>
             Contact us
           </Link>
           <h3 className="t-eyebrow">Business</h3>
-          <Link href="/seller/register" onClick={() => setDrawerOpen(false)}>
+          <Link href="/seller/signup" onClick={() => setDrawerOpen(false)}>
             <DayloraIcon name="store" />
             Sell on {BRAND_NAME}
           </Link>

@@ -387,9 +387,9 @@ export default function SellerSignupClient() {
               />
               <label htmlFor="agreed" className="[font-family:'Inter',sans-serif] font-normal text-[13px] leading-[20px] text-[#424242]">
                 I agree to ShopHub&apos;s{' '}
-                <Link href="/seller/terms" className={checkboxLinkClass}>Seller Terms</Link>
+                <Link href="/terms" className={checkboxLinkClass}>Seller Terms</Link>
                 {' '}&amp;{' '}
-                <Link href="/seller/policies" className={checkboxLinkClass}>Marketplace Policies</Link>
+                <Link href="/terms#marketplace" className={checkboxLinkClass}>Marketplace Policies</Link>
               </label>
             </div>
 
@@ -405,7 +405,7 @@ export default function SellerSignupClient() {
             {/* Sign in link */}
             <p className="[font-family:'Inter',sans-serif] font-normal text-[14px] leading-[21px] text-[#757575] text-center w-[384px] mt-6 max-md:w-full">
               Already have an account?{' '}
-              <Link href="/seller/login" className="text-[#2874F0] font-semibold no-underline hover:underline">Sign In</Link>
+              <Link href="/login" className="text-[#2874F0] font-semibold no-underline hover:underline">Sign In</Link>
             </p>
 
           </div>

@@ -27,7 +27,7 @@ export function DayloraHero() {
           </div>
           <div className="bento">
             <Link
-              href="/catalog?category=electronics"
+              href="/catalog"
               className="tile tile-main"
               aria-label="Wireless Headphones Pro, $149.99"
             >
@@ -51,7 +51,7 @@ export function DayloraHero() {
               </span>
             </Link>
 
-            <a href="#deals" className="tile tile-promo tile-deals">
+            <Link href="/catalog?deals=1" className="tile tile-promo tile-deals">
               <DayloraIcon name="tag" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -66,9 +66,9 @@ export function DayloraHero() {
                   Shop deals <DayloraIcon name="arrow" />
                 </span>
               </span>
-            </a>
+            </Link>
 
-            <a href="#new" className="tile tile-promo tile-new">
+            <Link href="/catalog?new=1" className="tile tile-promo tile-new">
               <DayloraIcon name="spark" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
@@ -83,7 +83,7 @@ export function DayloraHero() {
                   Explore new <DayloraIcon name="arrow" />
                 </span>
               </span>
-            </a>
+            </Link>
           </div>
         </div>
       </div>

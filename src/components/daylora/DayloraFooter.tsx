@@ -49,19 +49,19 @@ export function DayloraFooter() {
             <h2>Help</h2>
             <ul>
               <li>
-                <Link href="/catalog">Track an order</Link>
+                <Link href="/orders">Track an order</Link>
               </li>
               <li>
-                <Link href="/catalog">Shipping</Link>
+                <Link href="/help/shipping">Shipping</Link>
               </li>
               <li>
-                <Link href="/catalog">Returns &amp; refunds</Link>
+                <Link href="/help/returns">Returns &amp; refunds</Link>
               </li>
               <li>
-                <Link href="/catalog">Contact us</Link>
+                <Link href="/help/contact">Contact us</Link>
               </li>
               <li>
-                <Link href="/catalog">FAQs</Link>
+                <Link href="/help/faqs">FAQs</Link>
               </li>
             </ul>
           </div>
@@ -85,16 +85,16 @@ export function DayloraFooter() {
             <h2>Company</h2>
             <ul>
               <li>
-                <Link href="/catalog">About us</Link>
+                <Link href="/about">About us</Link>
               </li>
               <li>
-                <Link href="/seller/register">Sell on {BRAND_NAME}</Link>
+                <Link href="/seller/signup">Sell on {BRAND_NAME}</Link>
               </li>
               <li>
-                <Link href="/catalog">Careers</Link>
+                <Link href="/about#careers">Careers</Link>
               </li>
               <li>
-                <Link href="/catalog">Press</Link>
+                <Link href="/about#press">Press</Link>
               </li>
             </ul>
           </div>

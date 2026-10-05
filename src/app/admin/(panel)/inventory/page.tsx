@@ -4,9 +4,10 @@ import adminService from "@/services/admin/admin.service";
 import publicCategoryService from "@/services/public/category.service";
 import { getApiErrorMessage } from "@/lib/apiError";
 import type { CategoryResponse } from "@/types/api/category.types";
-import type { AdminInventoryRow, InventoryStats } from "@/types/api/admin.types";
+import type { AdminInventoryRow, InventoryStats, StockMovement, StockMovementSource } from "@/types/api/admin.types";
+import BulkUpdateDialog from "@/components/admin/BulkUpdateDialog";
 import { refreshAdminCounts } from "@/components/admin/refresh";
-import { Icon, Pager, StockPill, rangeText, toast, useDebounced } from "@/components/admin/ui";
+import { Drawer, Icon, Pager, StockPill, dateTime, money, rangeText, toast, useDebounced } from "@/components/admin/ui";
 
 const SIZE = 15;
 const REASONS = ["Stock received", "Damaged / lost", "Count correction", "Return to stock"];
@@ -24,6 +25,8 @@ export default function AdminInventoryPage() {
   const [categories, setCategories] = useState<CategoryResponse[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [adjust, setAdjust] = useState<{ row: AdminInventoryRow; top: number; left: number } | null>(null);
+  const [history, setHistory] = useState<AdminInventoryRow | null>(null);
+  const [bulkOpen, setBulkOpen] = useState(false);
   const hostRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -78,7 +81,7 @@ export default function AdminInventoryPage() {
           <p>Stock by SKU. Stock deducts on confirmed orders and restores on cancellation.</p>
         </div>
         <div className="actions">
-          <button className="btn btn-secondary" disabled title="Bulk price and stock update (FR-IM-10) is the next importer step">
+          <button className="btn btn-secondary" onClick={() => setBulkOpen(true)}>
             <Icon name="upload" />
             Bulk update price &amp; stock
           </button>
@@ -89,7 +92,7 @@ export default function AdminInventoryPage() {
         <div className="stat"><span>Total SKUs</span><b>{stats ? stats.skus.toLocaleString() : "…"}</b></div>
         <div className="stat"><span>Units on hand</span><b>{stats ? stats.units.toLocaleString() : "…"}</b></div>
         <button className="stat" aria-pressed={lowOnly} onClick={() => setLowOnly((v) => !v)}>
-          <span><i style={{ background: "var(--warn)" }} />Low stock (≤ {stats?.lowStockThreshold ?? 5})</span>
+          <span><i style={{ background: "var(--warn)" }} />Low stock</span>
           <b>{stats ? stats.lowStock : "…"}</b>
         </button>
         <button className="stat" aria-pressed={lowOnly} onClick={() => setLowOnly((v) => !v)}>
@@ -124,6 +127,7 @@ export default function AdminInventoryPage() {
                 <th>Product</th>
                 <th>Variant</th>
                 <th>Category</th>
+                <th className="num">Price</th>
                 <th className="num">On hand</th>
                 <th className="num">Low at</th>
                 <th>Status</th>
@@ -132,11 +136,11 @@ export default function AdminInventoryPage() {
             </thead>
             <tbody>
               {rows === null ? (
-                <tr className="loading-row"><td colSpan={8}>Loading inventory…</td></tr>
+                <tr className="loading-row"><td colSpan={9}>Loading inventory…</td></tr>
               ) : error ? (
-                <tr className="empty-row"><td colSpan={8}><span className="err-text">{error}</span></td></tr>
+                <tr className="empty-row"><td colSpan={9}><span className="err-text">{error}</span></td></tr>
               ) : rows.length === 0 ? (
-                <tr className="empty-row"><td colSpan={8}>No SKUs match.</td></tr>
+                <tr className="empty-row"><td colSpan={9}>No SKUs match.</td></tr>
               ) : (
                 rows.map((s) => (
                   <tr key={s.id}>
@@ -144,15 +148,31 @@ export default function AdminInventoryPage() {
                     <td style={{ whiteSpace: "normal", minWidth: 180 }}>{s.productName}</td>
                     <td>{s.variantName ?? <span className="sub">—</span>}</td>
                     <td className="sub">{s.categoryName ?? "—"}</td>
+                    <td className="num">
+                      {money(s.price)}
+                      <div className="sub">
+                        {s.mrp ? `MRP ${money(s.mrp)}` : ""}
+                        {s.mrp && s.taxRate ? " · " : ""}
+                        {s.taxRate ? `tax ${s.taxRate}%` : ""}
+                      </div>
+                    </td>
                     <td className={`num ${s.stockStatus === "OUT_OF_STOCK" ? "qty-out" : s.stockStatus === "LOW_STOCK" ? "qty-low" : ""}`}>
                       {s.stockQuantity}
                     </td>
-                    <td className="num sub">{s.lowStockThreshold}</td>
+                    <td className="num sub">
+                      {s.lowStockThreshold}
+                      {s.ownLowStockThreshold === null ? <div>default</div> : null}
+                    </td>
                     <td><StockPill status={s.stockStatus} /></td>
                     <td className="num">
-                      <button className="btn btn-secondary btn-sm" onClick={(e) => openAdjust(s, e.currentTarget)}>
-                        Adjust
-                      </button>
+                      <span className="actrow">
+                        <button className="btn btn-secondary btn-sm" onClick={() => setHistory(s)} aria-label={`Stock history of ${s.sku}`} title="Stock history">
+                          <Icon name="clock" size={16} />
+                        </button>
+                        <button className="btn btn-secondary btn-sm" onClick={(e) => openAdjust(s, e.currentTarget)}>
+                          Adjust
+                        </button>
+                      </span>
                     </td>
                   </tr>
                 ))
@@ -180,7 +200,96 @@ export default function AdminInventoryPage() {
           }}
         />
       ) : null}
+
+      <StockHistory row={history} onClose={() => setHistory(null)} />
+      <BulkUpdateDialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onUpdated={() => {
+          load();
+          refreshAdminCounts();
+        }}
+      />
     </section>
+  );
+}
+
+const SOURCE: Record<StockMovementSource, string> = {
+  ADJUSTMENT: "Adjustment",
+  BULK_UPDATE: "Bulk update",
+  IMPORT: "Import",
+  RETURN: "Return",
+};
+const HISTORY_SIZE = 20;
+
+/** Every stock change outside checkout, newest first (FR-AD-03). */
+function StockHistory({ row, onClose }: { row: AdminInventoryRow | null; onClose: () => void }) {
+  const [page, setPage] = useState(0);
+  const [items, setItems] = useState<StockMovement[] | null>(null);
+  const [total, setTotal] = useState(0);
+  const [pages, setPages] = useState(0);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => setPage(0), [row]);
+
+  useEffect(() => {
+    setItems(null);
+    setError(null);
+    if (!row) return;
+    adminService
+      .stockMovements(row.id, { page, size: HISTORY_SIZE })
+      .then((r) => {
+        const d = r.data.data!;
+        setItems(d.content);
+        setTotal(d.totalElements);
+        setPages(d.totalPages);
+      })
+      .catch((err) => setError(getApiErrorMessage(err, "Couldn't load the stock history")));
+  }, [row, page]);
+
+  return (
+    <Drawer
+      open={!!row}
+      onClose={onClose}
+      title="Stock history"
+      sub={row ? <><code>{row.sku}</code> · {row.stockQuantity} on hand</> : null}
+      foot={<button className="btn btn-secondary" onClick={onClose}>Close</button>}
+    >
+      {error ? (
+        <p className="err-text">{error}</p>
+      ) : !items ? (
+        <p className="sub">Loading…</p>
+      ) : items.length === 0 ? (
+        <p className="sub">No stock changes recorded yet. Orders deduct stock on payment and aren&apos;t listed here.</p>
+      ) : (
+        <>
+          <div className="items">
+            {items.map((m) => {
+              const d = dateTime(m.createdAt);
+              return (
+                <div className="item" key={m.id}>
+                  <div>
+                    <strong>{m.reason || SOURCE[m.source] || m.source}</strong>
+                    <span className="sub">
+                      {SOURCE[m.source] ?? m.source} · {d.date}, {d.time}
+                      {m.actor ? ` · ${m.actor}` : ""}
+                    </span>
+                  </div>
+                  <span style={{ textAlign: "right" }}>
+                    <b className={m.delta < 0 ? "qty-low" : "qty-up"}>{m.delta > 0 ? `+${m.delta}` : m.delta}</b>
+                    <div className="sub">→ {m.quantityAfter}</div>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+          <div className="tfoot" style={{ padding: 0 }}>
+            <span>{rangeText(page, HISTORY_SIZE, items.length, total, "changes")}</span>
+            <Pager page={page} pages={pages} onPage={setPage} />
+          </div>
+        </>
+      )}
+    </Drawer>
   );
 }
 

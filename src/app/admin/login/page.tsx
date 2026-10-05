@@ -4,12 +4,12 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { Icon } from "@/components/admin/ui";
-import { useAdminSession } from "@/components/admin/useAdminSession";
+import { PANEL_ROLES, useAdminSession } from "@/components/admin/useAdminSession";
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { login, logout } = useAuth();
-  const { ready, isAdmin } = useAdminSession();
+  const { ready, isStaff } = useAdminSession();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
@@ -17,8 +17,8 @@ export default function AdminLoginPage() {
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (ready && isAdmin) router.replace("/admin/products");
-  }, [ready, isAdmin, router]);
+    if (ready && isStaff) router.replace("/admin/products");
+  }, [ready, isStaff, router]);
 
   const submit = async (e: FormEvent) => {
     e.preventDefault();
@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
     setBusy(true);
     try {
       const auth = await login({ email: email.trim(), password });
-      if (auth.role !== "ROLE_ADMIN") {
+      if (!PANEL_ROLES.includes(auth.role)) {
         // A valid customer or merchant account: don't keep it signed in here.
         logout();
         setError("This account doesn't have admin access.");
@@ -97,7 +97,7 @@ export default function AdminLoginPage() {
             {busy ? "Signing in…" : "Sign in"}
           </button>
         </form>
-        <p className="login-foot">Admin access only. Customers sign in on the storefront.</p>
+        <p className="login-foot">Admin and catalog staff only. Customers sign in on the storefront.</p>
       </main>
     </div>
   );

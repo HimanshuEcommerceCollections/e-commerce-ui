@@ -23,6 +23,14 @@ const PATHS: Record<string, ReactNode> = {
   ext: <path d="M14 4h6v6M20 4l-9 9M18 14v6H4V6h6" />,
   logout: <path d="M15 4h4v16h-4M10 8l-4 4 4 4M6 12h10" />,
   lock: (<><rect x="5" y="11" width="14" height="10" rx="2" /><path d="M8 11V8a4 4 0 018 0v3" /></>),
+  truck: (<><path d="M2 6h12v10H2zM14 10h4l3 3v3h-7" /><circle cx="6" cy="18" r="2" /><circle cx="17" cy="18" r="2" /></>),
+  undo: (<><path d="M9 14L4 9l5-5" /><path d="M4 9h10a6 6 0 010 12h-3" /></>),
+  gear: (<><circle cx="12" cy="12" r="3" /><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1L7 17M17 7l2.1-2.1" /></>),
+  image: (<><rect x="3" y="4" width="18" height="16" rx="2" /><circle cx="9" cy="10" r="2" /><path d="M21 16l-5-5-9 9" /></>),
+  refresh: <path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7" />,
+  alert: (<><path d="M12 3l10 18H2z" /><path d="M12 10v5M12 18v.01" /></>),
+  clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>),
+  star: <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />,
 };
 
 export function Icon({ name, size, className }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {
@@ -101,12 +109,64 @@ const PAYMENT: Record<string, [string, string]> = {
   SUCCEEDED: ["Paid", "p-ok"],
   FAILED: ["Failed", "p-bad"],
   REFUNDED: ["Refunded", "p-grey"],
+  PARTIALLY_REFUNDED: ["Part refunded", "p-warn"],
 };
 export const PaymentPill = ({ status }: { status: string | null }) => {
   if (!status) return <span className="pill p-grey">—</span>;
   const [label, cls] = PAYMENT[status] ?? [status, "p-grey"];
   return <span className={`pill ${cls}`}>{label}</span>;
 };
+
+const FULFILMENT: Record<string, [string, string]> = {
+  UNFULFILLED: ["Unfulfilled", "p-warn"],
+  PICKED: ["Picked", "p-info"],
+  PACKED: ["Packed", "p-info"],
+  SHIPPED: ["Shipped", "p-info"],
+  DELIVERED: ["Delivered", "p-ok"],
+};
+/** Warehouse progress of a paid order (FR-AD-02). */
+export const FulfilmentPill = ({ status }: { status: string | null }) => {
+  if (!status) return <span className="sub">—</span>;
+  const [label, cls] = FULFILMENT[status] ?? [status, "p-grey"];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+export const SHIPMENT_STATUS: Record<string, [string, string]> = {
+  LABEL_CREATED: ["Label created", "p-grey"],
+  IN_TRANSIT: ["In transit", "p-info"],
+  OUT_FOR_DELIVERY: ["Out for delivery", "p-info"],
+  DELIVERED: ["Delivered", "p-ok"],
+  EXCEPTION: ["Exception", "p-bad"],
+  RETURNED: ["Returned to sender", "p-warn"],
+};
+export const ShipmentPill = ({ status }: { status: string }) => {
+  const [label, cls] = SHIPMENT_STATUS[status] ?? [status, "p-grey"];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+export const RETURN_STATUS: Record<string, [string, string]> = {
+  REQUESTED: ["Requested", "p-warn"],
+  APPROVED: ["Approved", "p-info"],
+  REJECTED: ["Rejected", "p-grey"],
+  RECEIVED: ["Received", "p-info"],
+  REFUNDED: ["Refunded", "p-ok"],
+};
+export const ReturnPill = ({ status }: { status: string }) => {
+  const [label, cls] = RETURN_STATUS[status] ?? [status, "p-grey"];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+export const ROLE_LABEL: Record<string, string> = {
+  ROLE_CUSTOMER: "Customer",
+  ROLE_MERCHANT: "Merchant",
+  ROLE_ADMIN: "Admin",
+  ROLE_CATALOG: "Catalog staff",
+};
+export const RolePill = ({ role }: { role: string }) => (
+  <span className={`pill ${role === "ROLE_ADMIN" ? "p-info" : role === "ROLE_CATALOG" ? "p-ok" : "p-grey"}`}>
+    {ROLE_LABEL[role] ?? role}
+  </span>
+);
 
 // ── Thumbnail ───────────────────────────────────────────────────────────────
 
@@ -142,6 +202,13 @@ export function Pager({ page, pages, onPage }: { page: number; pages: number; on
     </div>
   );
 }
+
+/** "Mar 3, 2026, 4:05 PM", or a dash. */
+export const whenText = (iso: string | null | undefined) => {
+  if (!iso) return "—";
+  const d = dateTime(iso);
+  return `${d.date}, ${d.time}`;
+};
 
 export function rangeText(page: number, size: number, shown: number, total: number, noun: string) {
   if (!total) return `0 ${noun}`;

@@ -8,7 +8,8 @@ import { ProductItem, LOW_STOCK_THRESHOLD, RATINGS_MAP } from "./dayloraData";
 interface DayloraProductCardProps {
   product: ProductItem;
   isDeal?: boolean;
-  onAddToCart?: (p: ProductItem) => void;
+  /** Resolves false when the item wasn't added (e.g. sent to sign in). */
+  onAddToCart?: (p: ProductItem) => void | Promise<boolean | void>;
 }
 
 export function DayloraProductCard({
@@ -17,6 +18,10 @@ export function DayloraProductCard({
   onAddToCart,
 }: DayloraProductCardProps) {
   const [added, setAdded] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
+  const href = product.href || "/catalog";
+  const imgSrc = product.imageUrl ?? (product.imgKey ? `/daylora/${product.imgKey}.jpg` : null);
+  const chooseOptions = (product.variantCount ?? 1) > 1;
 
   const save = product.wasPrice
     ? Math.round(((product.wasPrice - product.price) / product.wasPrice) * 100)
@@ -27,10 +32,11 @@ export function DayloraProductCard({
 
   const ratingInfo = RATINGS_MAP[product.imgKey];
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (isOut) return;
+    const ok = onAddToCart ? await onAddToCart(product) : undefined;
+    if (ok === false) return;
     setAdded(true);
-    if (onAddToCart) onAddToCart(product);
     setTimeout(() => {
       setAdded(false);
     }, 1400);
@@ -57,19 +63,18 @@ export function DayloraProductCard({
 
   return (
     <article className={`card ${isOut ? "is-out" : ""}`}>
-      <Link
-        href={product.href || `/catalog?product=${encodeURIComponent(product.id)}`}
-        className="card-media"
-        aria-label={product.name}
-      >
+      <Link href={href} className="card-media" aria-label={product.name}>
         <DayloraIcon name={product.icon} />
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          className="media-img"
-          src={`/daylora/${product.imgKey}.jpg`}
-          alt={product.name}
-          loading="lazy"
-        />
+        {imgSrc && !imgFailed && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            className="media-img"
+            src={imgSrc}
+            alt={product.name}
+            loading="lazy"
+            onError={() => setImgFailed(true)}
+          />
+        )}
         {product.badge ? (
           <span className="badge badge-new">{product.badge}</span>
         ) : isDeal && save > 0 ? (
@@ -79,10 +84,7 @@ export function DayloraProductCard({
 
       <div className="card-body">
         <span className="brand">{product.brand}</span>
-        <Link
-          href={product.href || `/catalog?product=${encodeURIComponent(product.id)}`}
-          className="name"
-        >
+        <Link href={href} className="name">
           {product.name}
         </Link>
         <span className="variant">{product.variant}</span>
@@ -129,6 +131,11 @@ export function DayloraProductCard({
             : "In stock"}
         </span>
 
+        {chooseOptions && !isOut ? (
+          <Link href={href} className="add" style={{ display: "grid", placeItems: "center" }}>
+            Choose options
+          </Link>
+        ) : (
         <button
           className={`add ${added ? "added" : ""}`}
           disabled={isOut}
@@ -137,6 +144,7 @@ export function DayloraProductCard({
         >
           {isOut ? "Out of stock" : added ? "Added ✓" : "Add to cart"}
         </button>
+        )}
       </div>
     </article>
   );

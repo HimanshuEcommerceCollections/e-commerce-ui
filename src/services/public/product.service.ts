@@ -13,6 +13,10 @@ const publicProductService = {
   getById: (id: string) =>
     api.get<ApiResponse<ProductDetailResponse>>(`/api/products/${id}`),
 
+  /** The PDP by its clean URL slug (NFR-04). */
+  getBySlug: (slug: string) =>
+    api.get<ApiResponse<ProductDetailResponse>>(`/api/products/slug/${encodeURIComponent(slug)}`),
+
   getByCategory: (categoryId: string, params?: ProductListParams) =>
     api.get<ApiResponse<PageResponse<ProductSummaryResponse>>>(
       `/api/products/category/${categoryId}`,

@@ -5,16 +5,17 @@ import publicCategoryService from "@/services/public/category.service";
 import { getApiErrorMessage } from "@/lib/apiError";
 import type { CategoryResponse } from "@/types/api/category.types";
 import type { ProductStatus } from "@/types/api/common.types";
-import type { AdminProductDetail, AdminProductRow, ProductStatusCounts } from "@/types/api/admin.types";
+import type { AdminProductRow, ProductStatusCounts } from "@/types/api/admin.types";
+import BulkUpdateDialog from "@/components/admin/BulkUpdateDialog";
+import EditProduct from "@/components/admin/EditProduct";
+import ImageIssues from "@/components/admin/ImageIssues";
 import ImportDialog from "@/components/admin/ImportDialog";
+import { fileNameFrom, saveFile } from "@/components/admin/files";
 import { refreshAdminCounts } from "@/components/admin/refresh";
 import {
-  Drawer,
   Icon,
   Pager,
-  PRODUCT_STATUS_LABEL,
   ProductPill,
-  StockPill,
   Thumb,
   money,
   rangeText,
@@ -49,6 +50,10 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [issuesOpen, setIssuesOpen] = useState(false);
+  const [brokenImages, setBrokenImages] = useState<number | null>(null);
+  const [exporting, setExporting] = useState(false);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -77,6 +82,28 @@ export default function AdminProductsPage() {
   useEffect(() => {
     load();
   }, [load]);
+
+  const loadImageCount = useCallback(() => {
+    adminService
+      .imageIssues({ page: 0, size: 1 })
+      .then((r) => setBrokenImages(r.data.data?.totalElements ?? 0))
+      .catch(() => {});
+  }, []);
+  useEffect(loadImageCount, [loadImageCount]);
+
+  // NFR-06: the whole catalog as a file, in the import template's columns.
+  const exportCatalog = async (format: "csv" | "xlsx") => {
+    setExporting(true);
+    try {
+      const res = await adminService.exportCatalog(format);
+      const header = res.headers["content-disposition"] as string | undefined;
+      saveFile(fileNameFrom(header, `catalog-export.${format}`), res.data);
+    } catch (err) {
+      toast(getApiErrorMessage(err, "Couldn't export the catalog"), true);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // A new filter starts from the first page.
   useEffect(() => setPage(0), [q, categoryId, tab]);
@@ -120,12 +147,34 @@ export default function AdminProductsPage() {
             <Icon name="upload" />
             Import products
           </button>
-          <button
-            className="btn btn-primary"
-            onClick={() => toast("Products are added through the import template; manual entry isn't a launch path.")}
-          >
-            <Icon name="plus" />
-            Add product
+          <button className="btn btn-secondary" onClick={() => setBulkOpen(true)}>
+            <Icon name="upload" />
+            Bulk update
+          </button>
+          <details className="menu">
+            <summary className="btn btn-secondary" aria-disabled={exporting}>
+              <Icon name="download" />
+              {exporting ? "Exporting…" : "Export"}
+            </summary>
+            <div className="menu-list" role="menu">
+              {(["csv", "xlsx"] as const).map((f) => (
+                <button
+                  key={f}
+                  role="menuitem"
+                  disabled={exporting}
+                  onClick={(e) => {
+                    e.currentTarget.closest("details")?.removeAttribute("open");
+                    exportCatalog(f);
+                  }}
+                >
+                  {f === "csv" ? "CSV (.csv)" : "Excel (.xlsx)"}
+                </button>
+              ))}
+            </div>
+          </details>
+          <button className={`btn ${brokenImages ? "btn-danger" : "btn-secondary"}`} onClick={() => setIssuesOpen(true)}>
+            <Icon name="image" />
+            Image issues{brokenImages ? ` (${brokenImages})` : ""}
           </button>
         </div>
       </div>
@@ -213,10 +262,23 @@ export default function AdminProductsPage() {
                           <div>
                             <strong>{p.name}</strong>
                             <span className="sub">{p.code}{p.brand ? ` · ${p.brand}` : ""}</span>
+                            {p.featured || p.brokenImages ? (
+                              <span className="badges">
+                                {p.featured ? <span className="pill p-info">Featured</span> : null}
+                                {p.brokenImages ? (
+                                  <span className="pill p-bad" title="Image URLs that failed the check (FR-IM-08)">
+                                    {p.brokenImages} broken image{p.brokenImages === 1 ? "" : "s"}
+                                  </span>
+                                ) : null}
+                              </span>
+                            ) : null}
                           </div>
                         </div>
                       </td>
-                      <td>{p.category?.name ?? <span className="sub">—</span>}</td>
+                      <td>
+                        {p.category?.name ?? <span className="sub">—</span>}
+                        {p.subcategory ? <div className="sub">{p.subcategory.name}</div> : null}
+                      </td>
                       <td className="num">{p.variantCount}</td>
                       <td className="num">{priceText(p)}</td>
                       <td className="num">
@@ -247,11 +309,32 @@ export default function AdminProductsPage() {
           refreshAdminCounts();
         }}
       />
+      <ImageIssues
+        open={issuesOpen}
+        onClose={() => setIssuesOpen(false)}
+        onChecked={() => {
+          load();
+          loadImageCount();
+        }}
+        onOpenProduct={(id) => {
+          setIssuesOpen(false);
+          setEditing(id);
+        }}
+      />
+      <BulkUpdateDialog
+        open={bulkOpen}
+        onClose={() => setBulkOpen(false)}
+        onUpdated={() => {
+          load();
+          refreshAdminCounts();
+        }}
+      />
       <ImportDialog
         open={importOpen}
         onClose={() => setImportOpen(false)}
         onImported={() => {
           load();
+          loadImageCount();
           refreshAdminCounts();
           publicCategoryService.getAll().then((r) => setCategories(r.data.data ?? [])).catch(() => {});
         }}
@@ -260,155 +343,3 @@ export default function AdminProductsPage() {
   );
 }
 
-type VariantDraft = { price: string; status: ProductStatus };
-
-function EditProduct({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: () => void }) {
-  const [p, setP] = useState<AdminProductDetail | null>(null);
-  const [name, setName] = useState("");
-  const [brand, setBrand] = useState("");
-  const [variants, setVariants] = useState<Record<string, VariantDraft>>({});
-  const [error, setError] = useState<string | null>(null);
-  const [saving, setSaving] = useState(false);
-
-  useEffect(() => {
-    setP(null);
-    setError(null);
-    if (!id) return;
-    adminService
-      .getProduct(id)
-      .then((r) => {
-        const d = r.data.data!;
-        setP(d);
-        setName(d.name);
-        setBrand(d.brand ?? "");
-        setVariants(Object.fromEntries(d.variants.map((v) => [v.id, { price: v.price.toFixed(2), status: v.status }])));
-      })
-      .catch((err) => setError(getApiErrorMessage(err, "Couldn't load the product")));
-  }, [id]);
-
-  const setAll = (status: ProductStatus) =>
-    setVariants((vs) => Object.fromEntries(Object.entries(vs).map(([k, v]) => [k, { ...v, status }])));
-
-  const save = async () => {
-    if (!p) return;
-    const bad = Object.values(variants).some((v) => !(parseFloat(v.price) > 0));
-    if (!name.trim()) return setError("Product name is required.");
-    if (bad) return setError("Every price must be a number greater than 0.");
-    setSaving(true);
-    setError(null);
-    try {
-      if (name.trim() !== p.name || brand.trim() !== (p.brand ?? "")) {
-        await adminService.updateProduct(p.id, { name: name.trim(), brand: brand.trim() });
-      }
-      for (const v of p.variants) {
-        const d = variants[v.id];
-        const price = Math.round(parseFloat(d.price) * 100) / 100;
-        const change: { price?: number; status?: ProductStatus } = {};
-        if (price !== v.price) change.price = price;
-        if (d.status !== v.status) change.status = d.status;
-        if (Object.keys(change).length) await adminService.updateVariant(v.id, change);
-      }
-      toast("Product saved");
-      onSaved();
-    } catch (err) {
-      setError(getApiErrorMessage(err, "Couldn't save the product"));
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  return (
-    <Drawer
-      open={!!id}
-      onClose={onClose}
-      title={p?.name ?? "Product"}
-      sub={p ? <><code>{p.code}</code> · {p.category?.name ?? "No category"}</> : null}
-      foot={
-        <>
-          <button className="btn btn-secondary" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" onClick={save} disabled={!p || saving}>
-            {saving ? "Saving…" : "Save changes"}
-          </button>
-        </>
-      }
-    >
-      {!p ? (
-        error ? <p className="err-text">{error}</p> : <p className="sub">Loading…</p>
-      ) : (
-        <>
-          {error ? <div className="note warn" role="alert"><Icon name="info" /><span>{error}</span></div> : null}
-          <div className="form">
-            <div className="fld">
-              <label htmlFor="eName">Product name</label>
-              <input className={`inp ${name.trim() ? "" : "bad"}`} id="eName" value={name} onChange={(e) => setName(e.target.value)} />
-            </div>
-            <div className="row2">
-              <div className="fld">
-                <label htmlFor="eBrand">Brand</label>
-                <input className="inp" id="eBrand" value={brand} onChange={(e) => setBrand(e.target.value)} />
-              </div>
-              <div className="fld">
-                <label htmlFor="eStatus">Status (all variants)</label>
-                <select className="sel inp" id="eStatus" value="" onChange={(e) => e.target.value && setAll(e.target.value as ProductStatus)}>
-                  <option value="">Set every variant…</option>
-                  {(["ACTIVE", "DRAFT", "INACTIVE"] as const).map((s) => (
-                    <option key={s} value={s}>{PRODUCT_STATUS_LABEL[s]}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          <div className="d-sec">
-            <h3>Variants ({p.variants.length} SKUs)</h3>
-            <div className="items">
-              {p.variants.map((v) => {
-                const d = variants[v.id];
-                return (
-                  <div className="vrow" key={v.id}>
-                    <div style={{ minWidth: 0 }}>
-                      <strong>{v.variantName ?? ([v.color, v.size].filter(Boolean).join(" / ") || "Default")}</strong>
-                      <span className="sub" style={{ display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
-                        <code>{v.sku}</code> {v.stockQuantity} on hand <StockPill status={v.stockStatus} />
-                      </span>
-                    </div>
-                    <input
-                      className={`inp ${parseFloat(d.price) > 0 ? "" : "bad"}`}
-                      aria-label={`Price of ${v.sku}`}
-                      inputMode="decimal"
-                      value={d.price}
-                      onChange={(e) => setVariants((vs) => ({ ...vs, [v.id]: { ...d, price: e.target.value } }))}
-                    />
-                    <select
-                      className="sel inp"
-                      aria-label={`Status of ${v.sku}`}
-                      value={d.status}
-                      onChange={(e) => setVariants((vs) => ({ ...vs, [v.id]: { ...d, status: e.target.value as ProductStatus } }))}
-                    >
-                      {(["ACTIVE", "DRAFT", "INACTIVE", "ARCHIVED"] as const).map((s) => (
-                        <option key={s} value={s}>{PRODUCT_STATUS_LABEL[s]}</option>
-                      ))}
-                    </select>
-                  </div>
-                );
-              })}
-            </div>
-            <p className="sub" style={{ marginTop: 8 }}>Stock is changed on the Inventory page, with a reason.</p>
-          </div>
-
-          {p.description ? (
-            <div className="d-sec">
-              <h3>Description</h3>
-              <p style={{ whiteSpace: "pre-line" }}>{p.description}</p>
-            </div>
-          ) : null}
-
-          <div className="note">
-            <Icon name="info" />
-            <span>MRP, tax rate and SEO fields aren&apos;t stored yet; they&apos;re listed as ignored columns when you import.</span>
-          </div>
-        </>
-      )}
-    </Drawer>
-  );
-}

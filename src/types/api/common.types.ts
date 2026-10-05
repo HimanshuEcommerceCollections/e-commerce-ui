@@ -17,6 +17,7 @@ export interface PageResponse<T> {
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
-export type UserRole = "ROLE_CUSTOMER" | "ROLE_MERCHANT" | "ROLE_ADMIN";
+/** ROLE_CATALOG manages products, inventory and imports only (FR-AD-08). */
+export type UserRole = "ROLE_CUSTOMER" | "ROLE_MERCHANT" | "ROLE_ADMIN" | "ROLE_CATALOG";
 
 export type ProductStatus = "DRAFT" | "ACTIVE" | "INACTIVE" | "ARCHIVED";
