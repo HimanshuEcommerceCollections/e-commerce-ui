@@ -27,6 +27,11 @@ export function DayloraSvgSprite() {
       <symbol id="i-return" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5M4 9h11a5 5 0 010 10h-3" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
       <symbol id="i-shield" viewBox="0 0 24 24"><path d="M12 3l8 3v6c0 5-3.5 8-8 9-4.5-1-8-4-8-9V6z" stroke="currentColor" fill="none" strokeWidth="1.75"/><path d="M8.8 12l2.2 2.2 4.2-4.2" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
       <symbol id="i-headset" viewBox="0 0 24 24"><path d="M4 15v-3a8 8 0 0116 0v3" stroke="currentColor" fill="none" strokeWidth="1.75"/><path d="M4 15h3v5H5a1 1 0 01-1-1zM20 15h-3v5h2a1 1 0 001-1z" stroke="currentColor" fill="none" strokeWidth="1.75"/><path d="M17 20c0 1.2-2 2-4.5 2" stroke="currentColor" fill="none" strokeWidth="1.75"/></symbol>
+      <symbol id="i-filter" viewBox="0 0 24 24"><path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round"/></symbol>
+      <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3.5 7.5L7 4l3.5 3.5M17 20V4M13.5 16.5L17 20l3.5-3.5" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
+      <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
+      <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" strokeWidth="1.75"/><path d="M12 7.5v5.5M12 16.5v.01" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round"/></symbol>
+      <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5L12 12l8.5-4.5M12 12v9" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinejoin="round"/></symbol>
     </svg>
   );
 }

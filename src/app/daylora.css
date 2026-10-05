@@ -126,6 +126,32 @@ ul{list-style:none}
 .nav .nav-sell{margin-left:auto}
 .nav .nav-sell a{color:var(--navy);font-weight:600}
 .nav .nav-sell .icon{width:18px;height:18px}
+/* ---- Department mega menu: list on the left, sections pane for departments that have them (Clothing) ---- */
+.dept-menu.open{display:grid;grid-template-columns:264px;gap:0;padding:var(--s-2)}
+.dept-menu.open.has-pane{grid-template-columns:264px 800px}
+.dm-list{display:flex;flex-direction:column;gap:2px;padding:var(--s-1)}
+.dm-list a{justify-content:flex-start}
+.dm-list a.active{background:var(--surface);color:var(--navy);font-weight:600}
+.dm-list .sub-chev{width:16px;height:16px;margin-left:auto;transform:rotate(-90deg)}
+.dm-pane{display:none;border-left:1px solid var(--line);padding:var(--s-3) var(--s-5) var(--s-4);grid-template-columns:repeat(4,minmax(0,1fr));gap:var(--s-5);align-content:start}
+.has-pane .dm-pane{display:grid}
+.dm-col{display:flex;flex-direction:column;min-width:0}
+.dm-col h4{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:var(--s-2) 0 var(--s-2)}
+.nav .dm-pane a{height:auto;min-height:36px;padding:6px 0;border:0;border-radius:0;font-weight:400;color:var(--ink);white-space:normal}
+.nav .dm-pane a:hover{background:none;color:var(--leaf);text-decoration:underline;text-underline-offset:3px}
+.nav .dm-pane a.dm-all{font-weight:600;color:var(--leaf)}
+.dm-pane .dm-deals{color:var(--save)!important;font-weight:600!important}
+/* Mobile drawer: Clothing expands in place */
+.dr-sub{display:flex;align-items:center;gap:var(--s-3);width:100%;min-height:48px;padding:0 var(--s-4);font-size:16px;font-weight:500;text-align:left}
+.dr-sub:hover{background:var(--surface)}
+.dr-sub > .icon:first-child{color:var(--muted)}
+.dr-sub .chev{margin-left:auto;width:20px;height:20px;transition:transform .2s;color:var(--muted)}
+.dr-sub[aria-expanded="true"] .chev{transform:rotate(180deg)}
+.dr-panel{display:none;padding:0 0 var(--s-2) var(--s-7);background:#FAFBFC}
+.dr-sub[aria-expanded="true"] + .dr-panel{display:block}
+.dr-panel h4{font-size:12px;line-height:16px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);padding:var(--s-3) var(--s-4) var(--s-1) 0}
+.drawer-body .dr-panel a{min-height:40px;padding:0;font-size:15px;font-weight:400}
+.drawer-body .dr-panel a.dm-all{font-weight:600;color:var(--leaf)}
 
 @media (min-width:1024px){
   .header-row{height:72px;gap:var(--s-4)}
