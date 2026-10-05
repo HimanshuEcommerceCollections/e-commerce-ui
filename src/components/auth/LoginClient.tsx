@@ -103,12 +103,15 @@ export default function LoginClient() {
     try {
       const auth = await login(values);
       toast.success("Welcome back!");
+      // Shoppers return to where sign-in was asked for (cart, checkout, an order); same-site paths only.
+      const next = new URLSearchParams(window.location.search).get("next");
+      const back = next && next.startsWith("/") && !next.startsWith("//") ? next : "/";
       const dest =
-        auth.role === "ROLE_ADMIN"
+        auth.role === "ROLE_ADMIN" || auth.role === "ROLE_CATALOG"
           ? "/admin"
           : auth.role === "ROLE_MERCHANT"
             ? "/merchant"
-            : "/";
+            : back;
       router.push(dest);
     } catch (err) {
       toast.error(getApiErrorMessage(err, "Login failed. Please try again."));
