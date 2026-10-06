@@ -51,6 +51,7 @@ function variantChanges(v: AdminVariant, d: VariantDraft): AdminVariantUpdate {
 }
 
 let treeCache: CategoryTreeNode[] | null = null;
+const NL = "\n";
 
 /** Product and variant editing (FR-AD-01, FR-AD-05). */
 export default function EditProduct({ id, onClose, onSaved }: { id: string | null; onClose: () => void; onSaved: () => void }) {
@@ -59,6 +60,8 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
   const [brand, setBrand] = useState("");
   const [productType, setProductType] = useState("");
   const [shortDescription, setShortDescription] = useState("");
+  const [description, setDescription] = useState("");
+  const [features, setFeatures] = useState("");
   const [subcategoryId, setSubcategoryId] = useState("");
   const [featured, setFeatured] = useState(false);
   const [variants, setVariants] = useState<Record<string, VariantDraft>>({});
@@ -90,6 +93,8 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
         setBrand(d.brand ?? "");
         setProductType(d.productType ?? "");
         setShortDescription(d.shortDescription ?? "");
+        setDescription(d.description ?? "");
+        setFeatures((d.keyFeatures ?? []).join(NL));
         setSubcategoryId(d.subcategory?.id ?? "");
         setFeatured(!!d.featured);
         setVariants(Object.fromEntries(d.variants.map((v) => [v.id, draftOf(v)])));
@@ -121,6 +126,9 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
       if (shortDescription.trim() !== (p.shortDescription ?? "")) change.shortDescription = shortDescription.trim();
       if (subcategoryId && subcategoryId !== (p.subcategory?.id ?? "")) change.subcategoryId = subcategoryId;
       if (featured !== !!p.featured) change.featured = featured;
+      if (description.trim() !== (p.description ?? "").trim()) change.description = description.trim();
+      const list = features.split(NL).map((f) => f.trim()).filter(Boolean);
+      if (list.join(NL) !== (p.keyFeatures ?? []).join(NL)) change.keyFeatures = list;
       if (Object.keys(change).length) await adminService.updateProduct(p.id, change);
       for (const v of p.variants) {
         const c = variantChanges(v, variants[v.id]);
@@ -219,6 +227,15 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
                 onChange={(e) => setShortDescription(e.target.value)}
               />
             </div>
+            <div className="fld">
+              <label htmlFor="eDesc">Long description</label>
+              <textarea className="inp" id="eDesc" value={description} onChange={(e) => setDescription(e.target.value)} />
+            </div>
+            <div className="fld">
+              <label htmlFor="eFeat">Key features</label>
+              <textarea className="inp" id="eFeat" value={features} onChange={(e) => setFeatures(e.target.value)} placeholder="One per line" />
+              <span className="hint">One per line. Shown as bullets on the product page.</span>
+            </div>
             <label className="switch">
               <input type="checkbox" checked={featured} onChange={(e) => setFeatured(e.target.checked)} />
               Featured on the homepage
@@ -237,15 +254,6 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
             </p>
           </div>
 
-          {p.keyFeatures?.length ? (
-            <div className="d-sec">
-              <h3>Key features</h3>
-              <ul className="bullets">
-                {p.keyFeatures.map((f) => <li key={f}>{f}</li>)}
-              </ul>
-            </div>
-          ) : null}
-
           {p.attributes && Object.keys(p.attributes).length ? (
             <div className="d-sec">
               <h3>Category attributes</h3>
@@ -260,12 +268,6 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
             </div>
           ) : null}
 
-          {p.description ? (
-            <div className="d-sec">
-              <h3>Description</h3>
-              <p style={{ whiteSpace: "pre-line" }}>{p.description}</p>
-            </div>
-          ) : null}
         </>
       )}
     </Drawer>

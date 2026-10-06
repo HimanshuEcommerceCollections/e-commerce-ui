@@ -3,10 +3,11 @@ import { useEffect, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/apiError";
-import { Icon } from "@/components/admin/ui";
+import { Icon, usePageTitle } from "@/components/admin/ui";
 import { PANEL_ROLES, useAdminSession } from "@/components/admin/useAdminSession";
 
 export default function AdminLoginPage() {
+  usePageTitle("Sign in");
   const router = useRouter();
   const { login, logout } = useAuth();
   const { ready, isStaff } = useAdminSession();
@@ -48,7 +49,7 @@ export default function AdminLoginPage() {
     <div className="dla login-page">
       <main className="login-card">
         <div className="login-brand">
-          <b>Daylora</b>
+          <b>Ecommerce Collections</b>
           <span>Admin</span>
         </div>
         <div>

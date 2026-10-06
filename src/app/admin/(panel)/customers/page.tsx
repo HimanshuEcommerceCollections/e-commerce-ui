@@ -19,29 +19,32 @@ import {
   rangeText,
   shortDate,
   toast,
+  initials,
   useDebounced,
+  usePageTitle,
   whenText,
 } from "@/components/admin/ui";
+import { fileNameFrom, saveFile } from "@/components/admin/files";
 
 const SIZE = 20;
 const VIEWS: Array<{ role: UserRole; label: string }> = [
   { role: "ROLE_CUSTOMER", label: "Customers" },
+  { role: "ROLE_CATALOG", label: "Catalog staff" },
+  { role: "ROLE_ADMIN", label: "Admins" },
   { role: "ROLE_MERCHANT", label: "Merchants" },
-  { role: "ROLE_CATALOG", label: "Staff · Catalog" },
-  { role: "ROLE_ADMIN", label: "Staff · Admin" },
 ];
+/** The design's sort options. */
 const SORTS: Array<[string, string]> = [
-  ["createdAt,desc", "Newest first"],
-  ["lastOrderAt,desc", "Last order"],
+  ["totalSpent,desc", "Most spent"],
+  ["lastOrderAt,desc", "Most recent order"],
   ["orders,desc", "Most orders"],
-  ["totalSpent,desc", "Top spend"],
   ["fullName,asc", "Name A–Z"],
-  ["email,asc", "Email A–Z"],
 ];
 const ROLES: UserRole[] = ["ROLE_CUSTOMER", "ROLE_MERCHANT", "ROLE_CATALOG", "ROLE_ADMIN"];
 
 /** Customer records linked to orders (FR-AD-06) and staff roles (FR-AD-08). */
 export default function AdminCustomersPage() {
+  usePageTitle("Customers");
   const [role, setRole] = useState<UserRole>("ROLE_CUSTOMER");
   const [search, setSearch] = useState("");
   const q = useDebounced(search);
@@ -52,6 +55,19 @@ export default function AdminCustomersPage() {
   const [pages, setPages] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
+  const [exporting, setExporting] = useState(false);
+
+  const exportCsv = async () => {
+    setExporting(true);
+    try {
+      const res = await adminService.exportCustomers({ search: q || undefined, role, sort });
+      saveFile(fileNameFrom(res.headers["content-disposition"] as string | undefined, "customers.csv"), res.data);
+    } catch (err) {
+      toast(getApiErrorMessage(err, "Couldn't export customers"), true);
+    } finally {
+      setExporting(false);
+    }
+  };
 
   // Deep link from an order: /admin/customers?id=…
   useEffect(() => {
@@ -85,7 +101,13 @@ export default function AdminCustomersPage() {
       <div className="page-head">
         <div>
           <h1 id="h-customers">Customers</h1>
-          <p>Accounts with their orders and spend. Staff views manage who can use this panel.</p>
+          <p>Everyone who has ordered, with their order history and contact details.</p>
+        </div>
+        <div className="actions">
+          <button className="btn btn-secondary" onClick={exportCsv} disabled={exporting}>
+            <Icon name="download" />
+            {exporting ? "Exporting…" : "Export CSV"}
+          </button>
         </div>
       </div>
 
@@ -122,38 +144,53 @@ export default function AdminCustomersPage() {
           <table>
             <thead>
               <tr>
-                <th>Name</th>
-                <th>Phone</th>
-                <th>Role</th>
+                <th>{staff ? "Staff member" : "Customer"}</th>
+                <th>Location</th>
                 <th className="num">Orders</th>
-                <th className="num">Spent</th>
+                <th className="num">Total spent</th>
                 <th>Last order</th>
-                <th>Joined</th>
+                <th>{staff ? "Role" : "Marketing"}</th>
               </tr>
             </thead>
             <tbody>
               {rows === null ? (
-                <tr className="loading-row"><td colSpan={7}>Loading accounts…</td></tr>
+                <tr className="loading-row"><td colSpan={6}>Loading accounts…</td></tr>
               ) : error ? (
-                <tr className="empty-row"><td colSpan={7}><span className="err-text">{error}</span></td></tr>
+                <tr className="empty-row"><td colSpan={6}><span className="err-text">{error}</span></td></tr>
               ) : rows.length === 0 ? (
-                <tr className="empty-row"><td colSpan={7}>{q ? "No accounts match." : "No accounts here yet."}</td></tr>
+                <tr className="empty-row"><td colSpan={6}>{q ? `No accounts match “${q}”.` : "No accounts here yet."}</td></tr>
               ) : (
                 rows.map((c) => (
-                  <tr key={c.id} className="click" onClick={() => setOpen(c.id)}>
+                  <tr
+                    key={c.id}
+                    className="click"
+                    tabIndex={0}
+                    onClick={() => setOpen(c.id)}
+                    onKeyDown={(e) => e.key === "Enter" && setOpen(c.id)}
+                  >
                     <td>
-                      <strong>{c.fullName}</strong>
-                      <div className="sub">{c.email}</div>
+                      <div className="cust">
+                        <span className="av" aria-hidden="true">{initials(c.fullName || c.email)}</span>
+                        <div>
+                          <strong>{c.fullName}</strong>
+                          <span className="sub">{c.email}</span>
+                        </div>
+                      </div>
                     </td>
-                    <td className="sub">{c.phoneNumber ?? "—"}</td>
-                    <td>
-                      <RolePill role={c.role} />
-                      {!c.enabled ? <div className="sub">Disabled</div> : null}
-                    </td>
+                    <td>{c.location ?? <span className="sub">—</span>}</td>
                     <td className="num">{c.orders}</td>
                     <td className="num">{money(c.totalSpent)}</td>
-                    <td className="sub">{c.lastOrderAt ? shortDate(c.lastOrderAt) : "—"}</td>
-                    <td className="sub">{shortDate(c.createdAt)}</td>
+                    <td>{c.lastOrderAt ? shortDate(c.lastOrderAt) : <span className="sub">None yet</span>}</td>
+                    <td>
+                      {staff ? (
+                        <RolePill role={c.role} />
+                      ) : c.marketingOptIn ? (
+                        <span className="pill p-ok">Subscribed</span>
+                      ) : (
+                        <span className="pill p-grey">Not subscribed</span>
+                      )}
+                      {!c.enabled ? <div className="sub">Disabled</div> : null}
+                    </td>
                   </tr>
                 ))
               )}
@@ -239,6 +276,7 @@ function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; onClose
               <dt>Phone</dt><dd>{c.phoneNumber ?? "—"}</dd>
               <dt>Joined</dt><dd>{whenText(c.createdAt)}</dd>
               <dt>Last sign-in</dt><dd>{whenText(c.lastLoginAt)}</dd>
+              <dt>Marketing</dt><dd>{c.marketingOptIn ? "Subscribed to email" : "Not subscribed"}</dd>
               <dt>Status</dt><dd>{c.enabled ? "Active" : "Disabled"}</dd>
             </dl>
           </div>

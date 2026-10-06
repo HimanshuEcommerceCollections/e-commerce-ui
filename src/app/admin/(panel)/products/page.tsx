@@ -6,7 +6,7 @@ import { getApiErrorMessage } from "@/lib/apiError";
 import type { CategoryResponse } from "@/types/api/category.types";
 import type { ProductStatus } from "@/types/api/common.types";
 import type { AdminProductRow, ProductStatusCounts } from "@/types/api/admin.types";
-import BulkUpdateDialog from "@/components/admin/BulkUpdateDialog";
+import AddProduct from "@/components/admin/AddProduct";
 import EditProduct from "@/components/admin/EditProduct";
 import ImageIssues from "@/components/admin/ImageIssues";
 import ImportDialog from "@/components/admin/ImportDialog";
@@ -22,6 +22,7 @@ import {
   shortDate,
   toast,
   useDebounced,
+  usePageTitle,
 } from "@/components/admin/ui";
 
 const SIZE = 10;
@@ -50,11 +51,21 @@ export default function AdminProductsPage() {
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState<string | null>(null);
   const [importOpen, setImportOpen] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [skus, setSkus] = useState<number | null>(null);
   const [issuesOpen, setIssuesOpen] = useState(false);
   const [brokenImages, setBrokenImages] = useState<number | null>(null);
   const [exporting, setExporting] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  usePageTitle("Products");
+  const loadSkus = useCallback(() => {
+    adminService
+      .inventoryStats()
+      .then((r) => setSkus(r.data.data?.skus ?? null))
+      .catch(() => {});
+  }, []);
+  useEffect(loadSkus, [loadSkus]);
 
   useEffect(() => {
     publicCategoryService.getAll().then((r) => setCategories(r.data.data ?? [])).catch(() => {});
@@ -138,23 +149,16 @@ export default function AdminProductsPage() {
         <div>
           <h1 id="h-products">Products</h1>
           <p>
-            {counts ? `${counts.ALL.toLocaleString()} products` : "Loading…"}
-            {counts ? " · import the catalog from the template to add more" : ""}
+            {counts
+              ? `${counts.ALL.toLocaleString()} product${counts.ALL === 1 ? "" : "s"}${skus !== null ? ` · ${skus.toLocaleString()} SKUs` : ""}`
+              : "Loading…"}
           </p>
         </div>
         <div className="actions">
-          <button className="btn btn-secondary" onClick={() => setImportOpen(true)}>
-            <Icon name="upload" />
-            Import products
-          </button>
-          <button className="btn btn-secondary" onClick={() => setBulkOpen(true)}>
-            <Icon name="upload" />
-            Bulk update
-          </button>
           <details className="menu">
             <summary className="btn btn-secondary" aria-disabled={exporting}>
               <Icon name="download" />
-              {exporting ? "Exporting…" : "Export"}
+              {exporting ? "Exporting…" : "Export catalog"}
             </summary>
             <div className="menu-list" role="menu">
               {(["csv", "xlsx"] as const).map((f) => (
@@ -176,6 +180,14 @@ export default function AdminProductsPage() {
             <Icon name="image" />
             Image issues{brokenImages ? ` (${brokenImages})` : ""}
           </button>
+          <button className="btn btn-secondary" onClick={() => setImportOpen(true)}>
+            <Icon name="upload" />
+            Import products
+          </button>
+          <button className="btn btn-primary" onClick={() => setAdding(true)}>
+            <Icon name="plus" />
+            Add product
+          </button>
         </div>
       </div>
 
@@ -192,7 +204,7 @@ export default function AdminProductsPage() {
           <label className="search">
             <Icon name="search" />
             <span className="sr-only">Search products</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, SKU, code or brand" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, SKU or brand" />
           </label>
           <select className="sel" aria-label="Category" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
             <option value="">All categories</option>
@@ -246,8 +258,14 @@ export default function AdminProductsPage() {
                 rows.map((p) => {
                   const on = selected.has(p.id);
                   return (
-                    <tr key={p.id} className={`click ${on ? "selected" : ""}`} onClick={() => setEditing(p.id)}>
-                      <td onClick={(e) => e.stopPropagation()}>
+                    <tr
+                      key={p.id}
+                      className={`click ${on ? "selected" : ""}`}
+                      tabIndex={0}
+                      onClick={() => setEditing(p.id)}
+                      onKeyDown={(e) => e.key === "Enter" && e.target === e.currentTarget && setEditing(p.id)}
+                    >
+                      <td className="cell-check" onClick={(e) => e.stopPropagation()}>
                         <input
                           type="checkbox"
                           className="chk"
@@ -321,12 +339,15 @@ export default function AdminProductsPage() {
           setEditing(id);
         }}
       />
-      <BulkUpdateDialog
-        open={bulkOpen}
-        onClose={() => setBulkOpen(false)}
-        onUpdated={() => {
+      <AddProduct
+        open={adding}
+        onClose={() => setAdding(false)}
+        onCreated={(id) => {
+          setAdding(false);
           load();
+          loadSkus();
           refreshAdminCounts();
+          setEditing(id);
         }}
       />
       <ImportDialog
@@ -334,6 +355,7 @@ export default function AdminProductsPage() {
         onClose={() => setImportOpen(false)}
         onImported={() => {
           load();
+          loadSkus();
           loadImageCount();
           refreshAdminCounts();
           publicCategoryService.getAll().then((r) => setCategories(r.data.data ?? [])).catch(() => {});

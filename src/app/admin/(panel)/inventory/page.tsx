@@ -7,12 +7,13 @@ import type { CategoryResponse } from "@/types/api/category.types";
 import type { AdminInventoryRow, InventoryStats, StockMovement, StockMovementSource } from "@/types/api/admin.types";
 import BulkUpdateDialog from "@/components/admin/BulkUpdateDialog";
 import { refreshAdminCounts } from "@/components/admin/refresh";
-import { Drawer, Icon, Pager, StockPill, dateTime, money, rangeText, toast, useDebounced } from "@/components/admin/ui";
+import { Drawer, Icon, PRODUCT_STATUS_LABEL, Pager, StockPill, dateTime, money, rangeText, toast, useDebounced, usePageTitle } from "@/components/admin/ui";
 
 const SIZE = 15;
 const REASONS = ["Stock received", "Damaged / lost", "Count correction", "Return to stock"];
 
 export default function AdminInventoryPage() {
+  usePageTitle("Inventory");
   const [search, setSearch] = useState("");
   const q = useDebounced(search);
   const [categoryId, setCategoryId] = useState("");
@@ -126,8 +127,7 @@ export default function AdminInventoryPage() {
                 <th>SKU</th>
                 <th>Product</th>
                 <th>Variant</th>
-                <th>Category</th>
-                <th className="num">Price</th>
+                <th>Warehouse</th>
                 <th className="num">On hand</th>
                 <th className="num">Low at</th>
                 <th>Status</th>
@@ -136,26 +136,23 @@ export default function AdminInventoryPage() {
             </thead>
             <tbody>
               {rows === null ? (
-                <tr className="loading-row"><td colSpan={9}>Loading inventory…</td></tr>
+                <tr className="loading-row"><td colSpan={8}>Loading inventory…</td></tr>
               ) : error ? (
-                <tr className="empty-row"><td colSpan={9}><span className="err-text">{error}</span></td></tr>
+                <tr className="empty-row"><td colSpan={8}><span className="err-text">{error}</span></td></tr>
               ) : rows.length === 0 ? (
-                <tr className="empty-row"><td colSpan={9}>No SKUs match.</td></tr>
+                <tr className="empty-row"><td colSpan={8}>No SKUs match.</td></tr>
               ) : (
                 rows.map((s) => (
                   <tr key={s.id}>
                     <td><code>{s.sku}</code></td>
-                    <td style={{ whiteSpace: "normal", minWidth: 180 }}>{s.productName}</td>
-                    <td>{s.variantName ?? <span className="sub">—</span>}</td>
-                    <td className="sub">{s.categoryName ?? "—"}</td>
-                    <td className="num">
-                      {money(s.price)}
+                    <td style={{ whiteSpace: "normal", minWidth: 180 }}>
+                      {s.productName}
                       <div className="sub">
-                        {s.mrp ? `MRP ${money(s.mrp)}` : ""}
-                        {s.mrp && s.taxRate ? " · " : ""}
-                        {s.taxRate ? `tax ${s.taxRate}%` : ""}
+                        {[s.categoryName, money(s.price), s.status !== "ACTIVE" ? PRODUCT_STATUS_LABEL[s.status] : null].filter(Boolean).join(" · ")}
                       </div>
                     </td>
+                    <td>{s.variantName ?? <span className="sub">—</span>}</td>
+                    <td className="sub">{s.warehouseId ?? "—"}</td>
                     <td className={`num ${s.stockStatus === "OUT_OF_STOCK" ? "qty-out" : s.stockStatus === "LOW_STOCK" ? "qty-low" : ""}`}>
                       {s.stockQuantity}
                     </td>
