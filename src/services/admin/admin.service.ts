@@ -9,6 +9,7 @@ import type {
   AdminOrderDetail,
   AdminOrderListParams,
   AdminOrderRow,
+  AdminProductCreate,
   AdminProductDetail,
   AdminProductListParams,
   AdminProductRow,
@@ -30,6 +31,7 @@ import type {
   ProductStatusCounts,
   ReturnActionRequest,
   ReturnStatus,
+  SalesReport,
   StockMovement,
   TrackingEventRequest,
 } from "@/types/api/admin.types";
@@ -57,6 +59,10 @@ const adminService = {
 
   productStatusCounts: (params: Pick<AdminProductListParams, "search" | "categoryId">) =>
     api.get<ApiResponse<ProductStatusCounts>>("/api/admin/products/status-counts", { params }),
+
+  /** Manual product entry (FR-AD-01); blank SKUs are generated. */
+  createProduct: (data: AdminProductCreate) =>
+    api.post<ApiResponse<AdminProductDetail>>("/api/admin/products", data),
 
   getProduct: (id: string) =>
     api.get<ApiResponse<AdminProductDetail>>(`/api/admin/products/${id}`),
@@ -94,6 +100,10 @@ const adminService = {
   // Orders (admin only)
   listOrders: (params: AdminOrderListParams) =>
     api.get<ApiResponse<PageResponse<AdminOrderRow>>>("/api/admin/orders", { params }),
+
+  /** CSV of the orders matching the filters. */
+  exportOrders: (params: Omit<AdminOrderListParams, "page" | "size">) =>
+    api.get<Blob>("/api/admin/orders/export", { params, responseType: "blob", timeout: 120_000 }),
 
   orderStats: () => api.get<ApiResponse<OrderStats>>("/api/admin/orders/stats"),
 
@@ -133,6 +143,9 @@ const adminService = {
   listCustomers: (params: AdminCustomerListParams) =>
     api.get<ApiResponse<PageResponse<AdminCustomerRow>>>("/api/admin/customers", { params }),
 
+  exportCustomers: (params: Omit<AdminCustomerListParams, "page" | "size">) =>
+    api.get<Blob>("/api/admin/customers/export", { params, responseType: "blob", timeout: 120_000 }),
+
   getCustomer: (id: string) => api.get<ApiResponse<AdminCustomerDetail>>(`/api/admin/customers/${id}`),
 
   setRole: (id: string, role: UserRole) =>
@@ -144,6 +157,10 @@ const adminService = {
   // Analytics (FR-IN-05) and settings
   analyticsSummary: (params: { from?: string; to?: string }) =>
     api.get<ApiResponse<AnalyticsSummary>>("/api/admin/analytics/summary", { params }),
+
+  /** Sales, by department and top products over the last N days (design 12 Reports). */
+  salesReport: (days: 7 | 14 | 30) =>
+    api.get<ApiResponse<SalesReport>>("/api/admin/reports/sales", { params: { days } }),
 
   settings: () => api.get<ApiResponse<AdminSettings>>("/api/admin/settings"),
 

@@ -1,0 +1,85 @@
+/* =====================================================================
+   STOREFRONT SHELL + HOMEPAGE v2 (design 01): header search suggestions,
+   featured rail, deals of the day, rail states. Tokens from daylora.css.
+   ===================================================================== */
+
+/* ---- Header search suggestions (autocomplete) ---- */
+form[role="search"]{position:relative}
+.ac{position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:120;background:#fff;border-radius:var(--r-md);box-shadow:0 12px 32px rgba(18,53,91,.18),0 0 0 1px rgba(18,53,91,.06);padding:var(--s-2) 0;max-height:min(560px,calc(100vh - 140px));overflow:auto;text-align:left;color:var(--ink)}
+.ac[hidden]{display:none}
+.ac h3{font-size:12px;line-height:16px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);padding:var(--s-2) var(--s-4) var(--s-1)}
+.ac-opt{display:flex;align-items:center;gap:var(--s-3);min-height:44px;padding:var(--s-2) var(--s-4);font-size:15px;line-height:22px;cursor:pointer;color:inherit;text-decoration:none}
+.ac-opt .icon{width:18px;height:18px;flex:none;color:var(--muted)}
+.ac-opt b{font-weight:700}
+.ac-opt .ac-typed{font-weight:400}
+.ac-opt .ac-scope{color:var(--leaf-700);font-weight:500}
+.ac-opt[aria-selected="true"],.ac-opt:hover{background:var(--surface)}
+.ac-sep{height:1px;background:var(--line);margin:var(--s-2) 0}
+.ac-thumb{position:relative;width:44px;height:44px;border-radius:var(--r-sm);flex:none;display:grid;place-items:center;overflow:hidden;background:#EEF1F4;color:#A3ADBA}
+.ac-thumb img{width:100%;height:100%;object-fit:cover}
+.ac-opt .ac-thumb .icon{width:22px;height:22px;color:inherit}
+.ac-pname{flex:1;min-width:0;font-size:14px;line-height:20px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ac-pname small{display:block;font-size:12px;line-height:16px;color:var(--muted)}
+.ac-price{font-size:14px;font-weight:700;white-space:nowrap}
+.ac-all{justify-content:space-between;font-size:14px;font-weight:600;color:var(--leaf-700)}
+.ac-opt.ac-all .icon{color:currentColor}
+@media (max-width:1023px){ .ac{top:calc(100% + 4px)} }
+.header .search input::-webkit-search-cancel-button{cursor:pointer}
+
+/* ---- Rail states ---- */
+.rail .skel-card .skel:first-child{aspect-ratio:1;border-radius:var(--r-md)}
+.feat .skel-card .skel:first-child{aspect-ratio:4/5;border-radius:var(--r-lg)}
+.rail-empty{padding:var(--s-6) var(--s-4);border:1px dashed var(--line);border-radius:var(--r-md);text-align:center;font-size:14px;line-height:20px;color:var(--muted)}
+.deal-skel .d-media{min-height:160px;border-radius:0}
+.deal-skel .d-body{gap:var(--s-2)}
+
+/* ---- Featured v2: 5 products, no boxes, more air ---- */
+@media (min-width:1024px){ .rail.feat{grid-template-columns:repeat(5,minmax(0,1fr));gap:var(--s-7) var(--s-6)} }
+.feat .card{border:0;background:transparent;overflow:visible;box-shadow:none}
+.feat .card:hover{box-shadow:none}
+.feat .card-media{border-radius:var(--r-lg);aspect-ratio:4/5}
+.feat .card-body{padding:var(--s-4) 0 0;gap:6px;flex:1}
+.feat .variant,.feat .stock.in,.feat .save{display:none}
+.feat .name{font-size:15px;line-height:22px}
+.feat .price-row{margin-top:var(--s-1);margin-bottom:var(--s-3)}
+.feat .card-body .stock{margin-bottom:0}
+.feat .add{margin-top:auto;min-height:40px;background:transparent;border:1.5px solid var(--navy);color:var(--navy)}
+.feat .add:hover{background:var(--navy);color:#fff}
+.feat .add.added{background:var(--navy);color:#fff}
+.feat .add:disabled{background:var(--disabled-bg);border-color:var(--disabled-bg);color:var(--disabled-fg)}
+
+/* ---- Deals of the day v2: 3 wide cards + countdown ---- */
+.deals .section-head{align-items:flex-end}
+.deal-end{display:flex;align-items:center;gap:var(--s-3);padding:var(--s-2) var(--s-2) var(--s-2) var(--s-4);background:#fff;border-radius:var(--r-pill);box-shadow:var(--shadow-1);flex:none}
+.deal-end span{font-size:13px;font-weight:600;color:var(--muted)}
+.deal-end b{font-variant-numeric:tabular-nums;font-size:16px;letter-spacing:.04em;color:#fff;background:var(--save);padding:6px 12px;border-radius:var(--r-pill)}
+.dgrid{display:grid;gap:var(--s-5)}
+@media (min-width:1024px){ .dgrid{grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-6)} }
+.deal{display:grid;grid-template-columns:132px minmax(0,1fr);grid-template-rows:auto;background:#fff;border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-1);transition:box-shadow .2s,transform .2s}
+@media (min-width:600px){ .deal{grid-template-columns:200px minmax(0,1fr)} }
+@media (min-width:1024px){ .deal{grid-template-columns:minmax(0,1fr);grid-template-rows:auto 1fr} }
+.deal:hover{box-shadow:0 12px 32px rgba(18,53,91,.14);transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){ .deal:hover{transform:none} }
+.d-media{position:relative;overflow:hidden;display:grid;place-items:center;background:var(--img);color:#A3ADBA;min-height:160px}
+@media (min-width:1024px){ .d-media{aspect-ratio:16/9} }
+.d-media .media-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.d-media .icon{width:48px;height:48px}
+.d-badge{position:absolute;z-index:1;left:var(--s-3);top:var(--s-3);padding:4px 12px;border-radius:var(--r-pill);background:var(--peach);color:var(--navy);font-size:14px;font-weight:800}
+.d-body{display:flex;flex-direction:column;gap:6px;padding:var(--s-4) var(--s-5) var(--s-5);flex:1;min-width:0}
+.d-body .name{font-size:16px;line-height:22px;font-weight:600;color:var(--ink);min-height:0}
+.d-body .name:hover{text-decoration:underline;text-underline-offset:2px}
+.d-price{display:flex;align-items:baseline;flex-wrap:wrap;gap:var(--s-2);margin-top:var(--s-1)}
+.d-price .price{font-size:24px;line-height:30px;color:var(--save)}
+.d-price .was{font-size:14px}
+.d-body .save{font-size:13px;margin-bottom:var(--s-3)}
+.d-body .add{margin-top:auto;min-height:44px}
+.deal.is-out .d-media{opacity:.5}
+.deals .daylora-container{display:flex;flex-direction:column}
+.deals-all{margin-top:var(--s-5);align-self:center}
+
+/* ---- Type: the design's Inter. next/font registers it as --font-sans on <body>; Tailwind's
+   .font-sans utility would otherwise swap in the system stack. ---- */
+body.font-sans{font-family:var(--font-sans,"Inter"),"Inter",system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+
+/* ---- Add-to-cart toast: fully hidden while parked off-screen (its shadow would peek in) ---- */
+.toast:not(.show){visibility:hidden;transition:transform .25s,visibility 0s .25s}

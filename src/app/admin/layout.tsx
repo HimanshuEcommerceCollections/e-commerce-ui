@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import "./_styles/admin.css";
 
 export const metadata: Metadata = {
-  title: "Daylora Admin",
+  title: { absolute: "Admin · Ecommerce Collections", template: "%s · Admin · Ecommerce Collections" },
   description: "Products, orders, inventory and catalog import",
   robots: { index: false, follow: false },
 };

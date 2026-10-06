@@ -1,71 +1,68 @@
 import React from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
-import { DayloraProductCard } from "./DayloraProductCard";
-import { ProductItem } from "./dayloraData";
+import { DayloraProductCard, type AddToCart } from "./DayloraProductCard";
+import type { CardModel } from "./shop/storefrontCatalog";
 
 interface DayloraProductRailProps {
   id?: string;
   title: string;
   subtitle?: string;
-  eyebrow?: string;
-  viewAllText?: string;
-  viewAllHref?: string;
-  products: ProductItem[];
-  isDeal?: boolean;
-  isBand?: boolean;
+  viewAllHref: string;
+  products: CardModel[];
+  loading: boolean;
+  /** Message shown when there's nothing to list (or the catalog couldn't load). */
+  emptyText: string;
+  /** "feat": the borderless featured layout, 5 across (design v2). */
+  variant?: "feat";
+  showNew?: boolean;
   dataNote?: string;
-  onAddToCart?: (p: ProductItem) => void | Promise<boolean | void>;
-  loading?: boolean;
+  onAdd: AddToCart;
 }
 
 export function DayloraProductRail({
   id,
   title,
   subtitle,
-  eyebrow,
-  viewAllText = "View all",
-  viewAllHref = "/catalog",
+  viewAllHref,
   products,
-  isDeal = false,
-  isBand = false,
+  loading,
+  emptyText,
+  variant,
+  showNew,
   dataNote,
-  onAddToCart,
-  loading = false,
+  onAdd,
 }: DayloraProductRailProps) {
-  const sectionClass = isBand ? "band deals" : "section";
-
+  const skeletons = variant === "feat" ? 5 : 6;
   return (
-    <section id={id} className={sectionClass} data-note={dataNote}>
+    <section id={id} className="section" data-note={dataNote} aria-busy={loading}>
       <div className="daylora-container">
         <div className="section-head">
           <div>
-            {eyebrow && <span className="t-eyebrow">{eyebrow}</span>}
             <h2 className="t-h2">{title}</h2>
             {subtitle && <p>{subtitle}</p>}
           </div>
           <Link href={viewAllHref} className="link">
-            {viewAllText} <DayloraIcon name="arrow" />
+            View all <DayloraIcon name="arrow" />
           </Link>
         </div>
-        <div className="rail">
-          {loading && Array.from({ length: 6 }, (_, i) => (
-            <div key={i} className="skel-card" aria-hidden="true">
-              <div className="skel" style={{ aspectRatio: "1", borderRadius: 12 }} />
-              <div className="skel" style={{ height: 12, width: "40%" }} />
-              <div className="skel" style={{ height: 16, width: "85%" }} />
-              <div className="skel" style={{ height: 20, width: "30%" }} />
-            </div>
-          ))}
-          {products.map((p) => (
-            <DayloraProductCard
-              key={p.id}
-              product={p}
-              isDeal={isDeal}
-              onAddToCart={onAddToCart}
-            />
-          ))}
-        </div>
+        {!loading && products.length === 0 ? (
+          <p className="rail-empty">{emptyText}</p>
+        ) : (
+          <div className={`rail${variant ? ` ${variant}` : ""}`}>
+            {loading
+              ? Array.from({ length: skeletons }, (_, i) => (
+                  <div key={i} className="skel-card" aria-hidden="true">
+                    <div className="skel" />
+                    <div className="skel" style={{ height: 12, width: "40%" }} />
+                    <div className="skel" style={{ height: 16, width: "85%" }} />
+                    <div className="skel" style={{ height: 20, width: "30%" }} />
+                    <div className="skel" style={{ height: 40, borderRadius: 999, marginTop: 8 }} />
+                  </div>
+                ))
+              : products.map((p) => <DayloraProductCard key={p.id} product={p} onAdd={onAdd} showNew={showNew} />)}
+          </div>
+        )}
       </div>
     </section>
   );

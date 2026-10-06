@@ -29,3 +29,19 @@ export function useStoreConfig(): StoreConfig | null {
   }, []);
   return config;
 }
+
+/**
+ * Same as useStoreConfig, plus whether the request finished without a config
+ * (so a page can show an error instead of loading placeholders forever).
+ */
+export function useStoreConfigState(): { config: StoreConfig | null; loading: boolean; failed: boolean } {
+  const [state, setState] = useState<{ config: StoreConfig | null; loading: boolean }>({ config: cached, loading: !cached });
+  useEffect(() => {
+    let live = true;
+    load().then((c) => live && setState({ config: c, loading: false }));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return { config: state.config, loading: state.loading, failed: !state.loading && !state.config };
+}

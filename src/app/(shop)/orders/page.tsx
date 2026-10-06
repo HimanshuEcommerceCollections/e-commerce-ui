@@ -1,9 +1,6 @@
-import type { Metadata } from "next";
-import { DayloraOrders } from "@/components/daylora/shop/DayloraOrders";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Your orders · Daylora", robots: { index: false } };
-
-/** Order history and tracking (FR-ST-12). */
+/** Old link: order history lives in the account area now. */
 export default function OrdersPage() {
-  return <DayloraOrders />;
+  redirect("/account#orders");
 }

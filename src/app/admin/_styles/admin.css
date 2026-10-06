@@ -1,4 +1,4 @@
-/* Daylora admin, ported from daylora-admin-preview.html. Every rule is scoped
+/* Admin panel, ported from design 12-admin.html. Every rule is scoped
    under .dla so the storefront styles are untouched (and vice versa). */
 .dla{--navy:#12355B; --navy-900:#0C2742; --leaf:#16794C; --leaf-700:#11603C; --mint:#BFE3CF; --mint-50:#EEF7F2;
   --surface:#F1F6FA; --peach-50:#FFF3EA; --save:#B54708;
@@ -284,3 +284,91 @@
 .dla .fbar{height:12px;border-radius:6px;background:var(--grey-50);overflow:hidden}
 .dla .fbar i{display:block;height:100%;background:var(--leaf);border-radius:6px;transition:width .3s}
 @media (max-width:479px){.dla .row2{grid-template-columns:1fr}.dla .kv{grid-template-columns:100px minmax(0,1fr)}}
+
+/* ---- Shell: user chip + menu (design 12 side-foot), phone top bar ---- */
+.dla .brandrow{gap:var(--s-2)}
+.dla .brandrow b{margin-right:auto;min-width:0}
+.dla .side-top{display:block}
+@media (min-width:1024px){.dla .side-top{display:none}}
+.dla .menu summary.btn{font-size:14px;line-height:20px}
+.dla .side-foot{padding:var(--s-2) 0 0}
+.dla .umenu{position:relative}
+.dla .umenu summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:var(--s-3);border-radius:var(--r-sm)}
+.dla .umenu summary::-webkit-details-marker{display:none}
+.dla .umenu.foot{flex:1;min-width:0}
+.dla .umenu.foot summary{padding:var(--s-2)}
+.dla .umenu.foot summary:hover,.dla .umenu[open].foot summary{background:rgba(255,255,255,.08)}
+.dla .umenu .who{display:block;flex:1;min-width:0}
+.dla .umenu .who strong{display:block;color:#fff;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dla .umenu .who span{display:block;font-size:12px;color:#C9D6E5}
+.dla .umenu-list{position:absolute;z-index:70;min-width:232px;background:#fff;color:var(--ink);border:1px solid var(--line);border-radius:var(--r-md);box-shadow:0 12px 32px rgba(12,24,40,.24);padding:var(--s-1);display:flex;flex-direction:column}
+.dla .umenu.foot .umenu-list{left:0;right:0;bottom:calc(100% + 6px)}
+.dla .umenu.top .umenu-list{right:0;top:calc(100% + 6px)}
+.dla .umenu-head{display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:var(--s-2) var(--s-3) var(--s-3);border-bottom:1px solid var(--line);margin-bottom:var(--s-1)}
+.dla .umenu-head strong{font-weight:600}
+.dla .umenu-head span:not(.pill){font-size:12px;color:var(--muted);overflow-wrap:anywhere}
+.dla .umenu-head .pill{margin-top:4px}
+.dla .umenu-list a,.dla .umenu-list button{display:flex;align-items:center;gap:var(--s-2);min-height:40px;padding:0 var(--s-3);border-radius:var(--r-sm);font-weight:500;text-align:left}
+.dla .umenu-list a:hover,.dla .umenu-list button:hover,.dla .umenu-list [aria-current="page"]{background:var(--grey-50)}
+.dla .umenu-list .icon{color:var(--muted)}
+
+/* ---- Phones: tables become stacked cards (label left, value right), as in the design ---- */
+@media (max-width:767px){
+  .dla .twrap table,.dla .twrap tbody{display:block}
+  .dla .twrap thead{display:none}
+  .dla .twrap tr{display:flex;flex-direction:column;padding:var(--s-3) var(--s-4);border-bottom:1px solid var(--line)}
+  .dla .twrap td{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;column-gap:var(--s-3);padding:6px 0;border:0;white-space:normal;text-align:right}
+  .dla .twrap td > *{grid-column:2;justify-self:end}
+  .dla .twrap td::before{grid-row:1 / span 6;content:attr(data-label);font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);text-align:left;flex:none}
+  .dla .twrap td:first-child > *{justify-self:start}
+  .dla .twrap td[data-label=""]::before,.dla .twrap td:not([data-label])::before{content:none}
+  .dla .twrap td[data-label=""],.dla .twrap td:not([data-label]){grid-template-columns:minmax(0,1fr)}
+  .dla .twrap td[data-label=""] > *{grid-column:1}
+  .dla .twrap td.num{text-align:right}
+  .dla .twrap tr.empty-row td,.dla .twrap tr.loading-row td{display:block;text-align:center}
+  .dla .twrap .pcell{min-width:0}
+  .dla .twrap td.cell-check{position:absolute;right:var(--s-4);top:var(--s-3);padding:0}
+  .dla .twrap tr{position:relative}
+  .dla .twrap td.cell-check + td{padding-right:32px}
+}
+
+/* ---- Customers & Reports (design 12) ---- */
+.dla .cust{display:flex;align-items:center;gap:var(--s-3)}
+.dla .cust .av{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:13px;font-weight:700;color:var(--navy);background:var(--mint-50);flex:none}
+.dla .cust strong{display:block}
+.dla tr.click:focus-visible{outline-offset:-2px}
+.dla .r-grid{display:grid;gap:var(--s-4)}
+@media (min-width:1024px){.dla .r-grid{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
+.dla .r-h{display:flex;align-items:baseline;justify-content:space-between;gap:var(--s-3);padding:var(--s-4) var(--s-4) 0}
+.dla .r-h h2{font-size:16px;font-weight:700}
+.dla .r-h span{font-size:13px;color:var(--muted)}
+.dla .r-chart{padding:var(--s-3) var(--s-4) var(--s-4);position:relative}
+.dla .r-chart svg{display:block;width:100%;height:auto}
+.dla .r-chart .grid{stroke:#EEF1F4;stroke-width:1}
+.dla .r-chart .axis{fill:var(--muted);font-size:11px}
+.dla .r-chart .line{fill:none;stroke:var(--navy);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.dla .r-chart .area{fill:var(--navy);opacity:.08}
+.dla .r-chart .hit{fill:transparent;cursor:crosshair}
+.dla .r-chart .cross{stroke:#C4CDD8;stroke-width:1}
+.dla .r-chart .dot{fill:var(--navy);stroke:#fff;stroke-width:2}
+.dla .r-tip{position:absolute;pointer-events:none;background:var(--navy);color:#fff;border-radius:var(--r-sm);padding:6px 10px;font-size:12px;line-height:16px;white-space:nowrap;transform:translate(-50%,-100%);box-shadow:var(--shadow-1)}
+.dla .r-tip b{display:block;font-size:13px}
+.dla .r-bars{display:flex;flex-direction:column;gap:var(--s-3);padding:var(--s-4)}
+.dla .r-bar{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px var(--s-3);font-size:13px}
+.dla .r-bar .t{height:8px;border-radius:999px;background:#EEF1F4;grid-column:1/-1;overflow:hidden}
+.dla .r-bar .t i{display:block;height:100%;background:var(--navy);border-radius:inherit}
+.dla .r-bar b{font-variant-numeric:tabular-nums}
+.dla .delta{font-size:12px;font-weight:600}
+.dla .delta.up{color:var(--ok)}
+.dla .delta.down{color:var(--bad)}
+.dla .delta.flat{color:var(--muted)}
+
+/* ---- Add product ---- */
+.dla .vedit{display:flex;flex-direction:column;gap:var(--s-3);padding:var(--s-3)}
+.dla .vedit + .vedit{border-top:1px solid var(--line)}
+.dla .vedit-h{display:flex;align-items:center;justify-content:space-between;gap:var(--s-2)}
+.dla .vedit textarea.inp{min-height:64px}
+.dla .req{color:var(--bad)}
+
+/* Storefront stylesheets declare an unscoped .toast (top-anchored); keep the admin's bottom toast. */
+.dla .toast{top:auto;width:auto;height:auto}

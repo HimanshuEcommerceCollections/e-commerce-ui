@@ -3,7 +3,7 @@ import { useEffect, useState, type ReactNode } from "react";
 import adminService from "@/services/admin/admin.service";
 import { getApiErrorMessage } from "@/lib/apiError";
 import type { AdminSettings } from "@/types/api/admin.types";
-import { Icon, money } from "@/components/admin/ui";
+import { Icon, money, usePageTitle } from "@/components/admin/ui";
 
 const yes = (b: boolean) => <span className={`pill ${b ? "p-ok" : "p-grey"}`}>{b ? "On" : "Off"}</span>;
 const provider = (p: string) => (p === "manual" ? "Manual" : p.charAt(0).toUpperCase() + p.slice(1));
@@ -12,6 +12,7 @@ const amount = (v: string | number | null | undefined, currency: string) =>
 
 /** Store configuration, read-only: it comes from the server's environment. */
 export default function AdminSettingsPage() {
+  usePageTitle("Settings");
   const [s, setS] = useState<AdminSettings | null>(null);
   const [error, setError] = useState<string | null>(null);
 

@@ -85,6 +85,8 @@ export interface AdminProductUpdate {
   description?: string;
   subcategoryId?: string;
   featured?: boolean;
+  /** Replaces the list; an empty array clears it. */
+  keyFeatures?: string[];
 }
 
 export interface AdminVariantUpdate {
@@ -108,6 +110,7 @@ export interface AdminProductListParams {
   search?: string;
   status?: ProductStatus;
   categoryId?: string;
+  subcategoryId?: string;
   page?: number;
   size?: number;
   sort?: string;
@@ -118,6 +121,7 @@ export interface AdminProductListParams {
 export interface AdminInventoryRow {
   id: string;
   sku: string;
+  warehouseId: string | null;
   parentId: string;
   productName: string;
   variantName: string | null;
@@ -237,7 +241,8 @@ export interface AdminOrderItem {
 }
 
 export interface OrderTimelineEntry {
-  status: OrderStatusValue;
+  /** "" when the entry only changed the fulfilment status. */
+  status: OrderStatusValue | "";
   fulfilmentStatus: FulfilmentStatus | null;
   note: string | null;
   actor: string;
@@ -316,7 +321,8 @@ export interface AdminOrderDetail {
   deliveredAt: string | null;
   createdAt: string;
   updatedAt: string;
-  customer: { id: string; fullName: string; email: string; phoneNumber: string | null; orders: number };
+  /** `id` is null for a guest order. */
+  customer: { id: string | null; fullName: string; email: string; phoneNumber: string | null; orders: number; guest: boolean };
   cancellationReason: string | null;
   cancelledBy: string | null;
 }
@@ -326,6 +332,31 @@ export interface OrderStats {
   byStatus: Partial<Record<OrderStatusValue, number>>;
   awaitingFulfilment: Partial<Record<"UNFULFILLED" | "PICKED" | "PACKED", number>>;
   returnsByStatus: Partial<Record<ReturnStatus, number>>;
+}
+
+/** POST /api/admin/products: manual product entry (FR-AD-01). Blank SKUs are generated. */
+export interface AdminProductCreate {
+  name: string;
+  brand?: string;
+  subcategoryId: string;
+  productType?: string;
+  shortDescription?: string;
+  description?: string;
+  status: ProductStatus;
+  featured?: boolean;
+  variants: {
+    sku?: string;
+    variantName?: string;
+    color?: string;
+    size?: string;
+    price: number;
+    mrp?: number;
+    taxRate?: number;
+    stockQuantity: number;
+    lowStockThreshold?: number;
+    /** At least one. */
+    imageUrls: string[];
+  }[];
 }
 
 export interface AdminOrderListParams {
@@ -354,6 +385,10 @@ export interface TrackingEventRequest {
 // ── Returns and refunds (FR-AD-07) ──────────────────────────────────────────
 
 export interface AdminReturn extends OrderReturnSummary {
+  /** How the parcel comes back, when the customer chose. */
+  method?: "DROPOFF" | "PICKUP" | null;
+  /** The refund the lines are worth (price and tax). */
+  estimatedRefund?: number;
   adminNote: string | null;
   refundReference: string | null;
   /** What a REFUND pays by default: the lines' price and tax, capped at what's left. */
@@ -389,6 +424,9 @@ export interface AdminCustomerRow {
   phoneNumber: string | null;
   role: UserRole;
   enabled: boolean;
+  marketingOptIn: boolean;
+  /** "City, ST" from the latest order. */
+  location: string | null;
   createdAt: string;
   orders: number;
   totalSpent: number;
@@ -408,6 +446,7 @@ export interface AdminCustomerDetail {
   phoneNumber: string | null;
   role: UserRole;
   enabled: boolean;
+  marketingOptIn: boolean;
   createdAt: string;
   lastLoginAt: string | null;
   totalSpent: number;
@@ -453,6 +492,29 @@ export interface AnalyticsSummary {
   conversionRate: number | null;
   topViewedProducts: TopProduct[];
   topAddedToCartProducts: TopProduct[];
+}
+
+// ── Reports (design 12) ─────────────────────────────────────────────────────
+
+export interface SalesReport {
+  from: string;
+  to: string;
+  currency: string;
+  totals: { revenue: number; orders: number; units: number; averageOrderValue: number };
+  /** The preceding period of the same length, for deltas. */
+  previous: { revenue: number; orders: number };
+  daily: { date: string; revenue: number; orders: number }[];
+  byDepartment: { categoryId: string | null; name: string; revenue: number; units: number }[];
+  topProducts: {
+    productId: string;
+    parentId: string | null;
+    name: string;
+    sku: string;
+    imageUrl: string | null;
+    units: number;
+    revenue: number;
+    stockLeft: number;
+  }[];
 }
 
 // ── Settings (read-only, from server configuration) ─────────────────────────

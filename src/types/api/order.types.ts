@@ -1,3 +1,5 @@
+import type { CartItemResponse, CartLineInput } from "./cart.types";
+
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
 export enum OrderStatus {
@@ -40,9 +42,14 @@ export interface ShippingAddressSnapshot {
 export interface OrderItem {
   id:               string;
   productId:        string;
+  parentId:         string | null;
   merchantId:       string;
   productName:      string;
   sku:              string;
+  variantName:      string | null;
+  color:            string | null;
+  size:             string | null;
+  imageUrl:         string | null;
   unitPrice:        number;
   quantity:         number;
   lineTotal:        number;
@@ -61,6 +68,13 @@ export interface OrderTimelineEvent {
   at:               string;
 }
 
+export interface ShipmentEvent {
+  status:      ShipmentStatus;
+  description: string | null;
+  location:    string | null;
+  occurredAt:  string;
+}
+
 export interface Shipment {
   id:             string;
   provider:       string;
@@ -71,58 +85,92 @@ export interface Shipment {
   status:         ShipmentStatus;
   deliveredAt:    string | null;
   createdAt:      string;
-  events: { status: ShipmentStatus; description: string | null; location: string | null; occurredAt: string }[];
+  /** Newest first. */
+  events:         ShipmentEvent[];
 }
 
+export type ReturnMethod = "DROPOFF" | "PICKUP";
+
 export interface OrderReturn {
-  id:           string;
-  rmaNumber:    string;
-  status:       ReturnStatus;
-  reason:       string;
-  requestedBy:  "CUSTOMER" | "ADMIN";
-  refundAmount: number | null;
-  restocked:    boolean;
-  items:        { orderItemId: string; quantity: number }[];
-  createdAt:    string;
-  receivedAt:   string | null;
-  refundedAt:   string | null;
+  id:              string;
+  rmaNumber:       string;
+  status:          ReturnStatus;
+  reason:          string;
+  method:          ReturnMethod | null;
+  requestedBy:     "CUSTOMER" | "ADMIN";
+  /** Set once refunded. */
+  refundAmount:    number | null;
+  /** Price and tax of the returned lines. */
+  estimatedRefund: number;
+  restocked:       boolean;
+  items:           { orderItemId: string; quantity: number }[];
+  createdAt:       string;
+  receivedAt:      string | null;
+  refundedAt:      string | null;
+}
+
+/** ISO dates, business days after payment (or placement). */
+export interface DeliveryWindow {
+  from: string;
+  to:   string;
 }
 
 export interface Order {
-  id:               string;
-  orderNumber:      string;
-  status:           OrderStatus;
-  fulfilmentStatus: FulfilmentStatus | null;
-  currency:         string;
-  subtotal:         number;
-  taxTotal:         number;
-  shippingTotal:    number;
-  discountTotal:    number;
-  grandTotal:       number;
-  refundedTotal:    number;
-  shippingMethod:   ShippingMethod | null;
-  paymentStatus:    PaymentStatus | null;
-  shippingAddress:  ShippingAddressSnapshot;
-  items:            OrderItem[];
-  /** Present on the order detail (GET /api/orders/:id). */
-  timeline?:        OrderTimelineEvent[];
-  shipments?:       Shipment[];
-  returns?:         OrderReturn[];
-  paidAt:           string | null;
-  shippedAt:        string | null;
-  deliveredAt:      string | null;
-  createdAt:        string;
-  updatedAt:        string;
+  id:                string;
+  orderNumber:       string;
+  status:            OrderStatus;
+  fulfilmentStatus:  FulfilmentStatus | null;
+  currency:          string;
+  subtotal:          number;
+  taxTotal:          number;
+  shippingTotal:     number;
+  discountTotal:     number;
+  grandTotal:        number;
+  refundedTotal:     number;
+  shippingMethod:    ShippingMethod | null;
+  paymentStatus:     PaymentStatus | null;
+  customerEmail:     string | null;
+  guest:             boolean;
+  estimatedDelivery: DeliveryWindow | null;
+  shippingAddress:   ShippingAddressSnapshot;
+  items:             OrderItem[];
+  timeline:          OrderTimelineEvent[];
+  shipments:         Shipment[];
+  returns:           OrderReturn[];
+  /** Delivered + the return window; null until delivered. */
+  returnableUntil:   string | null;
+  paidAt:            string | null;
+  shippedAt:         string | null;
+  deliveredAt:       string | null;
+  createdAt:         string;
+  updatedAt:         string;
+}
+
+export interface OrderSummaryItem {
+  productId:   string;
+  productName: string;
+  variantName: string | null;
+  color:       string | null;
+  size:        string | null;
+  imageUrl:    string | null;
+  quantity:    number;
 }
 
 export interface OrderSummary {
-  id:               string;
-  orderNumber:      string;
-  status:           OrderStatus;
-  fulfilmentStatus: FulfilmentStatus | null;
-  currency:         string;
-  grandTotal:       number;
-  createdAt:        string;
+  id:                string;
+  orderNumber:       string;
+  status:            OrderStatus;
+  fulfilmentStatus:  FulfilmentStatus | null;
+  currency:          string;
+  grandTotal:        number;
+  itemCount:         number;
+  createdAt:         string;
+  deliveredAt:       string | null;
+  estimatedDelivery: DeliveryWindow | null;
+  shipToName:        string;
+  items:             OrderSummaryItem[];
+  latestShipment:    { carrier: string; trackingNumber: string; trackingUrl: string | null; status: ShipmentStatus } | null;
+  returnableUntil:   string | null;
 }
 
 /** POST /api/orders returns the order and, for Stripe, the secret to confirm payment with. */
@@ -131,54 +179,93 @@ export interface CheckoutResponse {
   clientSecret: string | null;
 }
 
+/** POST /api/checkout/guest also returns the secret that lets this browser read the order. */
+export interface GuestCheckoutResponse extends CheckoutResponse {
+  guestToken: string;
+}
+
 export interface ShippingOption {
   method:            ShippingMethod;
   label:             string;
   estimatedDelivery: string;
+  minDays:           number;
+  maxDays:           number;
   fee:               number;
   free:              boolean;
 }
 
-/** POST /api/orders/quote (FR-ST-10). */
+/** POST /api/checkout/quote (FR-ST-10). */
 export interface CheckoutQuote {
   currency:              string;
   shippingMethod:        ShippingMethod;
   shippingOptions:       ShippingOption[];
   freeShippingThreshold: number | null;
   subtotal:              number;
+  savings:               number;
   taxTotal:              number;
   shippingTotal:         number;
   discountTotal:         number;
   grandTotal:            number;
   pricesIncludeTax:      boolean;
+  lines:                 CartItemResponse[];
 }
 
 export interface ReturnRequestBody {
-  items:  { orderItemId: string; quantity: number }[];
-  reason: string;
+  items:   { orderItemId: string; quantity: number }[];
+  reason:  string;
+  method?: ReturnMethod;
+}
+
+/** POST /api/orders/track: a guest's view of one order (FR-ST-12, FR-IN-04). */
+export interface TrackedOrder {
+  orderNumber:       string;
+  status:            OrderStatus;
+  fulfilmentStatus:  FulfilmentStatus | null;
+  createdAt:         string;
+  shippingMethod:    ShippingMethod | null;
+  estimatedDelivery: DeliveryWindow | null;
+  deliveredAt:       string | null;
+  items:             Omit<OrderSummaryItem, "productId">[];
+  shipments:         Shipment[];
+  timeline:          OrderTimelineEvent[];
+  /** City only, for privacy. */
+  shipTo:            { city: string; state: string; postalCode5: string };
 }
 
 // ─── Request Types ───────────────────────────────────────────────────────────
 
+export interface ShippingAddressInput {
+  recipientName: string;
+  phone?:        string;
+  addressLine1:  string;
+  addressLine2?: string;
+  city:          string;
+  state:         string;
+  postalCode:    string;
+  country:       string; // "US"
+}
+
+/** Signed-in checkout from the server cart: a saved address or one typed in. */
 export interface CheckoutRequest {
-  addressId:       string;
+  addressId?:       string;
+  shippingAddress?: ShippingAddressInput;
+  saveAddress?:     boolean;
+  shippingMethod?:  ShippingMethod;
+}
+
+export interface GuestCheckoutRequest {
+  email:           string;
+  marketingOptIn?: boolean;
+  shippingAddress: ShippingAddressInput;
   shippingMethod?: ShippingMethod;
+  items:           CartLineInput[];
 }
 
 export interface OrderListParams {
-  page?: number;
-  size?: number;
-}
-
-// ─── Pagination Meta ─────────────────────────────────────────────────────────
-
-export interface OrderListMeta {
-  currentPage:   number;
-  totalPages:    number;
-  totalElements: number;
-  pageSize:      number;
-  isFirst:       boolean;
-  isLast:        boolean;
+  page?:   number;
+  size?:   number;
+  /** open = on the way; done = delivered, cancelled or refunded. */
+  status?: "open" | "done";
 }
 
 // ─── Status Helpers ──────────────────────────────────────────────────────────

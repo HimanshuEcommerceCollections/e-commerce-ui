@@ -1,9 +1,10 @@
 import React from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
-import { CATEGORIES } from "./dayloraData";
+import { catalogHref, type Department } from "./shop/departments";
 
-export function DayloraCategories() {
+/** Shop by department (FR-ST-01/02): the nine departments of the taxonomy. */
+export function DayloraCategories({ departments }: { departments: Department[] }) {
   return (
     <section className="section" data-note="FR-ST-01/02 · Shop by category">
       <div className="daylora-container">
@@ -14,12 +15,12 @@ export function DayloraCategories() {
           </Link>
         </div>
         <div className="cat-grid" id="catGrid">
-          {CATEGORIES.map((c) => (
-            <Link key={c.name} href={c.href} className="cat">
+          {departments.map((d) => (
+            <Link key={d.slug} href={catalogHref({ dept: d.slug })} className="cat">
               <span className="cat-img">
-                <DayloraIcon name={c.icon} />
+                <DayloraIcon name={d.icon} />
               </span>
-              {c.name}
+              {d.name}
             </Link>
           ))}
         </div>

@@ -31,6 +31,10 @@ const PATHS: Record<string, ReactNode> = {
   alert: (<><path d="M12 3l10 18H2z" /><path d="M12 10v5M12 18v.01" /></>),
   clock: (<><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>),
   star: <path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1 6.2L12 17.3 6.5 20.2l1-6.2L3 9.6l6.2-.9z" />,
+  store: (<><path d="M4 9l1.5-5h13L20 9" /><path d="M4 9h16v2a3 3 0 01-6 0 3 3 0 01-4 0 3 3 0 01-6 0z" /><path d="M5 13v7h14v-7M10 20v-4h4v4" /></>),
+  chevron: <path d="M6 9l6 6 6-6" />,
+  edit: (<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M14 6l4 4" /></>),
+  trash: (<><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></>),
 };
 
 export function Icon({ name, size, className }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {
@@ -40,6 +44,18 @@ export function Icon({ name, size, className }: { name: keyof typeof PATHS | str
     </svg>
   );
 }
+
+/** "Store Admin" → "SA". */
+export const initials = (name: string) =>
+  name
+    .split(/[\s@.]+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((w) => w[0]!.toUpperCase())
+    .join("");
+
+/** The signed-in staff member's role as the panel names it. */
+export const PANEL_ROLE_LABEL: Record<string, string> = { ROLE_ADMIN: "Admin", ROLE_CATALOG: "Catalog admin" };
 
 // ── Formatting ──────────────────────────────────────────────────────────────
 
@@ -292,4 +308,11 @@ export function useDebounced<T>(value: T, ms = 300): T {
     return () => clearTimeout(t);
   }, [value, ms, setV]);
   return v;
+}
+
+/** Client pages can't export metadata, so the tab title is set here. */
+export function usePageTitle(title: string) {
+  useEffect(() => {
+    document.title = `${title} · Admin · Ecommerce Collections`;
+  }, [title]);
 }

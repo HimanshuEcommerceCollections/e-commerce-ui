@@ -21,8 +21,11 @@ api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
-    if (error.response?.status === 401) {
+    // Only a rejected session token signs the shopper out; a 401 on a call
+    // made without one (a guest) is the page's to handle.
+    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
       localStorage.removeItem("accessToken");
+      localStorage.removeItem("nexus-auth"); // the persisted session
       // Admin pages have their own sign-in page.
       const inAdmin = window.location.pathname.startsWith("/admin");
       if (window.location.pathname !== "/admin/login") {

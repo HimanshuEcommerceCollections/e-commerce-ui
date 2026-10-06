@@ -75,12 +75,17 @@ export interface ProductSummaryResponse extends VariantAttributes {
   lowStockThreshold: number | null; // this SKU's own; null = store default
   sku: string;
   status: ProductStatus;
+  /** Department. */
+  categoryId: string | null;
   categoryName: string | null;     // denormalized
   categorySlug: string | null;
+  /** Section within the department, e.g. Men. */
+  subcategoryId: string | null;
   subcategoryName: string | null;
   subcategorySlug: string | null;
   productType: string | null;
   primaryImageUrl: string | null;
+  imageUrls: string[];
   parentId: string;
   parentCode: string;
   parentName: string;
@@ -89,8 +94,10 @@ export interface ProductSummaryResponse extends VariantAttributes {
   material: string | null;
   searchKeywords: string | null;
   urlSlug: string | null;
+  /** The parent's category attribute values, used as PLP facets (Fit, Connectivity…). */
+  attributes: Record<string, string>;
   /** Units sold on paid orders, for the popularity sort (FR-ST-05). */
-  unitsSold?: number;
+  unitsSold: number;
   merchantId: string;
   createdAt: string;               // ISO-8601 UTC
 }
