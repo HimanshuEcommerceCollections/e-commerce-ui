@@ -1,11 +1,6 @@
-import type { Metadata } from 'next';
-import SellerSignupClient from './SellerSignupClient';
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = {
-  title: 'Seller Signup — ShopHub Seller Center',
-  description: 'Join 50,000+ sellers on ShopHub. Zero upfront cost, start listing in minutes.',
-};
-
+/** Seller self-signup is replaced by the "Sell with us" application form. */
 export default function SellerSignupPage() {
-  return <SellerSignupClient />;
+  redirect("/sell");
 }

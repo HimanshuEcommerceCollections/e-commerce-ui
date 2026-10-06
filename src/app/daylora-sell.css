@@ -1,0 +1,118 @@
+/* =====================================================================
+   SELL WITH US (design 11) — /sell. Seller interest form only (the
+   marketplace itself is Phase 2). Scoped under .sell-page.
+   mobile: intro → form → steps · desktop: 6/6 of 12, form on the right
+   ===================================================================== */
+.sell-page .sell-hero{background:var(--surface);padding:var(--s-6) 0 var(--section)}
+@media (min-width:1024px){ .sell-page .sell-hero{padding:var(--s-8) 0 var(--section)} }
+.sell-page .sell-grid{display:grid;grid-template-columns:minmax(0,1fr);grid-template-areas:"intro" "form" "steps";gap:var(--s-6)}
+.sell-page .sell-intro{grid-area:intro}
+.sell-page .sell-form-wrap{grid-area:form}
+.sell-page .sell-steps{grid-area:steps}
+@media (min-width:1024px){
+  .sell-page .sell-grid{grid-template-columns:minmax(0,1fr) minmax(0,1fr);grid-template-areas:"intro form" "steps form";grid-template-rows:auto 1fr;column-gap:var(--s-8);row-gap:var(--s-7);align-items:start}
+  .sell-page .sell-form-wrap{position:sticky;top:144px}
+}
+.sell-page .sell-intro{display:flex;flex-direction:column;gap:var(--s-4)}
+.sell-page .sell-intro .t-eyebrow{color:var(--leaf)}
+.sell-page .sell-intro h1{color:var(--navy)}
+.sell-page .sell-intro > p{font-size:16px;line-height:24px;color:var(--muted);max-width:52ch}
+@media (min-width:1024px){ .sell-page .sell-intro > p{font-size:18px;line-height:28px} }
+
+/* ---- Left side: 3 light sections + reveal-on-scroll micro-animations ---- */
+.sell-page .benefits{display:flex;flex-wrap:wrap;gap:var(--s-2);margin-top:var(--s-2)}
+.sell-page .benefits li{display:inline-flex;align-items:center;gap:var(--s-2);height:36px;padding:0 var(--s-4) 0 var(--s-3);border-radius:var(--r-pill);background:#fff;border:1px solid var(--line);font-size:14px;font-weight:600;color:var(--navy)}
+.sell-page .benefits .icon{width:18px;height:18px;color:var(--leaf)}
+.sell-page .sell-steps{display:flex;flex-direction:column}
+.sell-page .blk{padding:var(--s-6) 0;border-top:1px solid #DCE4EC}
+.sell-page .blk:first-child{border-top:0;padding-top:0}
+.sell-page .blk h2{font-size:18px;line-height:28px;font-weight:700;color:var(--navy)}
+.sell-page .blk-sub{font-size:14px;line-height:20px;color:var(--muted);margin-top:2px}
+/* How it works: numbered stepper, connector line draws in */
+.sell-page .flow{position:relative;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-3);margin-top:var(--s-5);list-style:none;text-align:center}
+.sell-page .flow::before{content:"";position:absolute;top:20px;left:16.66%;right:16.66%;height:2px;background:var(--mint);transform:scaleX(0);transform-origin:left;transition:transform .9s cubic-bezier(.4,0,.2,1) .15s}
+.sell-page .flow li{position:relative;display:flex;flex-direction:column;align-items:center;gap:2px}
+.sell-page .flow-n{display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;margin-bottom:var(--s-2);box-shadow:0 0 0 6px var(--surface);transform:scale(.6);opacity:0;transition:transform .35s cubic-bezier(.3,1.6,.5,1),opacity .2s;transition-delay:calc(var(--i) * 280ms)}
+.sell-page .flow strong{font-size:15px;line-height:22px;color:var(--ink)}
+.sell-page .flow li > span:last-child{font-size:13px;line-height:18px;color:var(--muted)}
+.sell-page .blk.in .flow::before{transform:scaleX(1)}
+.sell-page .blk.in .flow-n{transform:none;opacity:1}
+/* Departments: chips rise in one by one */
+.sell-page .depts{display:flex;flex-wrap:wrap;gap:var(--s-2);margin-top:var(--s-4);list-style:none}
+.sell-page .depts li{display:inline-flex;align-items:center;gap:var(--s-2);height:40px;padding:0 var(--s-4) 0 var(--s-3);border-radius:var(--r-pill);background:#fff;border:1px solid var(--line);font-size:14px;font-weight:500;color:var(--ink);opacity:0;transform:translateY(8px);transition:opacity .3s,transform .3s,border-color .15s,box-shadow .15s;transition-delay:calc(var(--i) * 45ms),calc(var(--i) * 45ms),0s,0s}
+.sell-page .depts .icon{width:18px;height:18px;color:var(--leaf)}
+.sell-page .blk.in .depts li{opacity:1;transform:none}
+.sell-page .blk.in .depts li:hover{transform:translateY(-2px);border-color:#AEBCCB;box-shadow:0 4px 12px rgba(18,53,91,.08)}
+/* What we look for: ticks draw in */
+.sell-page .looks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-3) var(--s-5);margin-top:var(--s-4);list-style:none}
+.sell-page .looks li{display:flex;align-items:center;gap:var(--s-3);font-size:15px;line-height:22px;font-weight:500;color:var(--ink);opacity:0;transition:opacity .3s;transition-delay:calc(var(--i) * 90ms)}
+.sell-page .tick{flex:none;width:24px;height:24px;border-radius:50%;background:var(--mint-50);fill:none;stroke:var(--leaf);stroke-width:2.5;stroke-linecap:round;stroke-linejoin:round}
+.sell-page .tick path{stroke-dasharray:20;stroke-dashoffset:20;transition:stroke-dashoffset .4s ease;transition-delay:calc(var(--i) * 90ms + 150ms)}
+.sell-page .blk.in .looks li{opacity:1}
+.sell-page .blk.in .tick path{stroke-dashoffset:0}
+@media (max-width:420px){ .sell-page .looks{grid-template-columns:minmax(0,1fr)} }
+@media (prefers-reduced-motion:reduce){
+  .sell-page .flow::before,.sell-page .flow-n,.sell-page .depts li,.sell-page .looks li,.sell-page .tick path{transition:none!important}
+}
+
+/* ---- Form card ---- */
+.sell-page .form-card{scroll-margin-top:144px;background:#fff;border-radius:var(--r-lg);box-shadow:0 12px 40px rgba(18,53,91,.10);border:1px solid var(--line);padding:var(--s-5)}
+@media (min-width:768px){ .sell-page .form-card{padding:var(--s-6)} }
+.sell-page .form-card h2{font-size:20px;line-height:28px;font-weight:700;color:var(--ink)}
+.sell-page .form-card .sub{font-size:14px;line-height:20px;color:var(--muted);margin-top:var(--s-1)}
+.sell-page .form{display:grid;gap:var(--s-5);margin-top:var(--s-5)}
+.sell-page .row2{display:grid;gap:var(--s-5)}
+@media (min-width:768px){ .sell-page .row2{grid-template-columns:1fr 1fr} }
+.sell-page .field{display:flex;flex-direction:column;gap:var(--s-2);min-width:0}
+.sell-page .field label{font-size:14px;line-height:20px;font-weight:600;color:var(--ink)}
+.sell-page .field .opt-tag{font-weight:400;color:var(--muted)}
+.sell-page .field .hint{font-size:12px;line-height:16px;color:var(--muted)}
+.sell-page .input{width:100%;min-height:48px;padding:var(--s-3) var(--s-4);border:1px solid #AEB8C5;border-radius:var(--r-sm);background:#fff;font:inherit;font-size:16px;line-height:24px;color:var(--ink);transition:border-color .15s,box-shadow .15s}
+.sell-page .input::placeholder{color:#8792A1}
+.sell-page .input:hover{border-color:var(--navy)}
+.sell-page .input:focus{outline:none;border-color:var(--leaf);box-shadow:0 0 0 3px rgba(22,121,76,.18)}
+.sell-page textarea.input{min-height:104px;resize:vertical}
+.sell-page select.input{appearance:none;padding-right:var(--s-7);background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6675' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") right 14px center/18px no-repeat}
+.sell-page .dd{position:relative}
+.sell-page .dd-btn{display:flex;align-items:center;gap:var(--s-2);text-align:left;cursor:pointer}
+.sell-page .dd-val{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#8792A1}
+.sell-page .dd-btn.has-val .dd-val{color:var(--ink)}
+.sell-page .dd-chev{width:18px;height:18px;color:var(--muted);transition:transform .2s}
+.sell-page .dd-btn[aria-expanded="true"]{border-color:var(--leaf);box-shadow:0 0 0 3px rgba(22,121,76,.18)}
+.sell-page .dd-btn[aria-expanded="true"] .dd-chev{transform:rotate(180deg)}
+.sell-page .dd-menu{display:none;position:absolute;left:0;right:0;top:calc(100% + 4px);z-index:20;padding:var(--s-2);background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);box-shadow:0 12px 32px rgba(18,53,91,.14)}
+.sell-page .dd.open .dd-menu{display:grid;gap:2px;max-height:320px;overflow-y:auto}
+.sell-page .field .dd-opt{display:flex;align-items:center;gap:var(--s-3);min-height:44px;padding:0 var(--s-3);border-radius:6px;font-size:15px;font-weight:400;color:var(--ink);cursor:pointer}
+.sell-page .dd-opt:hover{background:var(--surface)}
+.sell-page .dd-opt input{width:18px;height:18px;flex:none;accent-color:var(--leaf)}
+.sell-page .dd-opt .icon{width:20px;height:20px;color:var(--muted)}
+.sell-page .field .consent{display:flex;gap:var(--s-3);align-items:flex-start;font-size:14px;line-height:20px;font-weight:400;color:var(--ink);cursor:pointer}
+.sell-page .consent input{flex:none;width:20px;height:20px;margin-top:0;accent-color:var(--leaf)}
+.sell-page .consent a{color:var(--leaf);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.sell-page .btn-submit{width:100%;min-height:56px}
+.sell-page .btn-submit:disabled{opacity:.7;cursor:progress}
+.sell-page .fine{font-size:12px;line-height:16px;color:var(--muted);text-align:center}
+
+/* Errors */
+.sell-page .err{display:none;align-items:center;gap:var(--s-1);font-size:14px;line-height:20px;font-weight:500;color:var(--low-stock)}
+.sell-page .err .icon{width:16px;height:16px}
+.sell-page .field.invalid .err{display:flex}
+.sell-page .field.invalid .input{border-color:var(--low-stock)}
+.sell-page .field.invalid .input:focus{box-shadow:0 0 0 3px rgba(180,35,24,.15)}
+.sell-page .summary{display:flex;gap:var(--s-3);padding:var(--s-4);border-radius:var(--r-md);background:#FEF3F2;border:1px solid #FECDCA;color:var(--ink);font-size:14px;line-height:20px}
+.sell-page .summary:focus{outline:2px solid var(--low-stock);outline-offset:2px}
+.sell-page .summary .icon{color:var(--low-stock)}
+.sell-page .summary ul{margin-top:var(--s-1);display:grid;gap:2px}
+.sell-page .summary a{color:var(--low-stock);text-decoration:underline;text-underline-offset:3px}
+
+/* Success */
+.sell-page .success{display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--s-4);padding:var(--s-6) var(--s-2)}
+.sell-page .success:focus{outline:none}
+.sell-page .success-ic{display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--mint-50);color:var(--leaf)}
+.sell-page .success-ic .icon{width:32px;height:32px;stroke-width:2.25}
+.sell-page .success h2{font-size:24px;line-height:32px}
+.sell-page .success p{font-size:16px;line-height:24px;color:var(--muted);max-width:40ch}
+.sell-page .success .recap{width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s-4);font-size:14px;line-height:20px;display:grid;grid-template-columns:auto 1fr;gap:var(--s-2) var(--s-4)}
+.sell-page .success .recap dt{color:var(--muted)}
+.sell-page .success .recap dd{color:var(--ink);font-weight:500;overflow-wrap:anywhere}
+.sell-page .input,.sell-page .summary,.sell-page .consent input{scroll-margin-top:160px}

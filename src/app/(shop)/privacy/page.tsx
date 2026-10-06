@@ -1,22 +1,6 @@
-import type { Metadata } from "next";
-import { DayloraInfoPage } from "@/components/daylora/shop/DayloraInfoPage";
+import { redirect } from "next/navigation";
 
-export const metadata: Metadata = { title: "Privacy policy · Daylora" };
-
+/** The privacy policy lives in the help center. */
 export default function PrivacyPage() {
-  return (
-    <DayloraInfoPage
-      eyebrow="Legal"
-      title="Privacy policy"
-      intro="How we collect, use and protect your personal information."
-      draft
-      sections={[
-        {
-          id: "dns",
-          title: "Do not sell or share my personal information",
-          body: <p>How to opt out will be explained here.</p>,
-        },
-      ]}
-    />
-  );
+  redirect("/help?t=privacy");
 }

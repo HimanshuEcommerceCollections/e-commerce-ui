@@ -1,0 +1,122 @@
+/* =====================================================================
+   HELP CENTER (design 10) — /help?t=home|shipping|returns|faq|contact|privacy|terms
+   Everything is scoped under .help so it can't collide with other pages.
+   ===================================================================== */
+.help{background:#fff;padding:var(--s-5) 0 var(--section)}
+.help [hidden]{display:none!important}
+
+/* hero + search (help home) */
+.help .help-hero{background:var(--navy);color:#fff;border-radius:var(--r-lg);padding:var(--s-7) var(--s-5);display:flex;flex-direction:column;align-items:center;text-align:center;gap:var(--s-4)}
+.help .help-main .help-hero h1{font-size:32px;line-height:40px;font-weight:800;letter-spacing:-.5px;color:#fff}
+.help .help-main .help-hero p{color:#C9D6E3}
+.help .hsearch{display:flex;align-items:center;gap:var(--s-2);width:min(560px,100%);height:52px;padding:0 var(--s-2) 0 var(--s-4);background:#fff;border-radius:var(--r-pill)}
+.help .hsearch.boxed{border:1px solid #C4CDD8;width:100%}
+.help .hsearch input{flex:1;min-width:0;height:100%;border:0;font:inherit;font-size:16px;color:var(--ink);background:transparent}
+.help .hsearch input:focus{outline:none}
+.help .hsearch:focus-within{box-shadow:0 0 0 3px var(--mint)}
+.help .hsearch.boxed:focus-within{box-shadow:0 0 0 3px rgba(22,121,76,.18);border-color:var(--leaf)}
+.help .hsearch .icon{width:20px;height:20px;color:var(--muted)}
+.help .results{display:flex;flex-direction:column;gap:var(--s-2);width:min(560px,100%);text-align:left}
+.help .results:empty{display:none}
+.help .results a{display:block;padding:var(--s-3) var(--s-4);background:#fff;border-radius:var(--r-md);color:var(--ink);text-decoration:none}
+.help .results a:hover{box-shadow:0 0 0 2px var(--mint)}
+.help .results small{display:block;color:var(--muted);font-size:13px;line-height:18px}
+.help .help-main .results p{color:#C9D6E3}
+.help .help-main .results p a{display:inline;padding:0;background:none;color:var(--mint);text-decoration:underline}
+
+/* topic tiles */
+.help .topics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-3);margin-top:var(--s-5)}
+@media (min-width:768px){ .help .topics{grid-template-columns:repeat(5,minmax(0,1fr))} }
+.help .topic{display:flex;flex-direction:column;gap:var(--s-2);padding:var(--s-4);border:1px solid var(--line);border-radius:var(--r-md);background:#fff;transition:border-color .15s,box-shadow .15s}
+.help .topic:hover{border-color:var(--navy);box-shadow:0 6px 18px rgba(18,53,91,.1)}
+.help .topic .icon{width:28px;height:28px;color:var(--leaf)}
+.help .topic b{font-size:15px;color:var(--ink)}
+.help .topic span{font-size:13px;color:var(--muted);line-height:18px}
+
+/* layout: side nav on topic pages */
+.help .help-grid{display:grid;gap:var(--s-5)}
+.help .help-grid.side{grid-template-columns:minmax(0,1fr)}
+@media (min-width:1024px){ .help .help-grid.side{grid-template-columns:220px minmax(0,1fr);gap:var(--s-8);align-items:start} }
+.help .hnav-wrap{display:none}
+.help .side .hnav-wrap{display:block}
+.help .hnav{display:flex;gap:var(--s-2);overflow-x:auto;scrollbar-width:none}
+.help .hnav::-webkit-scrollbar{display:none}
+@media (min-width:1024px){ .help .hnav{flex-direction:column;gap:2px;position:sticky;top:96px} }
+.help .hnav a{display:flex;align-items:center;min-height:40px;padding:0 var(--s-4);border-radius:var(--r-pill);border:1px solid var(--line);font-size:14px;font-weight:500;white-space:nowrap}
+@media (min-width:1024px){ .help .hnav a{border:0;border-radius:var(--r-sm)} .help .hnav a:hover{background:var(--surface)} }
+.help .hnav a[aria-current="page"]{background:var(--navy);color:#fff;border-color:var(--navy)}
+
+/* article typography */
+.help .help-main{display:flex;flex-direction:column;gap:var(--s-5);min-width:0;max-width:820px}
+.help .help-main.wide{max-width:none}
+.help .help-main h1{font-size:30px;line-height:38px;font-weight:700;color:var(--navy);letter-spacing:-.4px}
+.help .help-main h2{font-size:20px;line-height:28px;font-weight:700;color:var(--ink)}
+.help .help-main p,.help .help-main li{font-size:16px;line-height:26px;color:#3F4A58}
+.help .help-main ul:not(.plain),.help .help-main ol:not(.plain){padding-left:1.25em;display:flex;flex-direction:column;gap:6px}
+.help .help-main ul:not(.plain){list-style:disc}
+.help .help-main ol:not(.plain){list-style:decimal}
+.help .help-main .lead{font-size:18px;line-height:28px;color:var(--muted)}
+.help .faq .a a,.help .help-main p a,.help .help-main li a{color:var(--leaf-700);text-decoration:underline;text-underline-offset:2px}
+.help mark{background:#FFF1C2;color:inherit;border-radius:2px}
+.help .tbl-wrap{overflow-x:auto;border:1px solid var(--line);border-radius:var(--r-md)}
+.help .tbl{width:100%;border-collapse:collapse;font-size:15px;min-width:480px}
+.help .tbl th,.help .tbl td{padding:var(--s-3) var(--s-4);text-align:left;border-bottom:1px solid var(--line)}
+.help .tbl th{background:#F7F9FB;font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.help .tbl tr:last-child td{border-bottom:0}
+.help .tbl .free{color:var(--leaf-700);font-weight:700}
+.help .note{display:flex;gap:var(--s-3);padding:var(--s-4);border-radius:var(--r-md);background:var(--surface);font-size:15px;line-height:22px}
+.help .note .icon{width:22px;height:22px;color:var(--leaf);flex:none}
+.help .help-main .steps-n{list-style:none;padding:0;counter-reset:n;display:grid;gap:var(--s-3)}
+@media (min-width:768px){ .help .help-main .steps-n{grid-template-columns:repeat(3,1fr)} }
+.help .steps-n li{counter-increment:n;padding:var(--s-4);border:1px solid var(--line);border-radius:var(--r-md);font-size:15px;line-height:22px}
+.help .steps-n li::before{content:counter(n);display:grid;place-items:center;width:28px;height:28px;border-radius:50%;background:var(--navy);color:#fff;font-weight:700;font-size:13px;margin-bottom:var(--s-2)}
+.help .steps-n b{display:block;color:var(--ink)}
+.help .draft{font-size:13px;font-weight:600;color:#7A4B00;background:#FFF8E6;border:1px solid #F5D98A;border-radius:var(--r-sm);padding:var(--s-2) var(--s-3)}
+.help .skel-txt{display:inline-block;width:4.5em;height:.9em;border-radius:4px;background:linear-gradient(90deg,#EEF1F4 25%,#E3E8EE 50%,#EEF1F4 75%);background-size:200% 100%;animation:help-shimmer 1.2s infinite linear;vertical-align:middle}
+@keyframes help-shimmer{to{background-position:-200% 0}}
+@media (prefers-reduced-motion:reduce){ .help .skel-txt{animation:none} .help .topic,.help .faq summary .icon{transition:none} }
+
+/* FAQ accordion */
+.help .faq-g{display:flex;flex-direction:column}
+.help .faq-g h2{margin:var(--s-4) 0 var(--s-2)}
+.help .faq{border-top:1px solid var(--line);scroll-margin-top:144px}
+.help .faq:last-child{border-bottom:1px solid var(--line)}
+.help .faq summary{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);min-height:56px;cursor:pointer;list-style:none;font-size:16px;font-weight:600;color:var(--ink);padding:var(--s-2) 0}
+.help .faq summary::-webkit-details-marker{display:none}
+.help .faq summary .icon{width:20px;height:20px;color:var(--muted);transition:transform .2s;flex:none}
+.help .faq[open] summary .icon{transform:rotate(180deg)}
+.help .faq .a{padding:0 0 var(--s-4);font-size:15px;line-height:24px;color:#3F4A58;max-width:68ch}
+
+/* contact */
+.help .contact-grid{display:grid;gap:var(--s-5)}
+@media (min-width:900px){ .help .contact-grid{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr);align-items:start} }
+.help .ways{display:flex;flex-direction:column;gap:var(--s-3)}
+.help .way{display:flex;gap:var(--s-3);padding:var(--s-4);border:1px solid var(--line);border-radius:var(--r-md)}
+.help .way .icon{width:24px;height:24px;color:var(--leaf);flex:none}
+.help .way b{display:block;color:var(--ink)}
+.help .way > span{font-size:14px;color:var(--muted);line-height:20px}
+.help .way a{color:var(--navy);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.help .card{background:#fff;border:1px solid var(--line);border-radius:var(--r-lg);padding:var(--s-5)}
+@media (min-width:768px){ .help .card{padding:var(--s-6)} }
+.help .cform{display:flex;flex-direction:column;gap:var(--s-4)}
+.help .row2{display:grid;gap:var(--s-4)}
+@media (min-width:600px){ .help .row2{grid-template-columns:1fr 1fr} }
+.help .field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.help .field label{font-size:14px;line-height:20px;font-weight:600;color:var(--ink)}
+.help .field .opt{font-weight:400;color:var(--muted)}
+.help .field input,.help .field select,.help .field textarea{min-height:48px;padding:0 var(--s-3);border:1px solid #9AA5B4;border-radius:var(--r-sm);font:inherit;font-size:16px;color:var(--ink);background:#fff;width:100%}
+.help .field textarea{padding:var(--s-3);min-height:120px;resize:vertical}
+.help .field select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235B6675' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;background-size:18px;padding-right:34px}
+.help .field input:focus,.help .field select:focus,.help .field textarea:focus{outline:2px solid var(--leaf);outline-offset:1px;border-color:var(--leaf)}
+.help .field .hint{font-size:13px;line-height:18px;color:var(--muted)}
+.help .field .err{display:none;font-size:13px;line-height:18px;font-weight:500;color:var(--low-stock)}
+.help .field.bad input,.help .field.bad select,.help .field.bad textarea{border-color:var(--low-stock);box-shadow:0 0 0 1px var(--low-stock)}
+.help .field.bad .err{display:block}
+.help .alert{display:flex;gap:var(--s-3);padding:var(--s-3) var(--s-4);border-radius:var(--r-md);font-size:14px;line-height:20px}
+.help .alert.err{background:#FEF3F2;border:1px solid #FDA29B;color:#7A271A}
+.help .alert.ok{background:var(--mint-50);border:1px solid var(--mint);color:var(--ink)}
+.help .alert .icon{width:20px;height:20px;flex:none}
+.help .help-main .alert p{font-size:14px;line-height:20px;color:inherit}
+.help .cform .btn{align-self:flex-start}
+.help .cform .btn:disabled{opacity:.7;cursor:progress}
+.help .field input,.help .field select,.help .field textarea{scroll-margin-top:160px}

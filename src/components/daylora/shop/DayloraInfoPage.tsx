@@ -57,26 +57,3 @@ export function DayloraInfoPage({
     </main>
   );
 }
-
-/** Shipping and returns terms, as shown on the PDP design. */
-export const SHIPPING_TERMS: [string, string][] = [
-  ["Standard", "Free on orders $35+ · 3–5 business days"],
-  ["Express", "$9.99 · 1–2 business days"],
-];
-export const RETURN_TERMS: [string, string][] = [
-  ["Returns", "Free within 30 days. Items must be unused and in their original packaging."],
-  ["Refunds", "To your original payment method, 5–7 business days after we receive the return."],
-];
-
-export function TermsTable({ rows }: { rows: [string, string][] }) {
-  return (
-    <dl className="specs">
-      {rows.map(([k, v]) => (
-        <span key={k} style={{ display: "contents" }}>
-          <dt>{k}</dt>
-          <dd>{v}</dd>
-        </span>
-      ))}
-    </dl>
-  );
-}

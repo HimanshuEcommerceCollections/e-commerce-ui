@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import { DayloraInfoPage } from "@/components/daylora/shop/DayloraInfoPage";
 
-export const metadata: Metadata = { title: "About us · Daylora" };
+export const metadata: Metadata = { title: "About us · Ecommerce Collections" };
 
 export default function AboutPage() {
   return (
     <DayloraInfoPage
       eyebrow="Company"
-      title="About Daylora"
+      title="About Ecommerce Collections"
       intro="One store for everyday needs: clothing, electronics, home, grocery, beauty and more."
       draft
       sections={[
