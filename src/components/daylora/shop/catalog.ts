@@ -15,7 +15,7 @@ export const COLOR_HEX: Record<string, string> = {
   Oak: "#B98A5A", Teal: "#1F7A7A", Purple: "#6B4C9A", Indigo: "#2E3F6E", Stone: "#B8B0A2",
   Ecru: "#E6DCC5", Slate: "#5E6B78", Sand: "#D8C3A0", Mustard: "#C99A2E", Lavender: "#B8A6D9",
   Mint: "#A8D8C0", Coral: "#E8745F", Ivory: "#F4EFE2", Tan: "#C49A6C", Berry: "#8E2C55",
-  Bronze: "#9C6B30", Chalk: "#EEEBE3", Champagne: "#E9DCC0", Wine: "#6E2436", Denim: "#4A6A8E",
+  Bronze: "#9C6B30", Chalk: "#EEEBE3", Cocoa: "#7A4A32", Champagne: "#E9DCC0", Wine: "#6E2436", Denim: "#4A6A8E",
 };
 
 const NEUTRAL = "#D0D5DC";

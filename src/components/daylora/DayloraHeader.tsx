@@ -2,73 +2,83 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
+import { useAuthStore } from "@/store/useAuthStore";
 import { DayloraIcon } from "./DayloraIcons";
-import { BRAND_NAME, CATEGORIES, type CategoryItem } from "./dayloraData";
-import { CLOTHING, clothingHref } from "./shop/taxonomy";
+import { BRAND_NAME } from "./dayloraData";
+import { DayloraSearch } from "./DayloraSearch";
+import { catalogHref, useDepartments, type Department } from "./shop/departments";
 
-/** Departments with a sections pane in the mega menu. Only Clothing has a taxonomy so far. */
-const hasPane = (c: CategoryItem) => c.shortName === "Clothing";
-
-const SHOP_BY = [
-  { t: "New arrivals", href: "/catalog?category=clothing&new=1" },
-  { t: "Deals", href: "/catalog?category=clothing&deals=1", deals: true },
+/** "Shop by" column of the mega menu, per department. */
+const shopBy = (d: Department) => [
+  { t: "New arrivals", href: catalogHref({ dept: d.slug, new: true }) },
+  { t: "Deals", href: catalogHref({ dept: d.slug, deals: true }), deals: true },
+  { t: "Best sellers", href: catalogHref({ dept: d.slug, sort: "pop" }) },
 ];
 
 interface DayloraHeaderProps {
   cartCount: number;
 }
 
+/** Sticky header, desktop nav with the "All departments" mega menu, and the mobile drawer (FR-ST-01, FR-ST-02). */
 export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
-  const router = useRouter();
+  const pathname = usePathname();
+  const departments = useDepartments();
+  const user = useAuthStore((s) => s.user);
+  // Auth and cart live in localStorage: render the signed-out state until mounted to match the server HTML.
+  const [mounted, setMounted] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [deptMenuOpen, setDeptMenuOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  // Mega menu opens on Clothing, the department with sections (design default).
-  const [activeDept, setActiveDept] = useState<string | null>(CATEGORIES.find(hasPane)?.name ?? null);
-  const [drawerDeptOpen, setDrawerDeptOpen] = useState(false);
+  // The mega menu opens on the first department, as in the design.
+  const [activeDept, setActiveDept] = useState<string | null>(null);
+  const [drawerExpanded, setDrawerExpanded] = useState<string | null>(null);
   const deptRef = useRef<HTMLLIElement>(null);
+  const closeBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Close menus on Escape key
+  useEffect(() => setMounted(true), []);
+
+  const firstName = mounted && user ? user.fullName?.trim().split(/\s+/)[0] || null : null;
+  const signedIn = mounted && !!user;
+  const accountHref = signedIn ? "/account" : "/login";
+  const active = departments.find((d) => d.slug === activeDept) ?? departments[0];
+
+  // Close menus on Escape.
   useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
+    const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
         setDeptMenuOpen(false);
         setDrawerOpen(false);
       }
     };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // Close department menu on outside click
+  // Close the department menu on an outside click.
   useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (deptRef.current && !deptRef.current.contains(e.target as Node)) {
-        setDeptMenuOpen(false);
-      }
+    const onClick = (e: MouseEvent) => {
+      if (deptRef.current && !deptRef.current.contains(e.target as Node)) setDeptMenuOpen(false);
     };
-    document.addEventListener("click", handleClickOutside);
-    return () => document.removeEventListener("click", handleClickOutside);
+    document.addEventListener("click", onClick);
+    return () => document.removeEventListener("click", onClick);
   }, []);
 
-  // Sync drawer-open class on html tag for overflow locking
+  // Navigating closes everything.
   useEffect(() => {
-    if (drawerOpen) {
-      document.documentElement.classList.add("drawer-open");
-    } else {
-      document.documentElement.classList.remove("drawer-open");
-    }
-    return () => {
-      document.documentElement.classList.remove("drawer-open");
-    };
+    setDeptMenuOpen(false);
+    setDrawerOpen(false);
+  }, [pathname]);
+
+  // The drawer locks page scroll through a class on <html>, and takes focus.
+  useEffect(() => {
+    document.documentElement.classList.toggle("drawer-open", drawerOpen);
+    if (drawerOpen) closeBtnRef.current?.focus();
+    return () => document.documentElement.classList.remove("drawer-open");
   }, [drawerOpen]);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push(`/catalog?q=${encodeURIComponent(searchQuery.trim())}`);
-    }
+  const closeAll = () => {
+    setDeptMenuOpen(false);
+    setDrawerOpen(false);
   };
 
   return (
@@ -87,74 +97,32 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
               <DayloraIcon name="menu" />
             </button>
 
-            <Link href="/" className="logo" aria-label="Home">
-              <span className="logo-mark">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M6 3h12l3 6-9 12L3 9l3-6z" />
-                </svg>
-              </span>
+            <Link href="/" className="logo" aria-label={`${BRAND_NAME} home`}>
               <span>{BRAND_NAME}</span>
             </Link>
 
-            <form
-              className="search search-desktop"
-              role="search"
-              onSubmit={handleSearchSubmit}
-            >
-              <label className="sr-only" htmlFor="q1">
-                Search
-              </label>
-              <input
-                id="q1"
-                type="search"
-                placeholder="Search products, brands and categories"
-                autoComplete="off"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              <button type="submit" aria-label="Search">
-                <DayloraIcon name="search" />
-              </button>
-            </form>
+            <DayloraSearch id="q1" className="search-desktop" placeholder="Search products, brands and categories" />
 
             <Link
-              href="/login"
+              href={accountHref}
               className="icon-btn"
-              aria-label="Sign in or view your account"
+              aria-label={signedIn ? "Your account" : "Sign in or view your account"}
+              data-account
             >
               <DayloraIcon name="user" />
-              <span className="label-desktop">Sign in</span>
+              <span className="label-desktop">{firstName ? `Hi, ${firstName}` : signedIn ? "Account" : "Sign in"}</span>
             </Link>
 
-            <Link href="/cart" className="icon-btn" aria-label="Cart">
+            <Link href="/cart" className="icon-btn" aria-label={`Cart, ${mounted ? cartCount : 0} items`}>
               <DayloraIcon name="cart" />
               <span className="label-desktop">Cart</span>
               <span className="cart-count" id="cartCount" aria-live="polite">
-                {cartCount}
+                {mounted ? cartCount : 0}
               </span>
             </Link>
           </div>
 
-          <form
-            className="search search-mobile"
-            role="search"
-            onSubmit={handleSearchSubmit}
-          >
-            <label className="sr-only" htmlFor="q2">
-              Search
-            </label>
-            <input
-              id="q2"
-              type="search"
-              placeholder="Search products and brands"
-              autoComplete="off"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" aria-label="Search">
-              <DayloraIcon name="search" />
-            </button>
-          </form>
+          <DayloraSearch id="q2" className="search-mobile" placeholder="Search products and brands" />
         </div>
 
         {/* NAVIGATION (desktop) */}
@@ -167,73 +135,76 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
                   id="deptBtn"
                   aria-expanded={deptMenuOpen}
                   aria-controls="deptMenu"
-                  onClick={() => setDeptMenuOpen(!deptMenuOpen)}
+                  onClick={() => {
+                    if (!deptMenuOpen) setActiveDept(departments[0]?.slug ?? null);
+                    setDeptMenuOpen(!deptMenuOpen);
+                  }}
                 >
                   <DayloraIcon name="grid" />
                   All departments
                   <DayloraIcon name="chev" className="icon chev" />
                 </button>
                 <div
-                  className={`dept-menu ${deptMenuOpen ? "open" : ""} ${
-                    CATEGORIES.some((c) => c.name === activeDept && hasPane(c)) ? "has-pane" : ""
-                  }`}
+                  className={`dept-menu${deptMenuOpen ? " open" : ""}${active && active.sections.length ? " has-pane" : ""}`}
                   id="deptMenu"
                 >
                   <div className="dm-list">
-                    {CATEGORIES.map((c) => (
+                    {departments.map((d) => (
                       <Link
-                        key={c.name}
-                        href={hasPane(c) ? clothingHref() : c.href}
-                        className={c.name === activeDept ? "active" : undefined}
-                        aria-haspopup={hasPane(c) ? "true" : undefined}
-                        onMouseEnter={() => setActiveDept(c.name)}
-                        onFocus={() => setActiveDept(c.name)}
-                        onClick={() => setDeptMenuOpen(false)}
+                        key={d.slug}
+                        href={catalogHref({ dept: d.slug })}
+                        className={`has-sub${d.slug === active?.slug ? " active" : ""}`}
+                        aria-haspopup={d.sections.length ? "true" : undefined}
+                        onMouseEnter={() => setActiveDept(d.slug)}
+                        onFocus={() => setActiveDept(d.slug)}
+                        onClick={closeAll}
                       >
-                        <DayloraIcon name={c.icon} />
-                        {c.name}
-                        {hasPane(c) && <DayloraIcon name="chev" className="icon sub-chev" />}
+                        <DayloraIcon name={d.icon} />
+                        {d.name}
+                        {d.sections.length > 0 && <DayloraIcon name="chev" className="icon sub-chev" />}
                       </Link>
                     ))}
                   </div>
-                  <div className="dm-pane" aria-label="Department sections">
-                    {CLOTHING.map((s) => (
-                      <div key={s.key} className="dm-col">
-                        <h4>{s.label}</h4>
-                        <Link href={clothingHref(s)} className="dm-all" onClick={() => setDeptMenuOpen(false)}>
-                          Shop all {s.label.toLowerCase()}
+                  <div className="dm-pane" aria-label={active ? `${active.name} sections` : "Department sections"}>
+                    {active?.sections.map((s) => (
+                      <div key={s.slug} className="dm-col">
+                        <h4>{s.name}</h4>
+                        <Link href={catalogHref({ dept: active.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
+                          Shop all {s.name.toLowerCase()}
                         </Link>
                         {s.types.map((t) => (
-                          <Link key={t.name} href={clothingHref(s, t)} onClick={() => setDeptMenuOpen(false)}>
-                            {t.name}
+                          <Link key={t} href={catalogHref({ dept: active.slug, g: s.slug, type: t })} onClick={closeAll}>
+                            {t}
                           </Link>
                         ))}
                       </div>
                     ))}
-                    <div className="dm-col">
-                      <h4>Shop by</h4>
-                      {SHOP_BY.map((i) => (
-                        <Link key={i.t} href={i.href} className={i.deals ? "dm-deals" : undefined} onClick={() => setDeptMenuOpen(false)}>
-                          {i.t}
+                    {active && (
+                      <div className="dm-col">
+                        <h4>Shop by</h4>
+                        {shopBy(active).map((i) => (
+                          <Link key={i.t} href={i.href} className={i.deals ? "dm-deals" : undefined} onClick={closeAll}>
+                            {i.t}
+                          </Link>
+                        ))}
+                        <Link href={catalogHref({ dept: active.slug })} className="dm-all" onClick={closeAll}>
+                          All {active.name.toLowerCase()}
                         </Link>
-                      ))}
-                      <Link href={clothingHref()} className="dm-all" onClick={() => setDeptMenuOpen(false)}>
-                        All clothing
-                      </Link>
-                    </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </li>
               <li>
-                <Link href="/catalog?deals=1" className="deals-link">
+                <Link href={catalogHref({ deals: true })} className="deals-link">
                   Today&apos;s deals
                 </Link>
               </li>
               <li>
-                <Link href="/catalog?new=1">New arrivals</Link>
+                <Link href={catalogHref({ new: true })}>New arrivals</Link>
               </li>
               <li className="nav-sell">
-                <Link href="/seller/signup">
+                <Link href="/sell">
                   <DayloraIcon name="store" />
                   Sell on {BRAND_NAME}
                 </Link>
@@ -244,94 +215,73 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
       </header>
 
       {/* Mobile drawer */}
-      <div
-        className="backdrop"
-        id="backdrop"
-        onClick={() => setDrawerOpen(false)}
-      />
-      <aside
-        className="drawer"
-        id="drawer"
-        aria-label="Menu"
-        aria-hidden={!drawerOpen}
-      >
+      <div className="backdrop" id="backdrop" onClick={() => setDrawerOpen(false)} />
+      <aside className="drawer" id="drawer" aria-label="Menu" aria-hidden={!drawerOpen}>
         <div className="drawer-head">
-          <Link href="/login" onClick={() => setDrawerOpen(false)}>
+          <Link href={accountHref} onClick={closeAll}>
             <DayloraIcon name="user" />
-            Sign in / Create account
+            {firstName ? `Hi, ${firstName}` : signedIn ? "Your account" : "Sign in / Create account"}
           </Link>
-          <button
-            className="icon-btn"
-            id="closeBtn"
-            aria-label="Close menu"
-            onClick={() => setDrawerOpen(false)}
-          >
+          <button className="icon-btn" id="closeBtn" aria-label="Close menu" ref={closeBtnRef} onClick={() => setDrawerOpen(false)}>
             <DayloraIcon name="close" />
           </button>
         </div>
         <div className="drawer-body">
           <h3 className="t-eyebrow">Shop by department</h3>
           <div id="drawerList">
-            <Link
-              href="/catalog?deals=1"
-              className="deals-link"
-              onClick={() => setDrawerOpen(false)}
-            >
+            <Link href={catalogHref({ deals: true })} className="deals-link" onClick={closeAll}>
               <DayloraIcon name="tag" />
               Deals
             </Link>
-            {CATEGORIES.map((c) =>
-              hasPane(c) ? (
-                <React.Fragment key={c.name}>
+            {departments.map((d) => {
+              const expanded = drawerExpanded === d.slug;
+              const panelId = `drp-${d.slug}`;
+              return (
+                <React.Fragment key={d.slug}>
                   <button
                     className="dr-sub"
-                    aria-expanded={drawerDeptOpen}
-                    aria-controls="drawer-clothing"
-                    onClick={() => setDrawerDeptOpen(!drawerDeptOpen)}
+                    aria-expanded={expanded}
+                    aria-controls={panelId}
+                    onClick={() => setDrawerExpanded(expanded ? null : d.slug)}
                   >
-                    <DayloraIcon name={c.icon} />
-                    {c.name}
+                    <DayloraIcon name={d.icon} />
+                    {d.name}
                     <DayloraIcon name="chev" className="icon chev" />
                   </button>
-                  <div className="dr-panel" id="drawer-clothing">
-                    <Link href={clothingHref()} className="dm-all" style={{ marginTop: 8 }} onClick={() => setDrawerOpen(false)}>
-                      Shop all clothing
+                  <div className="dr-panel" id={panelId}>
+                    <Link href={catalogHref({ dept: d.slug })} className="dm-all" style={{ marginTop: 8 }} onClick={closeAll}>
+                      Shop all {d.name.toLowerCase()}
                     </Link>
-                    {CLOTHING.map((s) => (
-                      <React.Fragment key={s.key}>
-                        <h4>{s.label}</h4>
-                        <Link href={clothingHref(s)} className="dm-all" onClick={() => setDrawerOpen(false)}>
-                          Shop all {s.label.toLowerCase()}
+                    {d.sections.map((s) => (
+                      <React.Fragment key={s.slug}>
+                        <h4>{s.name}</h4>
+                        <Link href={catalogHref({ dept: d.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
+                          Shop all {s.name.toLowerCase()}
                         </Link>
                         {s.types.map((t) => (
-                          <Link key={t.name} href={clothingHref(s, t)} onClick={() => setDrawerOpen(false)}>
-                            {t.name}
+                          <Link key={t} href={catalogHref({ dept: d.slug, g: s.slug, type: t })} onClick={closeAll}>
+                            {t}
                           </Link>
                         ))}
                       </React.Fragment>
                     ))}
                   </div>
                 </React.Fragment>
-              ) : (
-                <Link key={c.name} href={c.href} onClick={() => setDrawerOpen(false)}>
-                  <DayloraIcon name={c.icon} />
-                  {c.name}
-                </Link>
-              ),
-            )}
+              );
+            })}
           </div>
           <h3 className="t-eyebrow">Help</h3>
-          <Link href="/orders" onClick={() => setDrawerOpen(false)}>
+          <Link href="/track" onClick={closeAll}>
             Orders &amp; tracking
           </Link>
-          <Link href="/help/shipping" onClick={() => setDrawerOpen(false)}>
+          <Link href="/help?t=shipping" onClick={closeAll}>
             Shipping &amp; returns
           </Link>
-          <Link href="/help/contact" onClick={() => setDrawerOpen(false)}>
+          <Link href="/help?t=contact" onClick={closeAll}>
             Contact us
           </Link>
           <h3 className="t-eyebrow">Business</h3>
-          <Link href="/seller/signup" onClick={() => setDrawerOpen(false)}>
+          <Link href="/sell" onClick={closeAll}>
             <DayloraIcon name="store" />
             Sell on {BRAND_NAME}
           </Link>

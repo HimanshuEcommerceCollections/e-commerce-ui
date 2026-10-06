@@ -1,21 +1,32 @@
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import publicProductService from "@/services/public/product.service";
 import type { ProductDetailResponse, ProductVariantResponse } from "@/types/api/product.types";
-import { useCart } from "@/hooks/useCart";
+import { useCartStore, MAX_LINE_QTY } from "@/store/useCartStore";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { track } from "@/lib/analytics";
 import { useStoreConfig } from "@/hooks/useStoreConfig";
 import { DayloraIcon } from "../DayloraIcons";
+import { ShopIconSprite } from "./ShopIcons";
 import { colorHex, compareSizes, stockState, usd } from "./catalog";
+import { catalogHref } from "./departments";
+import { loadStorefrontCatalog } from "./storefrontCatalog";
+import { toItem, type PlpItem } from "./plpModel";
+import { PlpCard } from "./PlpCard";
 
-/** Most a shopper can add in one go from the PDP. */
-const MAX_QTY = 10;
+/**
+ * Product detail page (design 03; FR-ST-06/07/13, NFR-04).
+ *
+ * The server renders it with the product already loaded (and its SEO
+ * metadata). Choosing a colour, size or option updates price, images, SKU,
+ * stock and the address bar in place (FR-ST-07): every variant arrives with
+ * the product, so nothing is fetched or reloaded.
+ */
 
-const uniq = (vals: (string | null)[]) => Array.from(new Set(vals.filter((v): v is string => !!v)));
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const uniq = (vals: (string | null | undefined)[]) => Array.from(new Set(vals.filter((v): v is string => !!v)));
 
 function addBusinessDays(from: Date, n: number) {
   const d = new Date(from);
@@ -27,133 +38,186 @@ function addBusinessDays(from: Date, n: number) {
 }
 const fmtDay = (d: Date) => d.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" });
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/** Fit advice under the sizes (design copy), from the Fit attribute. */
+function fitTip(fit: string | undefined, type: string | null) {
+  if (fit === "Slim") return "Slim fit. Between sizes? Size up.";
+  if (fit === "Regular")
+    return type === "Jackets & coats" ? "Regular fit. Between sizes? Size up for layering." : "Regular fit. True to size.";
+  if (fit === "Relaxed") return "Relaxed fit. Between sizes? Size down for a closer fit.";
+  return null;
+}
 
-export function DayloraProduct({ id: requested }: { id: string }) {
-  const router = useRouter();
+/** Return conditions by department (design). */
+function returnNote(dept: string | null | undefined) {
+  if (dept === "clothing") return { short: "Unworn, with tags attached", long: "Items must be unworn with tags attached." };
+  if (dept === "grocery" || dept === "beauty")
+    return { short: "Unopened items only", long: "For hygiene and safety, only unopened items can be returned." };
+  return { short: "In original condition and packaging", long: "Items must be in original condition and packaging." };
+}
+
+/** "Gender: Men\nFit: Regular" → rows. */
+function specRows(text: string | null): [string, string][] {
+  if (!text) return [];
+  return text
+    .split(/\n+/)
+    .map((l) => l.split(/:\s*/))
+    .filter((p) => p.length >= 2 && p[0].trim() && p.slice(1).join(":").trim())
+    .map((p) => [p[0].trim(), p.slice(1).join(": ").trim()]);
+}
+
+export function DayloraProduct({ requested, initial }: { requested: string; initial: ProductDetailResponse | null }) {
   const config = useStoreConfig();
-  // The SKU id or URL slug the page opened on (NFR-04). Later variant picks only
-  // rewrite the URL, so this never changes.
-  const [ref] = useState(requested);
-  const [id, setId] = useState<string | null>(UUID.test(requested) ? requested : null);
-  const { addItem } = useCart();
+  const addToCartStore = useCartStore((s) => s.add);
 
-  const [details, setDetails] = useState<Record<string, ProductDetailResponse>>({});
+  const [root, setRoot] = useState<ProductDetailResponse | null>(initial);
   const [loadError, setLoadError] = useState<{ notFound: boolean; message: string } | null>(null);
   const [reload, setReload] = useState(0);
-  const root = id ? details[id] : undefined;
 
-  const [color, setColor] = useState<string | null>(null);
-  const [size, setSize] = useState<string | null>(null);
-  const [qty, setQty] = useState(1);
-  const [sizeError, setSizeError] = useState(false);
-  const [cartError, setCartError] = useState<string | null>(null);
-  const [adding, setAdding] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const [eta, setEta] = useState("");
-  const [idx, setIdx] = useState(0);
-  const [failed, setFailed] = useState<Set<string>>(new Set());
-  const [stickyShown, setStickyShown] = useState(false);
-
-  const trackRef = useRef<HTMLDivElement>(null);
-  const addRef = useRef<HTMLButtonElement>(null);
-  const sizeOptRef = useRef<HTMLFieldSetElement>(null);
-  const accRefs = useRef<(HTMLDetailsElement | null)[]>([]);
-  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
-
-  /* ---- Load the requested SKU (parent + variants come with it) ---- */
+  // The server couldn't reach the API: load it here instead.
   useEffect(() => {
+    if (root) return;
     let live = true;
     setLoadError(null);
-    (UUID.test(ref) ? publicProductService.getById(ref) : publicProductService.getBySlug(ref))
-      .then((res) => {
-        if (!live || !res.data.data) return;
-        const d = res.data.data;
-        setDetails((prev) => ({ ...prev, [d.id]: d }));
-        setId(d.id);
-        setColor(d.color);
-        const sizes = uniq(d.variants.map((v) => v.size));
-        setSize(sizes.length <= 1 ? d.size : null);
-        track("PRODUCT_VIEW", { productId: d.id, value: d.price, properties: { sku: d.sku } });
-      })
+    (UUID.test(requested) ? publicProductService.getById(requested) : publicProductService.getBySlug(requested))
+      .then((res) => live && res.data.data && setRoot(res.data.data))
       .catch((err) => {
         if (!live) return;
         const status = (err as { response?: { status?: number } }).response?.status;
         setLoadError({ notFound: status === 404, message: getApiErrorMessage(err, "We couldn't load this product.") });
       });
-    return () => { live = false; };
-  }, [ref, reload]);
+    return () => {
+      live = false;
+    };
+  }, [requested, reload, root]);
 
-  useEffect(() => {
-    setEta(`${fmtDay(addBusinessDays(new Date(), 3))} – ${fmtDay(addBusinessDays(new Date(), 5))}`);
-  }, []);
-
-  const variants: ProductVariantResponse[] = useMemo(() => (root ? root.variants : []), [root]);
+  const variants: ProductVariantResponse[] = useMemo(() => root?.variants ?? [], [root]);
   const colors = useMemo(() => uniq(variants.map((v) => v.color)), [variants]);
   const sizes = useMemo(() => uniq(variants.map((v) => v.size)).sort(compareSizes), [variants]);
+  // Variants that differ by neither colour nor size (e.g. pack sizes) get an "Option" picker.
+  const options = useMemo(
+    () => (colors.length <= 1 && sizes.length <= 1 && variants.length > 1 ? uniq(variants.map((v) => v.variantName ?? v.sku)) : []),
+    [colors, sizes, variants],
+  );
   const needsSize = sizes.length > 1;
 
-  const inColor = useMemo(
-    () => variants.filter((v) => !colors.length || v.color === color),
-    [variants, colors, color],
-  );
-  const variantForSize = (s: string) => inColor.find((v) => v.size === s);
+  const [color, setColor] = useState<string | null>(null);
+  const [size, setSize] = useState<string | null>(null);
+  const [option, setOption] = useState<string | null>(null);
+  const [qty, setQty] = useState(1);
+  const [sizeError, setSizeError] = useState(false);
+
+  // Start on the SKU the URL names: its colour always, its size only when the link carries
+  // ?size= (a shopper's own choice; listing links leave the size open).
+  const inited = useRef(false);
+  useEffect(() => {
+    if (!root || inited.current) return;
+    inited.current = true;
+    const me = root.variants.find((v) => v.id === root.id);
+    setColor(me?.color ?? root.color ?? colors[0] ?? null);
+    setOption(me ? me.variantName ?? me.sku : null);
+    const urlSize = new URLSearchParams(window.location.search).get("size");
+    if (!needsSize) setSize(sizes[0] ?? null);
+    else if (urlSize && me?.size === urlSize && me.stockQuantity > 0) setSize(urlSize);
+    track("PRODUCT_VIEW", { productId: root.id, value: root.price, currency: "USD", properties: { sku: root.sku } });
+  }, [root, colors, sizes, needsSize]);
+
+  const inColor = useMemo(() => variants.filter((v) => !colors.length || v.color === color), [variants, colors, color]);
+  const variantForSize = useCallback((s: string) => inColor.find((v) => v.size === s), [inColor]);
 
   /** The SKU the shopper has fully picked. */
-  const resolved = useMemo(
-    () => inColor.find((v) => !sizes.length || v.size === size) ?? null,
-    [inColor, sizes, size],
-  );
-  /** The SKU whose images and details are on screen: the picked one, else the colour's first. */
-  const display = resolved ?? inColor[0] ?? variants.find((v) => v.id === id) ?? null;
-  const displayDetail = display ? details[display.id] : undefined;
+  const resolved = useMemo(() => {
+    if (options.length) return variants.find((v) => (v.variantName ?? v.sku) === option) ?? null;
+    return inColor.find((v) => !sizes.length || v.size === size) ?? null;
+  }, [options, variants, option, inColor, sizes, size]);
+  /** The SKU whose photos are shown: the picked one, else the colour's first. */
+  const display = resolved ?? inColor.find((v) => v.id === root?.id) ?? inColor[0] ?? variants[0] ?? null;
 
-  // FR-ST-07: fetch the shown SKU's own images without reloading the page.
-  useEffect(() => {
-    if (!display || details[display.id]) return;
-    let live = true;
-    publicProductService
-      .getById(display.id)
-      .then((res) => {
-        const d = res.data.data;
-        if (live && d) setDetails((prev) => ({ ...prev, [d.id]: d }));
-      })
-      .catch(() => { /* keep showing the variant's primary image */ });
-    return () => { live = false; };
-  }, [display, details]);
-
-  // Keep the address bar on the chosen SKU, by its clean slug, so it can be shared.
+  // FR-ST-07 + NFR-04: keep the address bar on the chosen SKU's clean slug.
   useEffect(() => {
     if (!resolved) return;
-    const path = `/product/${resolved.urlSlug ?? resolved.id}`;
-    if (window.location.pathname !== path) window.history.replaceState(null, "", path);
-  }, [resolved]);
+    const path = `/product/${resolved.urlSlug ?? resolved.id}${needsSize && resolved.size ? `?size=${encodeURIComponent(resolved.size)}` : ""}`;
+    if (window.location.pathname + window.location.search !== path) window.history.replaceState(null, "", path);
+  }, [resolved, needsSize]);
 
+  /* ---- Gallery ---- */
+  const [failed, setFailed] = useState<Set<string>>(new Set());
   const images = useMemo(() => {
-    const fromDetail = displayDetail?.images.map((im) => ({ url: im.url, alt: im.altText ?? "" })) ?? [];
-    const list = fromDetail.length ? fromDetail : display?.primaryImageUrl ? [{ url: display.primaryImageUrl, alt: "" }] : [];
-    return list.filter((im) => !failed.has(im.url));
-  }, [displayDetail, display, failed]);
-
-  // A new image set starts at the first image.
-  const imageKey = images.map((i) => i.url).join("|");
+    if (!root || !display) return [];
+    const own = display.imageUrls?.length ? display.imageUrls : display.primaryImageUrl ? [display.primaryImageUrl] : [];
+    const fallback = display.id === root.id ? root.images.map((i) => i.url) : [];
+    const extra = [root.parent.lifestyleImageUrl, root.parent.infographicUrl];
+    return uniq([...(own.length ? own : fallback), ...extra]).filter((u) => !failed.has(u));
+  }, [root, display, failed]);
+  const [idx, setIdx] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const imageKey = images.join("|");
   useEffect(() => {
     setIdx(0);
     trackRef.current?.scrollTo({ left: 0 });
   }, [imageKey]);
+  const go = (i: number) => {
+    const t = trackRef.current;
+    if (!t) return;
+    t.scrollTo({ left: Math.max(0, Math.min(images.length - 1, i)) * t.clientWidth, behavior: "smooth" });
+  };
+  const onTrackScroll = () => {
+    const t = trackRef.current;
+    if (!t) return;
+    const i = Math.round(t.scrollLeft / t.clientWidth);
+    if (i !== idx) setIdx(i);
+  };
+  const zoomable = () => window.matchMedia("(hover:hover) and (min-width:1024px)").matches;
+  const onZoomMove = (e: React.MouseEvent) => {
+    const slide = (e.target as HTMLElement).closest(".slide");
+    if (!slide || !zoomable()) return;
+    const img = slide.querySelector("img");
+    if (!img) return;
+    const r = slide.getBoundingClientRect();
+    img.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+    slide.classList.add("zoom");
+  };
+  const onZoomLeave = () => trackRef.current?.querySelectorAll(".slide.zoom").forEach((s) => s.classList.remove("zoom"));
 
-  const maxQty = Math.max(1, Math.min(MAX_QTY, resolved?.stockQuantity ?? MAX_QTY));
+  /* ---- Lightbox + size guide dialogs ---- */
+  const lightRef = useRef<HTMLDialogElement>(null);
+  const guideRef = useRef<HTMLDialogElement>(null);
+  const [lightIdx, setLightIdx] = useState(0);
+  const openLight = (i: number) => {
+    setLightIdx(i);
+    lightRef.current?.showModal();
+  };
+  const backdropClose = (e: React.MouseEvent<HTMLDialogElement>) => {
+    if (e.target === e.currentTarget) e.currentTarget.close();
+  };
+
+  /* ---- Quantity ---- */
+  const stock = resolved?.stockQuantity ?? 0;
+  const maxQty = Math.max(1, Math.min(MAX_LINE_QTY, stock || MAX_LINE_QTY));
   useEffect(() => {
     setQty((q) => Math.min(q, maxQty));
   }, [maxQty]);
 
-  // Accordions: all open on desktop, only the first on small screens.
+  /* ---- Delivery estimate (FR-ST-06), client-only to avoid a date mismatch ---- */
+  const [eta, setEta] = useState("");
+  const standard = config?.shippingOptions.find((o) => o.method === "STANDARD");
+  const express = config?.shippingOptions.find((o) => o.method === "EXPRESS");
+  useEffect(() => {
+    const min = standard?.minDays ?? 3, max = standard?.maxDays ?? 5;
+    setEta(`${fmtDay(addBusinessDays(new Date(), min))} – ${fmtDay(addBusinessDays(new Date(), max))}`);
+  }, [standard?.minDays, standard?.maxDays]);
+
+  /* ---- Accordions: all open on desktop, only the first on phones ---- */
+  const detailsRef = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!root || !window.matchMedia("(max-width:767px)").matches) return;
-    accRefs.current.forEach((d, i) => { if (d && i > 0) d.open = false; });
+    detailsRef.current?.querySelectorAll("details").forEach((d, i) => {
+      if (i > 0) d.open = false;
+    });
   }, [root]);
 
-  // Mobile sticky bar once the main button scrolls off the top.
+  /* ---- Mobile sticky add-to-cart once the main button scrolls away ---- */
+  const addRef = useRef<HTMLButtonElement>(null);
+  const [stickyShown, setStickyShown] = useState(false);
   useEffect(() => {
     const el = addRef.current;
     if (!el) return;
@@ -162,26 +226,64 @@ export function DayloraProduct({ id: requested }: { id: string }) {
     return () => io.disconnect();
   }, [root]);
 
-  useEffect(() => () => clearTimeout(toastTimer.current), []);
-
+  /* ---- "More in …" rail: same subcategory, most popular, in stock ---- */
+  const [rail, setRail] = useState<PlpItem[]>([]);
+  const [railSameType, setRailSameType] = useState(false);
   useEffect(() => {
-    if (root) document.title = `${root.parent.name} · Daylora`;
+    if (!root) return;
+    let live = true;
+    const sub = root.parent.subcategory?.slug;
+    loadStorefrontCatalog()
+      .then((all) => {
+        if (!live || !sub) return;
+        const pool = all
+          .map(toItem)
+          .filter((x) => x.p.parentId !== root.parent.id && x.sec === sub && x.card.stockState !== "out");
+        const same = pool.filter((x) => x.type === root.parent.productType).sort((a, b) => b.p.popularity - a.p.popularity);
+        const rest = pool.filter((x) => x.type !== root.parent.productType).sort((a, b) => b.p.popularity - a.p.popularity);
+        setRailSameType(same.length > 0);
+        setRail([...same, ...rest].slice(0, 4));
+      })
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
   }, [root]);
 
-  /* ---- Not loaded / not found ---- */
+  /* ---- Add to cart ---- */
+  const [adding, setAdding] = useState(false);
+  const [cartError, setCartError] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const toastTimer = useRef<ReturnType<typeof setTimeout>>();
+  useEffect(() => () => clearTimeout(toastTimer.current), []);
+  const sizeOptRef = useRef<HTMLFieldSetElement>(null);
+
+  /* ---- Not loaded / failed ---- */
   if (loadError) {
     return (
       <main id="main" className="pdp">
         <div className="daylora-container">
-          <div className="empty" role="alert">
-            <span className="empty-ic"><DayloraIcon name={loadError.notFound ? "search" : "alert"} /></span>
-            <h2>{loadError.notFound ? "We couldn't find this product" : "This product didn't load"}</h2>
-            <p>{loadError.notFound ? "It may have sold out or been removed from the store." : loadError.message}</p>
-            {loadError.notFound ? (
-              <Link className="btn btn-primary" href="/catalog">Shop all products</Link>
-            ) : (
-              <button className="btn btn-primary" onClick={() => setReload((r) => r + 1)}>Try again</button>
-            )}
+          <div className="pdp-grid">
+            <div className="nf-page" role="alert">
+              <span className="empty-ic">
+                <DayloraIcon name={loadError.notFound ? "search" : "alert"} />
+              </span>
+              <h1>{loadError.notFound ? "We can't find that product" : "This product didn't load"}</h1>
+              <p>
+                {loadError.notFound
+                  ? "It may have sold out or the link may be out of date. Try searching, or browse all departments."
+                  : loadError.message}
+              </p>
+              {loadError.notFound ? (
+                <Link className="btn btn-primary" href="/catalog">
+                  Browse all departments
+                </Link>
+              ) : (
+                <button className="btn btn-primary" onClick={() => setReload((r) => r + 1)}>
+                  Try again
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </main>
@@ -192,7 +294,9 @@ export function DayloraProduct({ id: requested }: { id: string }) {
       <main id="main" className="pdp" aria-busy="true">
         <div className="daylora-container">
           <div className="pdp-grid">
-            <div className="gallery"><div className="skel" style={{ aspectRatio: "3/4", borderRadius: 16 }} /></div>
+            <div className="gallery">
+              <div className="skel" style={{ aspectRatio: "3/4", borderRadius: 16 }} />
+            </div>
             <div className="buy">
               <div className="skel" style={{ height: 20, width: "30%" }} />
               <div className="skel" style={{ height: 36, width: "80%" }} />
@@ -206,62 +310,50 @@ export function DayloraProduct({ id: requested }: { id: string }) {
   }
 
   const parent = root.parent;
-  const category = root.category;
-  const colorOutOfStock = needsSize && sizes.every((s) => {
+  const dept = root.category;
+  const sub = parent.subcategory;
+  const type = parent.productType;
+  const sizeOut = (s: string) => {
     const v = variantForSize(s);
     return !v || v.stockQuantity <= 0;
-  });
-  const someSizesOut = needsSize && sizes.some((s) => {
-    const v = variantForSize(s);
-    return !v || v.stockQuantity <= 0;
-  });
-  const resolvedState = resolved ? stockState(resolved.stockQuantity, resolved.lowStockThreshold) : null;
-  const soldOut = resolvedState === "out" || colorOutOfStock;
+  };
+  const allSizesOut = needsSize && sizes.every(sizeOut);
+  const someSizesOut = needsSize && sizes.some(sizeOut);
+  const state = resolved ? stockState(resolved.stockQuantity, resolved.lowStockThreshold ?? config?.lowStockThreshold) : null;
+  const soldOut = state === "out" || allSizesOut || variants.every((v) => v.stockQuantity <= 0);
 
-  const colorPrices = inColor.map((v) => v.price);
-  const minPrice = Math.min(...colorPrices), maxPrice = Math.max(...colorPrices);
+  const prices = inColor.map((v) => v.price);
+  const minPrice = Math.min(...prices), maxPrice = Math.max(...prices);
   const price = resolved?.price ?? minPrice;
+  const priced = resolved ?? inColor.find((v) => v.price === minPrice) ?? display;
+  const was = priced.mrp && priced.mrp > price ? priced.mrp : null;
+  const savePct = was ? Math.round(((was - price) / was) * 100) : 0;
   const priceNote = !resolved && maxPrice > minPrice ? `Up to ${usd(maxPrice)} depending on size` : "";
-  // FR-AD-05: MRP shown struck through when the selling price is below it.
-  const priced = resolved ?? inColor.find((v) => v.price === minPrice) ?? null;
-  const mrp = priced?.mrp && priced.mrp > price ? priced.mrp : null;
-  const savePct = mrp ? Math.round(((mrp - price) / mrp) * 100) : 0;
+
+  const what = resolved?.size && needsSize ? ` in ${resolved.size}` : options.length && resolved ? ` in ${option}` : colors.length > 1 ? ` in ${color}` : "";
+  const stockText = soldOut
+    ? state === "out" && !allSizesOut
+      ? `Out of stock${what}`
+      : colors.length > 1 && !variants.every((v) => v.stockQuantity <= 0)
+        ? "Out of stock in this color"
+        : "Out of stock · check back soon"
+    : state === "low"
+      ? `Only ${resolved!.stockQuantity} left${what}. Order soon`
+      : state === "in"
+        ? "In stock · ready to ship"
+        : someSizesOut
+          ? colors.length > 1
+            ? "Some sizes are sold out in this color"
+            : "Some sizes are sold out"
+          : "Select a size to see availability";
+  const stockClass = soldOut ? "out" : state ?? "idle";
 
   const pickColor = (c: string) => {
     setColor(c);
     setCartError(null);
-    // A size that's sold out (or missing) in the new colour is cleared.
     const v = variants.find((x) => x.color === c && x.size === size);
     if (needsSize && (!v || v.stockQuantity <= 0)) setSize(null);
   };
-  const pickSize = (s: string) => {
-    setSize(s);
-    setSizeError(false);
-    setCartError(null);
-  };
-
-  const go = (i: number) => {
-    const t = trackRef.current;
-    if (!t) return;
-    const next = Math.max(0, Math.min(images.length - 1, i));
-    t.scrollTo({ left: next * t.clientWidth, behavior: "smooth" });
-  };
-  const onTrackScroll = () => {
-    const t = trackRef.current;
-    if (!t) return;
-    const i = Math.round(t.scrollLeft / t.clientWidth);
-    if (i !== idx) setIdx(i);
-  };
-  const onZoomMove = (e: React.MouseEvent) => {
-    const slide = (e.target as HTMLElement).closest(".slide");
-    if (!slide || !window.matchMedia("(hover:hover) and (min-width:1024px)").matches) return;
-    const img = slide.querySelector("img");
-    if (!img) return;
-    const r = slide.getBoundingClientRect();
-    img.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
-    slide.classList.add("zoom");
-  };
-  const onZoomLeave = () => trackRef.current?.querySelectorAll(".slide.zoom").forEach((s) => s.classList.remove("zoom"));
 
   const addToCart = async () => {
     if (needsSize && !size) {
@@ -272,310 +364,528 @@ export function DayloraProduct({ id: requested }: { id: string }) {
       return;
     }
     if (!resolved || soldOut || adding) return;
-    if (!localStorage.getItem("accessToken")) {
-      router.push("/login");
-      return;
-    }
     setAdding(true);
     setCartError(null);
     try {
-      await addItem({ productId: resolved.id, quantity: qty });
-      track("ADD_TO_CART", { productId: resolved.id, value: resolved.price * qty, properties: { sku: resolved.sku, quantity: qty } });
-      const label = [parent.name, resolved.color, resolved.size].filter(Boolean).join(", ");
-      setToast(`${label} × ${qty}`);
+      await addToCartStore(resolved.id, qty);
+      track("ADD_TO_CART", {
+        productId: resolved.id,
+        value: Math.round(resolved.price * qty * 100) / 100,
+        currency: "USD",
+        properties: { sku: resolved.sku, quantity: qty },
+      });
+      const bits = [colors.length > 1 ? resolved.color : null, needsSize ? resolved.size : null, options.length ? option : null].filter(Boolean);
+      setToast(`${parent.name}${bits.length ? `, ${bits.join(", ")}` : ""} × ${qty}`);
       clearTimeout(toastTimer.current);
       toastTimer.current = setTimeout(() => setToast(null), 3200);
     } catch (err) {
-      const status = (err as { response?: { status?: number } }).response?.status;
-      setCartError(
-        status === 403
-          ? "Sign in with a customer account to add items to your cart."
-          : getApiErrorMessage(err, "We couldn't add this to your cart. Please try again."),
-      );
+      setCartError(getApiErrorMessage(err, "We couldn't add this to your cart. Please try again."));
     } finally {
       setAdding(false);
     }
   };
 
-  const shown = displayDetail ?? root;
-  const specs: [string, string | null][] = [
-    ["Brand", parent.brand],
-    ["Category", [category?.name, parent.subcategory?.name].filter(Boolean).join(" › ") || null],
-    ["Type", parent.productType],
-    ["Color", display.color],
-    ["Size", resolved?.size ?? (sizes.length === 1 ? sizes[0] : null)],
-    ["Material", display.material],
-    ["Pattern", display.pattern],
-    ["Style", display.style],
-    // Category attribute sheet (Gender, Fit, Net_Weight…), PRD §4.
-    ...Object.entries(parent.attributes ?? {}).map(([k, v]) => [k.replace(/_/g, " "), v] as [string, string]),
-    ["Dimensions", shown.dimensions],
-    ["Weight", shown.weight],
-    ["What's included", parent.whatsIncluded],
-    ["Warranty", parent.warranty],
-  ];
-  const standard = config?.shippingOptions.find((o) => o.method === "STANDARD");
-  const express = config?.shippingOptions.find((o) => o.method === "EXPRESS");
-  const freeOver = config?.freeShippingThreshold ? usd(Number(config.freeShippingThreshold)) : null;
+  const shown = resolved ?? display;
+  const attrs = parent.attributes ?? {};
+  const specMap = new Map<string, string>();
+  const addSpec = (k: string, v: string | null | undefined) => {
+    if (v && !specMap.has(k)) specMap.set(k, v);
+  };
+  addSpec("Brand", parent.brand);
+  Object.entries(attrs).forEach(([k, v]) => addSpec(k.replace(/_/g, " "), v));
+  specRows(root.specifications).forEach(([k, v]) => addSpec(k, v));
+  addSpec("Color", colors.length > 1 ? null : shown.color);
+  addSpec("Size", needsSize ? null : shown.size);
+  addSpec("Material", shown.material);
+  addSpec("Pattern", shown.pattern);
+  addSpec("Style", shown.style);
+  addSpec("Dimensions", root.dimensions);
+  addSpec("Weight", root.weight);
+  addSpec("What's included", parent.whatsIncluded);
+  addSpec("Warranty", parent.warranty);
+
+  const freeOver = config?.freeShippingThreshold != null ? Number(config.freeShippingThreshold) : null;
   const returnDays = config?.returnWindowDays ?? 30;
+  const ret = returnNote(dept?.slug);
   const description = parent.description ?? root.description;
   const skuLabel = resolved?.sku ?? parent.code;
   const addLabel = soldOut ? "Out of stock" : adding ? "Adding…" : "Add to cart";
-
-  let accIndex = 0;
-  const accRef = () => {
-    const i = accIndex++;
-    return (el: HTMLDetailsElement | null) => { accRefs.current[i] = el; };
-  };
+  const tip = needsSize ? fitTip(attrs.Fit, type) : null;
+  const deptSlug = dept?.slug;
+  const railTitle =
+    deptSlug === "clothing" && sub && type ? `${sub.name}'s ${type.toLowerCase()}` : (sub?.name ?? dept?.name ?? "this range").toLowerCase();
+  const railHref = catalogHref({ dept: deptSlug, g: sub?.slug, type: railSameType && type ? type : undefined });
 
   return (
     <main id="main" className="pdp">
+      <ShopIconSprite />
       <div className="daylora-container">
-        <nav className="crumbs" aria-label="Breadcrumb" data-note="FR-ST-02 · Breadcrumb from catalog taxonomy">
+        <nav className="crumbs" aria-label="Breadcrumb">
           <Link href="/">Home</Link>
-          <DayloraIcon name="chev" />
-          {category && (
+          {dept && (
             <>
-              <Link href={`/catalog?category=${encodeURIComponent(category.slug)}`}>{category.name}</Link>
               <DayloraIcon name="chev" />
+              <Link href={catalogHref({ dept: dept.slug })}>{dept.name}</Link>
             </>
           )}
+          {dept && sub && (
+            <>
+              <DayloraIcon name="chev" />
+              <Link href={catalogHref({ dept: dept.slug, g: sub.slug })}>{sub.name}</Link>
+            </>
+          )}
+          {dept && type && (
+            <>
+              <DayloraIcon name="chev" />
+              <Link href={catalogHref({ dept: dept.slug, g: sub?.slug, type })}>{type}</Link>
+            </>
+          )}
+          <DayloraIcon name="chev" />
           <span aria-current="page">{parent.name}</span>
         </nav>
 
         <div className="pdp-grid">
           {/* ============ GALLERY ============ */}
-          <section className="gallery" aria-label="Product images" data-note="FR-ST-06 · Images (swipe on mobile)">
-            <div className={`gallery-wrap${images.length > 1 ? "" : " single"}`}>
+          <section className="gallery" aria-label="Product images">
+            <div className={`gallery-wrap${images.length <= 1 && !parent.sizeChartUrl ? " single" : ""}${images.length <= 1 ? " one" : ""}`}>
               <div className="stage">
                 <div
                   className="track"
                   ref={trackRef}
                   tabIndex={0}
-                  aria-label="Image carousel, use arrow keys"
+                  aria-label="Product images, use arrow keys"
                   onScroll={onTrackScroll}
-                  onKeyDown={(e) => { if (e.key === "ArrowRight") go(idx + 1); if (e.key === "ArrowLeft") go(idx - 1); }}
+                  onKeyDown={(e) => {
+                    if (e.key === "ArrowRight") go(idx + 1);
+                    if (e.key === "ArrowLeft") go(idx - 1);
+                    if (e.key === "Enter" && images.length) openLight(idx);
+                  }}
                   onMouseMove={onZoomMove}
                   onMouseLeave={onZoomLeave}
                 >
                   {images.length ? (
-                    images.map((im, i) => (
-                      <div className="slide" key={im.url}>
+                    images.map((url, i) => (
+                      <div className="slide" key={url} onClick={() => openLight(i)}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
                         <img
-                          src={im.url}
-                          alt={im.alt || `${parent.name}, image ${i + 1}`}
+                          src={url}
+                          alt={`${parent.name}${images.length > 1 ? `, view ${i + 1} of ${images.length}` : ""}`}
                           loading={i ? "lazy" : "eager"}
-                          onError={() => setFailed((prev) => new Set(prev).add(im.url))}
+                          onError={() => setFailed((prev) => new Set(prev).add(url))}
                         />
                       </div>
                     ))
                   ) : (
-                    <div className="slide"><DayloraIcon name="box" /></div>
+                    <div className="slide ph" style={{ background: color ? `color-mix(in srgb, ${colorHex(color)} 18%, #F4F6F8)` : "#EEF1F4" }}>
+                      <div className="ph-slide">
+                        <DayloraIcon name="box" />
+                      </div>
+                    </div>
                   )}
                 </div>
-                {images.length > 1 && (
-                  <>
-                    <button className="stage-btn prev" aria-label="Previous image" onClick={() => go(idx - 1)}><DayloraIcon name="chev" /></button>
-                    <button className="stage-btn next" aria-label="Next image" onClick={() => go(idx + 1)}><DayloraIcon name="chev" /></button>
-                    <span className="counter" aria-live="polite">{idx + 1} / {images.length}</span>
-                  </>
-                )}
+                <button className="stage-btn prev" aria-label="Previous image" onClick={() => go(idx - 1)}>
+                  <DayloraIcon name="chev" />
+                </button>
+                <button className="stage-btn next" aria-label="Next image" onClick={() => go(idx + 1)}>
+                  <DayloraIcon name="chev" />
+                </button>
+                <span className="counter" aria-live="polite">
+                  {Math.min(idx + 1, Math.max(1, images.length))} / {Math.max(1, images.length)}
+                </span>
                 {images.length > 0 && (
-                  <span className="zoom-hint" aria-hidden="true"><DayloraIcon name="search" />Hover to zoom</span>
+                  <span className="zoom-hint" aria-hidden="true">
+                    <DayloraIcon name="search" />
+                    Hover to zoom
+                  </span>
                 )}
               </div>
-              {images.length > 1 && (
-                <div className="thumbs">
-                  {images.map((im, i) => (
-                    <button
-                      key={im.url}
-                      className="thumb"
-                      aria-label={`Show image ${i + 1}`}
-                      aria-current={i === idx}
-                      onClick={() => go(i)}
-                    >
+              <div className="thumbs">
+                {(images.length > 1 || parent.sizeChartUrl) &&
+                  images.map((url, i) => (
+                    <button key={url} className="thumb" aria-label={`Show image ${i + 1}`} aria-current={i === idx} onClick={() => go(i)}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={im.url} alt="" />
+                      <img src={url} alt="" />
                     </button>
                   ))}
-                </div>
-              )}
+                {parent.sizeChartUrl && (
+                  <button className="thumb thumb-chart" aria-label="Open size chart" onClick={() => guideRef.current?.showModal()}>
+                    <DayloraIcon name="ruler" />
+                    Size chart
+                  </button>
+                )}
+              </div>
             </div>
           </section>
 
           {/* ============ BUY BOX ============ */}
-          <section className="buy" aria-label="Purchase options" data-note="FR-ST-06/07 · Buy box (variant change updates price, image, SKU, stock — no reload)">
+          <section className="buy" aria-label="Purchase options">
             <div className="buy-head">
               {parent.brand && (
-                <Link href={`/catalog?q=${encodeURIComponent(parent.brand)}`} className="brand-link">{parent.brand}</Link>
+                <Link
+                  href={`${catalogHref({ dept: deptSlug })}${deptSlug ? "&" : "?"}brand=${encodeURIComponent(parent.brand)}`}
+                  className="brand-link"
+                >
+                  {parent.brand}
+                </Link>
               )}
               <h1>{parent.name}</h1>
-              {parent.shortDescription && <p className="opt-hint" style={{ fontSize: 16, lineHeight: "24px" }}>{parent.shortDescription}</p>}
             </div>
 
             <div className="pdp-price" aria-live="polite">
-              <span className="now">{usd(price)}</span>
-              {mrp && (
-                <>
-                  <span className="was"><span className="sr-only">Was </span>{usd(mrp)}</span>
-                  <span className="save">Save {savePct}%</span>
-                </>
+              <span className="now">
+                {!resolved && maxPrice > minPrice && <span className="sr-only">From </span>}
+                {usd(price)}
+              </span>
+              {was && (
+                <span className="was-lg">
+                  <span className="sr-only">Was </span>
+                  {usd(was)}
+                </span>
               )}
-              {priceNote && <span className="note">{priceNote}</span>}
+              {savePct > 0 && <span className="save-pill">Save {savePct}%</span>}
+              {(priceNote || (config && !config.pricesIncludeTax)) && (
+                <span className="note">{priceNote || "Plus tax at checkout"}</span>
+              )}
             </div>
-            {config && !config.pricesIncludeTax && <p className="opt-hint">Plus tax at checkout</p>}
 
-            {parent.keyFeatures.length > 0 && (
-              <ul className="features" aria-label="Key features">
-                {parent.keyFeatures.slice(0, 5).map((f) => (
-                  <li key={f}><DayloraIcon name="check" />{f}</li>
-                ))}
-              </ul>
-            )}
-
-            {colors.length > 1 && (
-              <fieldset className="opt">
-                <legend>Color: <span>{color}</span></legend>
-                <div className="swatches">
-                  {colors.map((c) => (
-                    <React.Fragment key={c}>
-                      <input type="radio" name="color" id={`c-${c}`} value={c} checked={color === c} onChange={() => pickColor(c)} />
-                      <label className="swatch" htmlFor={`c-${c}`} title={c}>
-                        <i style={{ background: colorHex(c) }} />
-                        <span className="sr-only">{c}</span>
-                      </label>
-                    </React.Fragment>
-                  ))}
-                </div>
-              </fieldset>
-            )}
-
-            {needsSize && (
-              <fieldset className={`opt${sizeError ? " has-error" : ""}`} ref={sizeOptRef}>
-                <legend>Size: <span>{size ?? "Select a size"}</span></legend>
-                {parent.sizeChartUrl && (
-                  <a className="size-chart" href={parent.sizeChartUrl} target="_blank" rel="noopener noreferrer">Size guide</a>
-                )}
-                <div className="sizes">
-                  {sizes.map((s) => {
-                    const v = variantForSize(s);
-                    const out = !v || v.stockQuantity <= 0;
-                    return (
-                      <React.Fragment key={s}>
-                        <input type="radio" name="size" id={`s-${s}`} value={s} disabled={out} checked={size === s} onChange={() => pickSize(s)} />
-                        <label className="size" htmlFor={`s-${s}`}>
-                          {s}
-                          {out && <span className="sr-only">, out of stock</span>}
+            <div className="opts">
+              {colors.length > 1 ? (
+                <fieldset className="opt">
+                  <legend>
+                    Color: <span>{color}</span>
+                  </legend>
+                  <div className="swatches">
+                    {colors.map((c, i) => (
+                      <React.Fragment key={c}>
+                        <input type="radio" name="color" id={`c-${i}`} value={c} checked={color === c} onChange={() => pickColor(c)} />
+                        <label className="swatch" htmlFor={`c-${i}`} title={c}>
+                          <i style={{ background: colorHex(c) }} />
+                          <span className="sr-only">{c}</span>
                         </label>
                       </React.Fragment>
-                    );
-                  })}
-                </div>
-                <p className="opt-error" role="alert">
-                  <DayloraIcon name="alert" />
-                  Select a size to add this to your cart.
+                    ))}
+                  </div>
+                </fieldset>
+              ) : colors.length === 1 ? (
+                <p className="opt-static">
+                  <b>Color:</b> {colors[0]}
                 </p>
-              </fieldset>
-            )}
+              ) : null}
 
-            <p className={`stock-line ${resolvedState ?? (colorOutOfStock ? "out" : "idle")}`} aria-live="polite">
+              {needsSize && (
+                <fieldset className={`opt${sizeError ? " has-error" : ""}`} ref={sizeOptRef}>
+                  <legend>
+                    Size: <span>{size ?? "Select a size"}</span>
+                    {parent.sizeChartUrl && (
+                      <a
+                        href={parent.sizeChartUrl}
+                        className="link"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          guideRef.current?.showModal();
+                        }}
+                      >
+                        Size guide
+                      </a>
+                    )}
+                  </legend>
+                  <div className="sizes">
+                    {sizes.map((s) => {
+                      const out = sizeOut(s);
+                      return (
+                        <React.Fragment key={s}>
+                          <input
+                            type="radio"
+                            name="size"
+                            id={`s-${s}`}
+                            value={s}
+                            disabled={out}
+                            checked={size === s}
+                            onChange={() => {
+                              setSize(s);
+                              setSizeError(false);
+                              setCartError(null);
+                            }}
+                          />
+                          <label className="size" htmlFor={`s-${s}`}>
+                            {s}
+                            {out && <span className="sr-only">, out of stock</span>}
+                          </label>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                  {tip && <p className="opt-hint">{tip}</p>}
+                  <p className="opt-error" role="alert">
+                    <DayloraIcon name="alert" />
+                    Select a size to add this to your cart.
+                  </p>
+                </fieldset>
+              )}
+
+              {options.length > 0 && (
+                <fieldset className="opt">
+                  <legend>
+                    Option: <span>{option}</span>
+                  </legend>
+                  <div className="sizes">
+                    {options.map((o, i) => {
+                      const v = variants.find((x) => (x.variantName ?? x.sku) === o);
+                      const out = !v || v.stockQuantity <= 0;
+                      return (
+                        <React.Fragment key={o}>
+                          <input type="radio" name="option" id={`o-${i}`} value={o} checked={option === o} onChange={() => setOption(o)} />
+                          <label className="size" htmlFor={`o-${i}`} style={{ minWidth: "auto", padding: "0 16px" }}>
+                            {o}
+                            {out && <span className="sr-only">, out of stock</span>}
+                          </label>
+                        </React.Fragment>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              )}
+            </div>
+
+            <p className={`stock-line ${stockClass}`} aria-live="polite">
               <span className="dot" aria-hidden="true" />
-              <span>
-                {resolvedState === "out" || colorOutOfStock
-                  ? colors.length > 1 ? "Out of stock in this color" : "Out of stock"
-                  : resolvedState === "low"
-                  ? `Only ${resolved!.stockQuantity} left${resolved!.size ? ` in ${resolved!.size}` : ""}. Order soon`
-                  : resolvedState === "in"
-                  ? "In stock · ships in 1–2 business days"
-                  : someSizesOut
-                  ? "Some sizes are sold out in this color"
-                  : "Select a size to see availability"}
-              </span>
+              <span>{stockText}</span>
             </p>
 
             <div className="cta-row">
               <div className="qty" role="group" aria-label="Quantity">
-                <button aria-label="Decrease quantity" disabled={qty <= 1 || soldOut} onClick={() => setQty(qty - 1)}>−</button>
+                <button aria-label="Decrease quantity" disabled={qty <= 1 || soldOut} onClick={() => setQty(qty - 1)}>
+                  −
+                </button>
                 <output aria-live="polite">{qty}</output>
-                <button aria-label="Increase quantity" disabled={qty >= maxQty || soldOut} onClick={() => setQty(qty + 1)}>+</button>
+                <button aria-label="Increase quantity" disabled={qty >= maxQty || soldOut} onClick={() => setQty(qty + 1)}>
+                  +
+                </button>
               </div>
               <button ref={addRef} className="btn btn-primary btn-cart" disabled={soldOut || adding} onClick={addToCart}>
                 {addLabel}
               </button>
             </div>
-            {cartError && <p className="cart-error" role="alert">{cartError}</p>}
-            <p className="sku">SKU <code>{skuLabel}</code></p>
+            {cartError && (
+              <p className="opt-error" role="alert" style={{ display: "flex" }}>
+                <DayloraIcon name="alert" />
+                {cartError}
+              </p>
+            )}
+            <p className="sku">
+              SKU <code>{skuLabel}</code>
+            </p>
 
-            <div className="assure-box" data-note="FR-ST-06 · Shipping & returns info">
+            <div className="assure-box">
               <div className="assure-row">
                 <DayloraIcon name="truck" />
                 <div>
-                  <strong>{freeOver ? "Free shipping" : "Fast shipping"}</strong>
-                  <span>{eta ? <>Arrives <b>{eta}</b>{freeOver ? " · " : ""}</> : null}{freeOver ? `orders ${freeOver}+` : ""}</span>
+                  <strong>{freeOver != null ? "Free shipping" : "Standard shipping"}</strong>
+                  <span>
+                    {eta && (
+                      <>
+                        Arrives <b>{eta}</b>
+                      </>
+                    )}
+                    {freeOver != null && (
+                      <>
+                        {" · "}
+                        {price >= freeOver ? "this item ships free" : `orders ${usd(freeOver).replace(".00", "")}+`}
+                      </>
+                    )}
+                  </span>
                 </div>
               </div>
               <div className="assure-row">
                 <DayloraIcon name="return" />
-                <div><strong>{returnDays}-day returns</strong><span>Unused, in original packaging</span></div>
+                <div>
+                  <strong>Free {returnDays}-day returns</strong>
+                  <span>{ret.short}</span>
+                </div>
               </div>
               <div className="assure-row">
                 <DayloraIcon name="shield" />
-                <div><strong>Secure checkout</strong><span>We never store your card details</span></div>
+                <div>
+                  <strong>Secure checkout</strong>
+                  <span>We never store your card details</span>
+                </div>
               </div>
             </div>
           </section>
 
           {/* ============ DETAILS ============ */}
-          <section className="details" aria-label="Product details">
-            {description && (
-              <details className="acc" open ref={accRef()} data-note="FR-ST-06 · Description">
-                <summary>Description<DayloraIcon name="chev" /></summary>
+          <section className="details" aria-label="Product details" ref={detailsRef}>
+            {(description || parent.keyFeatures.length > 0) && (
+              <details className="acc" open>
+                <summary>
+                  Description
+                  <DayloraIcon name="chev" />
+                </summary>
                 <div className="acc-body">
-                  <p>{description}</p>
-                  {parent.usageInstructions && <p style={{ marginTop: 12 }}><b>How to use.</b> {parent.usageInstructions}</p>}
-                  {shown.specifications && <p style={{ marginTop: 12 }}>{shown.specifications}</p>}
+                  {description && <p>{description}</p>}
+                  {parent.keyFeatures.length > 0 && (
+                    <ul className="feat">
+                      {parent.keyFeatures.map((f) => (
+                        <li key={f}>{f}</li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               </details>
             )}
-            <details className="acc" open ref={accRef()} data-note="FR-ST-06 · Specifications">
-              <summary>Specifications<DayloraIcon name="chev" /></summary>
-              <div className="acc-body">
-                <dl className="specs">
-                  {specs.filter(([, v]) => v).map(([k, v]) => (
-                    <React.Fragment key={k}><dt>{k}</dt><dd>{v}</dd></React.Fragment>
-                  ))}
-                  <dt>SKU</dt><dd>{skuLabel}</dd>
-                </dl>
-              </div>
-            </details>
-            <details className="acc" ref={accRef()} data-note="FR-ST-06 · Shipping & returns">
-              <summary>Shipping &amp; returns<DayloraIcon name="chev" /></summary>
+            {specMap.size > 0 && (
+              <details className="acc" open>
+                <summary>
+                  Specifications
+                  <DayloraIcon name="chev" />
+                </summary>
+                <div className="acc-body">
+                  <dl className="specs">
+                    {Array.from(specMap.entries()).map(([k, v]) => (
+                      <React.Fragment key={k}>
+                        <dt>{k}</dt>
+                        <dd>{v}</dd>
+                      </React.Fragment>
+                    ))}
+                  </dl>
+                </div>
+              </details>
+            )}
+            {parent.usageInstructions && (
+              <details className="acc" open>
+                <summary>
+                  {deptSlug === "clothing" ? "Care" : "How to use"}
+                  <DayloraIcon name="chev" />
+                </summary>
+                <div className="acc-body">
+                  <p>{parent.usageInstructions}</p>
+                </div>
+              </details>
+            )}
+            <details className="acc">
+              <summary>
+                Shipping &amp; returns
+                <DayloraIcon name="chev" />
+              </summary>
               <div className="acc-body">
                 <dl className="specs">
                   {standard && (
-                    <><dt>Standard</dt><dd>{usd(Number(standard.fee))}{freeOver ? `, free on orders ${freeOver}+` : ""} · {standard.estimatedDelivery}</dd></>
+                    <>
+                      <dt>Standard</dt>
+                      <dd>
+                        {freeOver != null ? `Free on orders ${usd(freeOver)}+, otherwise ${usd(Number(standard.fee))}` : usd(Number(standard.fee))} ·{" "}
+                        {standard.estimatedDelivery}
+                      </dd>
+                    </>
                   )}
-                  {express && <><dt>Express</dt><dd>{usd(Number(express.fee))} · {express.estimatedDelivery}</dd></>}
-                  <dt>Returns</dt><dd>Within {returnDays} days of delivery, from your order page. Items must be unused and in their original packaging.</dd>
-                  <dt>Refunds</dt><dd>To your original payment method once we receive the return.</dd>
+                  {express && (
+                    <>
+                      <dt>Express</dt>
+                      <dd>
+                        {usd(Number(express.fee))} · {express.estimatedDelivery}
+                      </dd>
+                    </>
+                  )}
+                  <dt>Returns</dt>
+                  <dd>
+                    Free within {returnDays} days of delivery, from your order page. {ret.long}
+                  </dd>
+                  <dt>Refunds</dt>
+                  <dd>To your original payment method once we receive the return.</dd>
                 </dl>
               </div>
             </details>
           </section>
         </div>
+
+        {rail.length > 0 && (
+          <section className="more-rail" aria-labelledby="moreH">
+            <div className="rail-head">
+              <h2 id="moreH">More in {railTitle}</h2>
+              <Link href={railHref} className="link">
+                See all
+              </Link>
+            </div>
+            <div className="mgrid">
+              {rail.map((x) => (
+                <PlpCard key={x.p.parentId} x={x} colors={null} delay={0} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
+
+      {/* Size guide (Size_Chart_URL) */}
+      {parent.sizeChartUrl && (
+        <dialog ref={guideRef} aria-labelledby="dlgTitle" onClick={backdropClose}>
+          <div className="dlg-head">
+            <h2 id="dlgTitle">Size guide{sub && type ? ` · ${sub.name}'s ${type.toLowerCase()}` : ""}</h2>
+            <button className="icon-btn" aria-label="Close size guide" onClick={() => guideRef.current?.close()}>
+              <DayloraIcon name="close" />
+            </button>
+          </div>
+          <div className="dlg-body">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={parent.sizeChartUrl} alt={`Size chart for ${parent.name}`} style={{ width: "100%", height: "auto" }} />
+            {tip && <p className="opt-hint">{tip}</p>}
+          </div>
+        </dialog>
+      )}
+
+      {/* Lightbox */}
+      <dialog ref={lightRef} className="lightbox" aria-label={`${parent.name} images`} onClick={backdropClose}>
+        <div className="dlg-head">
+          <h2>
+            {parent.name}
+            {images.length > 1 ? ` · ${lightIdx + 1} / ${images.length}` : ""}
+          </h2>
+          <button className="icon-btn" aria-label="Close image viewer" onClick={() => lightRef.current?.close()}>
+            <DayloraIcon name="close" />
+          </button>
+        </div>
+        <div className="lb-stage">
+          {images[lightIdx] && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={images[lightIdx]} alt={`${parent.name}, view ${lightIdx + 1} of ${images.length}`} />
+          )}
+          {images.length > 1 && (
+            <>
+              <button
+                className="stage-btn prev"
+                aria-label="Previous image"
+                onClick={() => setLightIdx((i) => (i - 1 + images.length) % images.length)}
+              >
+                <DayloraIcon name="chev" />
+              </button>
+              <button className="stage-btn next" aria-label="Next image" onClick={() => setLightIdx((i) => (i + 1) % images.length)}>
+                <DayloraIcon name="chev" />
+              </button>
+            </>
+          )}
+        </div>
+      </dialog>
 
       {/* Add-to-cart confirmation */}
       <div className={`toast${toast ? " show" : ""}`} role="status" aria-live="polite">
         <DayloraIcon name="check" />
-        <p>{toast && <><b>Added to cart</b><br />{toast}</>}</p>
+        <p>
+          {toast && (
+            <>
+              <b>Added to cart</b>
+              <br />
+              {toast}
+            </>
+          )}
+        </p>
         <Link href="/cart">View cart</Link>
       </div>
 
       {/* Mobile sticky add-to-cart */}
       <div className={`sticky-bar${stickyShown ? " show" : ""}`} aria-hidden={!stickyShown}>
-        <div><strong>{parent.name}</strong><span>{usd(price)}</span></div>
+        <div>
+          <strong>{parent.name}</strong>
+          <span>{usd(price)}</span>
+        </div>
         <button className="btn btn-primary" tabIndex={stickyShown ? 0 : -1} disabled={soldOut || adding} onClick={addToCart}>
           {addLabel}
         </button>

@@ -5,6 +5,14 @@ import "./globals.css";
 import "./daylora.css";
 import "./daylora-shop.css";
 import "./daylora-account.css";
+import "./daylora-home.css";
+import "./daylora-plp.css";
+import "./daylora-pdp.css";
+import "./daylora-help.css";
+import "./daylora-sell.css";
+import "./daylora-cart.css";
+import "./daylora-checkout.css";
+import "./daylora-customer.css";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -15,7 +23,7 @@ const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
-  title: "Daylora — Homepage",
+  title: { default: "Ecommerce Collections", template: "%s | Ecommerce Collections" },
   description:
     "Over 1,000 everyday essentials — from headphones to cookware — at prices that make sense.",
 };

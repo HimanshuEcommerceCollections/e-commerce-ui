@@ -1,9 +1,53 @@
 import React from "react";
 import Link from "next/link";
-import { BRAND_NAME, CATEGORIES } from "./dayloraData";
+import { BRAND_NAME } from "./dayloraData";
+import { FALLBACK_DEPARTMENTS, catalogHref } from "./shop/departments";
+
+const HELP = [
+  { t: "Track an order", href: "/track" },
+  { t: "Shipping", href: "/help?t=shipping" },
+  { t: "Returns & refunds", href: "/help?t=returns" },
+  { t: "Contact us", href: "/help?t=contact" },
+  { t: "FAQs", href: "/help?t=faq" },
+];
+
+const ACCOUNT = [
+  { t: "Sign in", href: "/login" },
+  { t: "Create account", href: "/login?mode=create" },
+  { t: "Order history", href: "/account#orders" },
+];
+
+const COMPANY = [
+  { t: "About us", href: "/about" },
+  { t: `Sell on ${BRAND_NAME}`, href: "/sell" },
+  { t: "Careers", href: "/about#careers" },
+  { t: "Press", href: "/about#press" },
+];
+
+/** Card brands and wallets the Stripe Payment Element accepts (NFR-07: we never see the card). */
+const PAYMENT_METHODS = ["Visa", "Mastercard", "Amex", "Discover", "Apple Pay", "Google Pay"];
+
+function Column({ title, links }: { title: string; links: { t: string; href: string }[] }) {
+  return (
+    <div className="foot-col">
+      <h2>{title}</h2>
+      <ul>
+        {links.map((l) => (
+          <li key={l.t}>
+            <Link href={l.href}>{l.t}</Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 export function DayloraFooter() {
-  const topCategories = CATEGORIES.slice(0, 5);
+  // The taxonomy is frozen (CONTRACT §2), so the footer needs no request.
+  const shop = [
+    ...FALLBACK_DEPARTMENTS.slice(0, 5).map((d) => ({ t: d.shortName, href: catalogHref({ dept: d.slug }) })),
+    { t: "All departments", href: "/catalog" },
+  ];
 
   return (
     <footer data-note="FR-ST-01 · Footer">
@@ -11,115 +55,32 @@ export function DayloraFooter() {
         <div className="foot-grid">
           <div className="foot-brand">
             <Link href="/" className="logo">
-              <span className="logo-mark">
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2.2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M6 3h12l3 6-9 12L3 9l3-6z" />
-                </svg>
-              </span>
               <span>{BRAND_NAME}</span>
             </Link>
-            <p>
-              One store for everyday needs: clothing, electronics, home,
-              grocery, beauty and more.
-            </p>
+            <p>One store for everyday needs: clothing, electronics, home, grocery, beauty and more.</p>
           </div>
-
-          <div className="foot-col">
-            <h2>Shop</h2>
-            <ul id="footShop">
-              {topCategories.map((c) => (
-                <li key={c.shortName}>
-                  <Link href={c.href}>{c.shortName}</Link>
-                </li>
-              ))}
-              <li>
-                <Link href="/catalog">All departments</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="foot-col">
-            <h2>Help</h2>
-            <ul>
-              <li>
-                <Link href="/orders">Track an order</Link>
-              </li>
-              <li>
-                <Link href="/help/shipping">Shipping</Link>
-              </li>
-              <li>
-                <Link href="/help/returns">Returns &amp; refunds</Link>
-              </li>
-              <li>
-                <Link href="/help/contact">Contact us</Link>
-              </li>
-              <li>
-                <Link href="/help/faqs">FAQs</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="foot-col">
-            <h2>Account</h2>
-            <ul>
-              <li>
-                <Link href="/login">Sign in</Link>
-              </li>
-              <li>
-                <Link href="/signup">Create account</Link>
-              </li>
-              <li>
-                <Link href="/orders">Order history</Link>
-              </li>
-            </ul>
-          </div>
-
-          <div className="foot-col">
-            <h2>Company</h2>
-            <ul>
-              <li>
-                <Link href="/about">About us</Link>
-              </li>
-              <li>
-                <Link href="/seller/signup">Sell on {BRAND_NAME}</Link>
-              </li>
-              <li>
-                <Link href="/about#careers">Careers</Link>
-              </li>
-              <li>
-                <Link href="/about#press">Press</Link>
-              </li>
-            </ul>
-          </div>
+          <Column title="Shop" links={shop} />
+          <Column title="Help" links={HELP} />
+          <Column title="Account" links={ACCOUNT} />
+          <Column title="Company" links={COMPANY} />
         </div>
 
         <div className="foot-bottom">
           <div>
-            <p>© 2026 {BRAND_NAME}. All rights reserved.</p>
+            <p>
+              © {new Date().getFullYear()} {BRAND_NAME}. All rights reserved.
+            </p>
             <div className="legal" style={{ marginTop: 8 }}>
-              <Link href="/privacy">Privacy policy</Link>
-              <Link href="/terms">Terms of use</Link>
+              <Link href="/help?t=privacy">Privacy policy</Link>
+              <Link href="/help?t=terms">Terms of use</Link>
               <Link href="/accessibility">Accessibility</Link>
-              <Link href="/privacy#dns">
-                Do not sell or share my personal information
-              </Link>
+              <Link href="/help?t=privacy#dns">Do not sell or share my personal information</Link>
             </div>
           </div>
           <div className="pay" aria-label="Accepted payment methods">
-            <span>Visa</span>
-            <span>Mastercard</span>
-            <span>Amex</span>
-            <span>Discover</span>
-            <span>PayPal</span>
-            <span>Apple Pay</span>
-            <span>Google Pay</span>
+            {PAYMENT_METHODS.map((m) => (
+              <span key={m}>{m}</span>
+            ))}
           </div>
         </div>
       </div>
