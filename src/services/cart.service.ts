@@ -3,6 +3,7 @@ import type { ApiResponse } from "@/types/api/common.types";
 import type {
   CartItemRequest,
   CartItemUpdateRequest,
+  CartLineInput,
   CartResponse,
 } from "@/types/api/cart.types";
 
@@ -21,6 +22,14 @@ const cartService = {
 
   clearCart: () =>
     api.delete<ApiResponse<null>>("/api/cart"),
+
+  /** Prices a guest's browser cart: stock, tax and shipping, without an account (FR-ST-09). */
+  preview: (items: CartLineInput[]) =>
+    api.post<ApiResponse<CartResponse>>("/api/cart/preview", { items }),
+
+  /** After sign-in: moves the guest's lines into the account's cart. */
+  merge: (items: CartLineInput[]) =>
+    api.post<ApiResponse<CartResponse>>("/api/cart/merge", { items }),
 };
 
 export default cartService;
