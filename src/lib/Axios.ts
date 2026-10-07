@@ -23,7 +23,9 @@ api.interceptors.response.use(
   (error: AxiosError) => {
     // Only a rejected session token signs the shopper out; a 401 on a call
     // made without one (a guest) is the page's to handle.
-    if (error.response?.status === 401 && error.config?.headers?.Authorization) {
+    // A 401 from a sign-in call is a wrong password, not an expired session.
+    const authCall = error.config?.url?.startsWith("/api/auth/") ?? false;
+    if (error.response?.status === 401 && error.config?.headers?.Authorization && !authCall) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("nexus-auth"); // the persisted session
       // Admin pages have their own sign-in page.

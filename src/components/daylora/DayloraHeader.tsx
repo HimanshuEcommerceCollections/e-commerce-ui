@@ -204,7 +204,7 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
                 <Link href={catalogHref({ new: true })}>New arrivals</Link>
               </li>
               <li className="nav-sell">
-                <Link href="/sell">
+                <Link href="/sell" aria-current={pathname === "/sell" ? "page" : undefined}>
                   <DayloraIcon name="store" />
                   Sell on {BRAND_NAME}
                 </Link>

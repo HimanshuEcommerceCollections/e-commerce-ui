@@ -23,6 +23,8 @@ const syne = Syne({ subsets: ["latin"], variable: "--font-syne" });
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 export const metadata: Metadata = {
+  // Absolute canonical and Open Graph URLs (NFR-04).
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000"),
   title: { default: "Ecommerce Collections", template: "%s | Ecommerce Collections" },
   description:
     "Over 1,000 everyday essentials — from headphones to cookware — at prices that make sense.",

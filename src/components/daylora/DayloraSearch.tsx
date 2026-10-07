@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { DayloraIcon } from "./DayloraIcons";
 import { usd, type ListingProduct } from "./shop/catalog";
 import { catalogHref, deptIcon } from "./shop/departments";
@@ -190,6 +190,19 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
   const [index, setIndex] = useState<Index | null>(null);
   const [recent, setRecent] = useState<string[]>([]);
   const boxId = `${id}-ac`;
+  const pathname = usePathname();
+
+  // On a search results page the box shows the query, so it can be refined.
+  useEffect(() => {
+    const sync = () => {
+      const q = pathname === "/catalog" ? new URLSearchParams(window.location.search).get("q") ?? "" : "";
+      setValue(q);
+      setTyped(q);
+    };
+    sync();
+    window.addEventListener("popstate", sync);
+    return () => window.removeEventListener("popstate", sync);
+  }, [pathname]);
 
   /** The catalog is fetched the first time a search box is used. */
   const ensureIndex = useCallback(() => {

@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { usd } from "./shop/catalog";
-import { catalogHref, type Department } from "./shop/departments";
+import { catalogHref } from "./shop/departments";
 import type { CardModel } from "./shop/storefrontCatalog";
 
 /** Name on the price tag, without the pack or size suffix: "Cookware Set, 10-Piece" → "Cookware Set". */
@@ -15,12 +15,11 @@ interface DayloraHeroProps {
   product: CardModel | null;
   /** Biggest saving across deals, for the promo pill ("Up to 50% off"). */
   maxDealPct: number;
-  departments: Department[];
   loading: boolean;
 }
 
-/** Hero (FR-ST-01): one message, one primary CTA, department quick links, shoppable photo bento. */
-export function DayloraHero({ product, maxDealPct, departments, loading }: DayloraHeroProps) {
+/** Hero (FR-ST-01): one message, one primary CTA, shoppable photo bento. */
+export function DayloraHero({ product, maxDealPct, loading }: DayloraHeroProps) {
   const [imgFailed, setImgFailed] = useState(false);
   // The house photo stands in only when the catalog has no featured photo to show.
   const mainImage = loading ? null : product?.image && !imgFailed ? product.image : "/daylora/hero.jpg";
@@ -39,19 +38,6 @@ export function DayloraHero({ product, maxDealPct, departments, loading }: Daylo
               <Link href="/catalog" className="btn btn-primary">
                 Start shopping
               </Link>
-            </div>
-            <div className="quick">
-              <span className="quick-label">Popular departments</span>
-              <div className="chips">
-                {departments.slice(0, 5).map((d) => (
-                  <Link key={d.slug} href={catalogHref({ dept: d.slug })} className="chip">
-                    <span className="chip-img">
-                      <DayloraIcon name={d.icon} />
-                    </span>
-                    {d.shortName}
-                  </Link>
-                ))}
-              </div>
             </div>
           </div>
 

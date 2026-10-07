@@ -372,3 +372,10 @@
 
 /* Storefront stylesheets declare an unscoped .toast (top-anchored); keep the admin's bottom toast. */
 .dla .toast{top:auto;width:auto;height:auto}
+/* An unscoped storefront ".panel + .panel" margin would misalign the admin grids. */
+.dla .r-grid > .panel,.dla .grid2 > .panel{margin-top:0}
+/* The phone account menu sits inside .brandrow, whose span rule styles the "Admin" pill. */
+.dla .brandrow .umenu span{font-size:12px;font-weight:400;letter-spacing:0;text-transform:none;background:none;color:inherit;border-radius:0;padding:0}
+.dla .brandrow .umenu .avatar{font-size:13px;font-weight:700;background:var(--mint);color:var(--navy);border-radius:50%}
+.dla .brandrow .umenu-head span:not(.pill){color:var(--muted)}
+.dla .brandrow .umenu-head .pill{font-weight:600;background:var(--ok-50);color:var(--ok);border-radius:var(--r-pill);padding:0 var(--s-2)}
