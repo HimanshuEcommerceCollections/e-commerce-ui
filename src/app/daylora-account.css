@@ -10,7 +10,6 @@
 
 .panel{border:1px solid var(--line);border-radius:var(--r-lg);background:#fff;padding:var(--s-4)}
 @media (min-width:768px){.panel{padding:var(--s-5)}}
-.panel + .panel{margin-top:var(--s-4)}
 .panel h2{font-size:18px;line-height:28px;font-weight:700;color:var(--navy);margin-bottom:var(--s-3)}
 .panel-sticky{position:sticky;top:var(--s-4)}
 

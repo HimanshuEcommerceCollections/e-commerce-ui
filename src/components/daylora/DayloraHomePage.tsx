@@ -95,7 +95,7 @@ export function DayloraHomePage() {
   return (
     <main id="main">
       {/* 3. HERO BANNER */}
-      <DayloraHero product={rails.hero} maxDealPct={rails.maxDealPct} departments={departments} loading={loading} />
+      <DayloraHero product={rails.hero} maxDealPct={rails.maxDealPct} loading={loading} />
 
       {/* 4. SHOP BY DEPARTMENT */}
       <DayloraCategories departments={departments} />

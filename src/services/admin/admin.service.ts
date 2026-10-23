@@ -94,8 +94,10 @@ const adminService = {
   // Image checks (FR-IM-08)
   imageIssues: (params: Paging) => api.get<ApiResponse<ImageIssuePage>>("/api/admin/images/issues", { params }),
 
+  // No body: with the instance's JSON Content-Type, axios would send `null` as the
+  // literal text "null", which the server's JSON parser rejects with a 400.
   recheckImages: (scope: "problems" | "all") =>
-    api.post<ApiResponse<ImageRecheckResult>>("/api/admin/images/recheck", null, { params: { scope }, timeout: 180_000 }),
+    api.post<ApiResponse<ImageRecheckResult>>("/api/admin/images/recheck", undefined, { params: { scope }, timeout: 180_000 }),
 
   // Orders (admin only)
   listOrders: (params: AdminOrderListParams) =>

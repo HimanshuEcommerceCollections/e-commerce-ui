@@ -509,8 +509,10 @@ export function OrderDetailView({
                   ? "This order was cancelled."
                   : canReturn
                     ? `Free returns until ${fmtShort(order.returnableUntil!)}.`
-                    : order.status === "DELIVERED"
-                      ? "The return window for this order has closed."
+                    : order.status === "DELIVERED" && returnable(order)
+                      ? "Everything in this order is already being returned."
+                      : order.status === "DELIVERED"
+                        ? "The return window for this order has closed."
                       : "Returns open once your order is delivered."}
             </p>
             {order.returns.length > 0 && (
