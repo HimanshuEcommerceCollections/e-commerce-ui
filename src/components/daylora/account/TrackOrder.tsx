@@ -10,7 +10,7 @@ import type { TrackedOrder } from "@/types/api/order.types";
 import { Field } from "./SignIn";
 import { Crumbs, Scans, Steps, Thumb, TrackingRef, headline, normalizeOrderNumber, orderNumberOk, variantText } from "./customerShared";
 
-/** Guest order tracking: order number + the order's email or 5-digit ZIP (design 09). */
+/** Guest order tracking: order number + the order's email or 5-digit billing/shipping ZIP (design 09, contract B3). */
 export function TrackOrder() {
   const qs = useSearchParams();
   const [no, setNo] = useState(qs.get("o") ?? "");

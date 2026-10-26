@@ -8,7 +8,7 @@ import authService from "@/services/auth.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useCartStore } from "@/store/useCartStore";
 import { getApiErrorMessage } from "@/lib/apiError";
-import type { AuthResponse } from "@/types/api/auth.types";
+import { isTwoFactorChallenge, type AuthResponse, type TwoFactorChallenge } from "@/types/api/auth.types";
 import { PW_RULES, PW_RULE_MESSAGE, emailOk, passwordOk } from "./customerShared";
 
 type Pane = "in" | "up" | "reset";
@@ -250,6 +250,8 @@ const emailError = (v: string) => (!v ? "Enter your email address." : !emailOk(v
 function SignInForm({ onDone, onForgot }: { onDone: (a: AuthResponse) => Promise<void>; onForgot: () => void }) {
   const [email, setEmail] = useState("");
   const [pw, setPw] = useState("");
+  const [keep, setKeep] = useState(true);
+  const [challenge, setChallenge] = useState<TwoFactorChallenge | null>(null);
   const [errs, setErrs] = useState<{ email?: string; pw?: string }>({});
   const [formErr, setFormErr] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -276,8 +278,14 @@ function SignInForm({ onDone, onForgot }: { onDone: (a: AuthResponse) => Promise
     if (next.pw) return pwRef.current?.focus();
     setBusy(true);
     try {
-      const res = await authService.login({ email: em, password: pw });
-      await onDone(res.data.data!);
+      const res = await authService.login({ email: em, password: pw, rememberMe: keep });
+      const result = res.data.data!;
+      if (isTwoFactorChallenge(result)) {
+        setChallenge(result);
+        setBusy(false);
+        return;
+      }
+      await onDone(result);
     } catch (err) {
       const status = (err as { response?: { status?: number } })?.response?.status;
       setFormErr(
@@ -300,6 +308,20 @@ function SignInForm({ onDone, onForgot }: { onDone: (a: AuthResponse) => Promise
     }
     onForgot();
   };
+
+  if (challenge) {
+    return (
+      <CodeStep
+        challenge={challenge}
+        rememberMe={keep}
+        onDone={onDone}
+        onBack={() => {
+          setChallenge(null);
+          setPw("");
+        }}
+      />
+    );
+  }
 
   return (
     <form className="auth-form" id="pIn" role="tabpanel" aria-labelledby="tabIn" noValidate onSubmit={submit}>
@@ -336,8 +358,87 @@ function SignInForm({ onDone, onForgot }: { onDone: (a: AuthResponse) => Promise
       >
         <PasswordInput id="inPw" inputRef={pwRef} value={pw} onChange={setPw} autoComplete="current-password" invalid={!!errs.pw} />
       </Field>
+      <label className="check">
+        <input type="checkbox" checked={keep} onChange={(e) => setKeep(e.target.checked)} />
+        <span>Keep me signed in on this device</span>
+      </label>
       <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
         {busy ? "Signing in…" : "Sign in"}
+      </button>
+    </form>
+  );
+}
+
+/* ---------------------------------------------------------------------------
+   2-step verification: the code texted after a correct password
+   --------------------------------------------------------------------------- */
+
+function CodeStep({
+  challenge,
+  rememberMe,
+  onDone,
+  onBack,
+}: {
+  challenge: TwoFactorChallenge;
+  rememberMe: boolean;
+  onDone: (a: AuthResponse) => Promise<void>;
+  onBack: () => void;
+}) {
+  const [code, setCode] = useState("");
+  const [err, setErr] = useState("");
+  const [busy, setBusy] = useState(false);
+  const ref = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    ref.current?.focus();
+  }, []);
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (!/^\d{6}$/.test(code)) {
+      setErr("Enter the 6-digit code.");
+      return ref.current?.focus();
+    }
+    setErr("");
+    setBusy(true);
+    try {
+      const res = await authService.verifyLogin({ challengeId: challenge.challengeId, code, rememberMe });
+      await onDone(res.data.data!);
+    } catch (e2) {
+      const status = (e2 as { response?: { status?: number } })?.response?.status;
+      setErr(
+        status === 429
+          ? "Too many attempts. Wait a minute and try again."
+          : getApiErrorMessage(e2, "That code didn't match. Try again.")
+      );
+      ref.current?.focus();
+      setBusy(false);
+    }
+  }
+
+  return (
+    <form className="auth-form" id="pIn" role="tabpanel" aria-labelledby="tabIn" noValidate onSubmit={submit}>
+      <button type="button" className="link sm back" onClick={onBack}>
+        <DayloraIcon name="arrow" className="icon flip" />
+        Back to sign in
+      </button>
+      <h2>Enter your code</h2>
+      <p className="lede">We sent a 6-digit code to {challenge.phoneMasked ?? "your mobile number"}.</p>
+      <Field id="inCode" label="Code" error={err}>
+        <input
+          ref={ref}
+          id="inCode"
+          inputMode="numeric"
+          autoComplete="one-time-code"
+          maxLength={6}
+          value={code}
+          onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+          aria-invalid={!!err || undefined}
+          aria-describedby={err ? "inCode-e" : undefined}
+        />
+      </Field>
+      <button className="btn btn-primary btn-block" type="submit" disabled={busy}>
+        {busy ? "Checking…" : "Sign in"}
       </button>
     </form>
   );
