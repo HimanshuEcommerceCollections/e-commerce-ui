@@ -379,3 +379,22 @@
 .dla .brandrow .umenu .avatar{font-size:13px;font-weight:700;background:var(--mint);color:var(--navy);border-radius:50%}
 .dla .brandrow .umenu-head span:not(.pill){color:var(--muted)}
 .dla .brandrow .umenu-head .pill{font-weight:600;background:var(--ok-50);color:var(--ok);border-radius:var(--r-pill);padding:0 var(--s-2)}
+
+/* Sidebar group labels (desktop; the phone nav is one scrolling row) */
+.dla .snav-h{display:none}
+@media (min-width:1024px){.dla .snav-h{display:block;margin:var(--s-3) var(--s-3) 2px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:#8FA3B8}}
+
+/* Review queues and inbox */
+.dla .panel-h{font-size:16px;font-weight:700;margin:0}
+.dla .pad{padding:var(--s-4)}
+.dla .items.flat{border:0;border-radius:0}
+.dla .stars{color:#C98A00;letter-spacing:1px}
+.dla .stars .off{color:#C4CDD8}
+.dla .review-head{display:flex;justify-content:space-between;align-items:flex-start;gap:var(--s-3)}
+.dla .review-body,.dla .msg{white-space:pre-wrap;overflow-wrap:anywhere;margin:0;line-height:1.5}
+.dla .diff{border:1px solid var(--line);border-radius:var(--r-sm)}
+.dla .diff td{white-space:normal;overflow-wrap:anywhere;vertical-align:top}
+.dla .diff del{color:var(--bad);background:var(--bad-50);text-decoration:line-through}
+.dla .diff ins{color:#1E6B45;background:var(--mint-50);text-decoration:none}
+.dla .secret{display:flex;align-items:center;gap:var(--s-3);flex-wrap:wrap}
+.dla .secret code{font-size:16px;letter-spacing:.04em}

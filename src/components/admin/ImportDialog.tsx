@@ -44,6 +44,21 @@ export default function ImportDialog({ open, onClose, onImported }: { open: bool
     }
   };
 
+  // "Use sample file": the template's example rows (one T-shirt, two SKUs), run through a real import.
+  const [loadingSample, setLoadingSample] = useState(false);
+  const runSample = async () => {
+    if (!window.confirm("Import the template's example rows (one sample T-shirt, 2 SKUs) into the catalog?")) return;
+    setLoadingSample(true);
+    try {
+      const res = await adminService.downloadTemplate();
+      await run(new File([res.data], "catalog-import-sample.csv", { type: "text/csv" }));
+    } catch (err) {
+      setStage({ kind: "pick", error: getApiErrorMessage(err, "Couldn't load the sample file") });
+    } finally {
+      setLoadingSample(false);
+    }
+  };
+
   const downloadTemplate = async () => {
     try {
       const res = await adminService.downloadTemplate();
@@ -86,8 +101,13 @@ export default function ImportDialog({ open, onClose, onImported }: { open: bool
             <ErrorNote text={stage.error} />
             <FileDrop
               title="Drag your catalog file here"
-              hint="CSV or Excel (.xlsx), up to 10 MB · images as URLs, never embedded"
+              hint="CSV or Excel (.xlsx), up to 5,000 rows · images as URLs, never embedded"
               onFile={run}
+              extra={
+                <button className="btn btn-secondary btn-sm" onClick={runSample} disabled={loadingSample}>
+                  {loadingSample ? "Loading…" : "Use sample file"}
+                </button>
+              }
             />
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
               <span className="sub">
@@ -101,7 +121,7 @@ export default function ImportDialog({ open, onClose, onImported }: { open: bool
         ) : null}
 
         {stage.kind === "uploading" ? (
-          <Uploading file={stage.file} percent={stage.percent} working="Validating rows, checking images and saving SKUs…" />
+          <Uploading file={stage.file} percent={stage.percent} working={["Validating rows…", "Creating and updating SKUs…"]} />
         ) : null}
 
         {stage.kind === "done" ? <Result report={stage.report} tab={tab} setTab={setTab} /> : null}

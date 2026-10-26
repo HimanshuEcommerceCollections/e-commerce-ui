@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode, type RefObject } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import adminService from "@/services/admin/admin.service";
@@ -8,20 +8,36 @@ import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
 import { ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
 
-type Count = "orders" | "stock";
+type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications";
+const COUNT_LABEL: Record<Count, string> = {
+  orders: "to fulfil",
+  stock: "low or out of stock",
+  submissions: "waiting for review",
+  reviews: "pending",
+  support: "open",
+  applications: "new",
+};
 
 /**
- * The design's five sections. `adminOnly` sections are hidden from catalog staff
- * (FR-AD-08) and the API answers 403 for them too. `also` lists routes that live
- * under a section: returns are a tab of Orders, the event funnel is part of Reports.
+ * The design's five sections, then the review queues, the inbox and promotions.
+ * `adminOnly` sections are hidden from catalog staff (FR-AD-08) and the API
+ * answers 403 for them too. `also` lists routes that live under a section:
+ * returns are a tab of Orders, the event funnel is part of Reports. `group`
+ * starts a labelled block of the sidebar (desktop only).
  */
-const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adminOnly?: boolean; also?: string[] }> = [
+const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adminOnly?: boolean; also?: string[]; group?: string }> = [
   { href: "/admin/products", label: "Products", icon: "box" },
   { href: "/admin/orders", label: "Orders", icon: "orders", count: "orders", adminOnly: true, also: ["/admin/returns"] },
   { href: "/admin/inventory", label: "Inventory", icon: "stack", count: "stock" },
   { href: "/admin/customers", label: "Customers", icon: "users", adminOnly: true },
   { href: "/admin/reports", label: "Reports", icon: "chart", adminOnly: true, also: ["/admin/analytics"] },
+  { href: "/admin/submissions", label: "Submissions", icon: "review", count: "submissions", group: "Review" },
+  { href: "/admin/reviews", label: "Product reviews", icon: "star", count: "reviews" },
+  { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
+  { href: "/admin/seller-applications", label: "Seller applications", icon: "store", count: "applications", adminOnly: true },
+  { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
 ];
+const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0 };
 const ADMIN_ONLY = [...NAV.filter((n) => n.adminOnly).flatMap((n) => [n.href, ...(n.also ?? [])]), "/admin/settings"];
 
 const inSection = (path: string, n: (typeof NAV)[number]) => [n.href, ...(n.also ?? [])].some((h) => path.startsWith(h));
@@ -57,7 +73,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   const router = useRouter();
   const { logout } = useAuth();
   const { ready, isStaff, isAdmin, user, role } = useAdminSession();
-  const [counts, setCounts] = useState<Record<Count, number>>({ orders: 0, stock: 0 });
+  const [counts, setCounts] = useState<Record<Count, number>>(NO_COUNTS);
   const blocked = isStaff && !isAdmin && ADMIN_ONLY.some((h) => pathname.startsWith(h));
   const rootRef = useRef<HTMLDivElement>(null);
   useCellLabels(rootRef);
@@ -71,19 +87,30 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
     if (blocked) router.replace("/admin/products");
   }, [blocked, router]);
 
+  // Counts are a convenience; the pages report their own errors, so each
+  // request fails on its own without hiding the other badges.
   const loadCounts = useCallback(async () => {
-    try {
-      const stock = (await adminService.inventoryStats()).data.data;
-      const next: Record<Count, number> = { orders: 0, stock: stock ? stock.lowStock + stock.outOfStock : 0 };
-      // Order stats are admin only; catalog staff would get a 403.
-      if (isAdmin) {
-        const o = (await adminService.orderStats()).data.data;
-        next.orders = o?.awaitingFulfilment?.UNFULFILLED ?? 0;
-      }
-      setCounts(next);
-    } catch {
-      // Counts are a convenience; the pages report their own errors.
-    }
+    const [stock, submissions, reviews, orders, inbox] = await Promise.allSettled([
+      adminService.inventoryStats(),
+      adminService.submissionCounts(),
+      // Catalog staff can't read the inbox counts, so they count the pending reviews directly.
+      isAdmin ? Promise.reject() : adminService.listReviews({ status: "PENDING", size: 1 }),
+      // Order stats and the inbox are admin only; catalog staff would get a 403.
+      isAdmin ? adminService.orderStats() : Promise.reject(),
+      isAdmin ? adminService.inboxCounts() : Promise.reject(),
+    ]);
+    const data = <T,>(r: PromiseSettledResult<{ data: { data: T | null } }>) => (r.status === "fulfilled" ? r.value.data.data : null);
+    const s = data(stock);
+    const sub = data(submissions);
+    const box = data(inbox);
+    setCounts({
+      stock: s ? s.lowStock + s.outOfStock : 0,
+      orders: data(orders)?.awaitingFulfilment?.UNFULFILLED ?? 0,
+      submissions: sub ? (sub.SUBMITTED ?? 0) + (sub.IN_REVIEW ?? 0) : box?.submissionsOpen ?? 0,
+      reviews: box?.reviewsPending ?? data(reviews)?.totalElements ?? 0,
+      support: box?.supportOpen ?? 0,
+      applications: box?.sellerApplicationsNew ?? 0,
+    });
   }, [isAdmin]);
 
   useEffect(() => {
@@ -127,11 +154,14 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
             {NAV.filter((item) => isAdmin || !item.adminOnly).map((item) => {
               const n = item.count ? counts[item.count] : 0;
               return (
-                <Link key={item.href} href={item.href} aria-current={inSection(pathname, item) ? "page" : undefined}>
-                  <Icon name={item.icon} />
-                  {item.label}
-                  {n ? <span className="n" aria-label={`${n} ${item.count === "orders" ? "to fulfil" : "low or out of stock"}`}>{n}</span> : null}
-                </Link>
+                <Fragment key={item.href}>
+                  {item.group ? <span className="snav-h" aria-hidden="true">{item.group}</span> : null}
+                  <Link href={item.href} aria-current={inSection(pathname, item) ? "page" : undefined}>
+                    <Icon name={item.icon} />
+                    {item.label}
+                    {n && item.count ? <span className="n" aria-label={`${n} ${COUNT_LABEL[item.count]}`}>{n}</span> : null}
+                  </Link>
+                </Fragment>
               );
             })}
           </nav>

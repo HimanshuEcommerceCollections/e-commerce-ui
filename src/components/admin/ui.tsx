@@ -35,6 +35,11 @@ const PATHS: Record<string, ReactNode> = {
   chevron: <path d="M6 9l6 6 6-6" />,
   edit: (<><path d="M4 20h4L19 9l-4-4L4 16z" /><path d="M14 6l4 4" /></>),
   trash: (<><path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13" /></>),
+  inbox: (<><path d="M3 13l3-8h12l3 8v6H3z" /><path d="M3 13h5l1 3h6l1-3h5" /></>),
+  review: (<><path d="M5 3h10l4 4v14H5z" /><path d="M9 12l2 2 4-4" /></>),
+  mail: (<><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>),
+  tag: (<><path d="M3 12V4h8l10 10-8 8z" /><circle cx="7.5" cy="8.5" r="1.5" /></>),
+  gift: (<><rect x="3" y="8" width="18" height="5" /><path d="M5 13v8h14v-8M12 8v13M12 8c-1.5-3-5-4-5-1.5S10 8 12 8zM12 8c1.5-3 5-4 5-1.5S14 8 12 8z" /></>),
 };
 
 export function Icon({ name, size, className }: { name: keyof typeof PATHS | string; size?: number; className?: string }) {
@@ -171,6 +176,49 @@ export const ReturnPill = ({ status }: { status: string }) => {
   const [label, cls] = RETURN_STATUS[status] ?? [status, "p-grey"];
   return <span className={`pill ${cls}`}>{label}</span>;
 };
+
+export const SUBMISSION_STATUS: Record<string, [string, string]> = {
+  SUBMITTED: ["Waiting", "p-warn"],
+  IN_REVIEW: ["In review", "p-info"],
+  CHANGES_REQUESTED: ["Changes requested", "p-warn"],
+  APPROVED: ["Approved", "p-ok"],
+  REJECTED: ["Rejected", "p-bad"],
+  WITHDRAWN: ["Withdrawn", "p-grey"],
+};
+export const SubmissionPill = ({ status }: { status: string }) => {
+  const [label, cls] = SUBMISSION_STATUS[status] ?? [status, "p-grey"];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+export const SUPPORT_STATUS: Record<string, [string, string]> = {
+  OPEN: ["Open", "p-warn"],
+  IN_PROGRESS: ["In progress", "p-info"],
+  CLOSED: ["Closed", "p-grey"],
+};
+export const APPLICATION_STATUS: Record<string, [string, string]> = {
+  NEW: ["New", "p-warn"],
+  CONTACTED: ["Contacted", "p-info"],
+  APPROVED: ["Approved", "p-ok"],
+  REJECTED: ["Rejected", "p-grey"],
+};
+export const REVIEW_STATUS: Record<string, [string, string]> = {
+  PENDING: ["Pending", "p-warn"],
+  PUBLISHED: ["Published", "p-ok"],
+  REJECTED: ["Rejected", "p-grey"],
+};
+/** A pill from one of the label maps above. */
+export const StatusPill = ({ map, status }: { map: Record<string, [string, string]>; status: string }) => {
+  const [label, cls] = map[status] ?? [status, "p-grey"];
+  return <span className={`pill ${cls}`}>{label}</span>;
+};
+
+/** "★★★★☆" with the rating for screen readers. */
+export const Stars = ({ rating }: { rating: number }) => (
+  <span className="stars" role="img" aria-label={`${rating} out of 5 stars`}>
+    {"★★★★★".slice(0, Math.round(rating))}
+    <span className="off">{"★★★★★".slice(Math.round(rating))}</span>
+  </span>
+);
 
 export const ROLE_LABEL: Record<string, string> = {
   ROLE_CUSTOMER: "Customer",

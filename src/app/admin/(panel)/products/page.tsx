@@ -298,7 +298,12 @@ export default function AdminProductsPage() {
                         {p.subcategory ? <div className="sub">{p.subcategory.name}</div> : null}
                       </td>
                       <td className="num">{p.variantCount}</td>
-                      <td className="num">{priceText(p)}</td>
+                      <td className="num">
+                        {priceText(p)}
+                        {p.minMrp && p.minPrice !== null && p.minMrp > p.minPrice ? (
+                          <div className="sub"><s aria-label={`was ${money(p.minMrp)}`}>{money(p.minMrp)}</s></div>
+                        ) : null}
+                      </td>
                       <td className="num">
                         {p.totalStock.toLocaleString()}
                         {p.lowStockVariants ? <div className="sub qty-low">{p.lowStockVariants} low / out</div> : null}

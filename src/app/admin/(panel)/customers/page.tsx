@@ -4,7 +4,7 @@ import Link from "next/link";
 import adminService from "@/services/admin/admin.service";
 import { getApiErrorMessage } from "@/lib/apiError";
 import type { UserRole } from "@/types/api/common.types";
-import type { AdminCustomerDetail, AdminCustomerRow } from "@/types/api/admin.types";
+import type { AdminCustomerDetail, AdminCustomerRow, AdminCustomerStats, CustomerSegment } from "@/types/api/admin.types";
 import { useAdminSession } from "@/components/admin/useAdminSession";
 import {
   Drawer,
@@ -41,6 +41,13 @@ const SORTS: Array<[string, string]> = [
   ["fullName,asc", "Name A–Z"],
 ];
 const ROLES: UserRole[] = ["ROLE_CUSTOMER", "ROLE_MERCHANT", "ROLE_CATALOG", "ROLE_ADMIN"];
+/** The design's customer tabs: by number of orders. */
+const SEGMENTS: Array<{ key: CustomerSegment | "all"; label: string }> = [
+  { key: "all", label: "All" },
+  { key: "new", label: "New" },
+  { key: "repeat", label: "Repeat" },
+  { key: "none", label: "No orders yet" },
+];
 
 /** Customer records linked to orders (FR-AD-06) and staff roles (FR-AD-08). */
 export default function AdminCustomersPage() {
@@ -56,11 +63,34 @@ export default function AdminCustomersPage() {
   const [error, setError] = useState<string | null>(null);
   const [open, setOpen] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [segment, setSegment] = useState<CustomerSegment | "all">("all");
+  const [stats, setStats] = useState<AdminCustomerStats | null>(null);
+  const customers = role === "ROLE_CUSTOMER";
+  // Segments only apply to customers; staff and merchant views list everyone in the role.
+  const seg = customers && segment !== "all" ? segment : undefined;
+
+  // The KPIs cover every customer; the tab counts follow the search.
+  const [found, setFound] = useState<AdminCustomerStats | null>(null);
+  const loadStats = useCallback(() => {
+    adminService
+      .customerStats()
+      .then((r) => setStats(r.data.data))
+      .catch(() => setStats(null));
+  }, []);
+  useEffect(loadStats, [loadStats]);
+  useEffect(() => {
+    if (!q) return setFound(null);
+    adminService
+      .customerStats({ search: q })
+      .then((r) => setFound(r.data.data))
+      .catch(() => setFound(null));
+  }, [q]);
+  const segCounts = (q ? found : stats)?.segments;
 
   const exportCsv = async () => {
     setExporting(true);
     try {
-      const res = await adminService.exportCustomers({ search: q || undefined, role, sort });
+      const res = await adminService.exportCustomers({ search: q || undefined, role, sort, segment: seg });
       saveFile(fileNameFrom(res.headers["content-disposition"] as string | undefined, "customers.csv"), res.data);
     } catch (err) {
       toast(getApiErrorMessage(err, "Couldn't export customers"), true);
@@ -78,7 +108,7 @@ export default function AdminCustomersPage() {
   const load = useCallback(async () => {
     setError(null);
     try {
-      const r = await adminService.listCustomers({ search: q || undefined, role, page, size: SIZE, sort });
+      const r = await adminService.listCustomers({ search: q || undefined, role, segment: seg, page, size: SIZE, sort });
       const data = r.data.data!;
       setRows(data.content);
       setTotal(data.totalElements);
@@ -87,14 +117,24 @@ export default function AdminCustomersPage() {
       setRows([]);
       setError(getApiErrorMessage(err, "Couldn't load customers"));
     }
-  }, [q, role, page, sort]);
+  }, [q, role, seg, page, sort]);
 
   useEffect(() => {
     load();
   }, [load]);
-  useEffect(() => setPage(0), [q, role, sort]);
+  useEffect(() => setPage(0), [q, role, seg, sort]);
 
   const staff = role === "ROLE_ADMIN" || role === "ROLE_CATALOG";
+  const pct = (n: number) => `${Math.round(n)}%`;
+  const kpis: Array<[string, string]> = stats
+    ? [
+        ["Customers", stats.customers.toLocaleString()],
+        // Share of buyers (customers with at least one order), as the design computes it.
+        ["Repeat buyers", `${stats.repeatBuyers.toLocaleString()} · ${pct(stats.buyers ? (stats.repeatBuyers / stats.buyers) * 100 : 0)}`],
+        ["Avg. spend", money(stats.averageSpend)],
+        ["Email opt-in", pct(stats.marketingOptInRate)],
+      ]
+    : [["Customers", "…"], ["Repeat buyers", "…"], ["Avg. spend", "…"], ["Email opt-in", "…"]];
 
   return (
     <section aria-labelledby="h-customers">
@@ -111,20 +151,37 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
+      <div className="stats">
+        {kpis.map(([label, value]) => (
+          <div className="stat" key={label}>
+            <span>{label}</span>
+            <b>{value}</b>
+          </div>
+        ))}
+      </div>
+
       <div className="panel">
-        <div className="tabs" role="tablist">
-          {VIEWS.map((v) => (
-            <button key={v.role} role="tab" aria-selected={role === v.role} onClick={() => setRole(v.role)}>
-              {v.label}
-            </button>
-          ))}
-        </div>
+        {customers ? (
+          <div className="tabs" role="tablist" aria-label="Customer segments">
+            {SEGMENTS.map((s) => (
+              <button key={s.key} role="tab" aria-selected={segment === s.key} onClick={() => setSegment(s.key)}>
+                {s.label}
+                <span className="c">{segCounts ? segCounts[s.key] : "…"}</span>
+              </button>
+            ))}
+          </div>
+        ) : null}
         <div className="toolbar">
           <label className="search">
             <Icon name="search" />
             <span className="sr-only">Search accounts</span>
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email or phone" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, email or city" />
           </label>
+          <select className="sel" aria-label="Accounts" value={role} onChange={(e) => setRole(e.target.value as UserRole)}>
+            {VIEWS.map((v) => (
+              <option key={v.role} value={v.role}>{v.label}</option>
+            ))}
+          </select>
           <select className="sel" aria-label="Sort" value={sort} onChange={(e) => setSort(e.target.value)}>
             {SORTS.map(([k, label]) => (
               <option key={k} value={k}>{label}</option>
@@ -180,7 +237,10 @@ export default function AdminCustomersPage() {
                     <td>{c.location ?? <span className="sub">—</span>}</td>
                     <td className="num">{c.orders}</td>
                     <td className="num">{money(c.totalSpent)}</td>
-                    <td>{c.lastOrderAt ? shortDate(c.lastOrderAt) : <span className="sub">None yet</span>}</td>
+                    <td>
+                      {c.lastOrderAt ? shortDate(c.lastOrderAt) : <span className="sub">None yet</span>}
+                      {c.lastOrderAt && c.lastOrderNumber ? <div className="sub">{c.lastOrderNumber}</div> : null}
+                    </td>
                     <td>
                       {staff ? (
                         <RolePill role={c.role} />
@@ -203,7 +263,14 @@ export default function AdminCustomersPage() {
         </div>
       </div>
 
-      <CustomerDrawer id={open} onClose={() => setOpen(null)} onChanged={load} />
+      <CustomerDrawer
+        id={open}
+        onClose={() => setOpen(null)}
+        onChanged={() => {
+          load();
+          loadStats();
+        }}
+      />
     </section>
   );
 }
@@ -299,6 +366,14 @@ function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; onClose
             </p>
           </div>
 
+          {c.role === "ROLE_CUSTOMER" ? (
+            <StoreCredit
+              key={c.id}
+              customer={c}
+              onAdjusted={(balance) => setC({ ...c, storeCreditBalance: balance ?? c.storeCreditBalance })}
+            />
+          ) : null}
+
           <div className="d-sec">
             <h3>Orders ({c.orders.length})</h3>
             {c.orders.length ? (
@@ -348,5 +423,66 @@ function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; onClose
         </>
       )}
     </Drawer>
+  );
+}
+
+/** Manual store credit: goodwill (+) or a correction (−), with a reason the customer sees in their activity. */
+function StoreCredit({ customer: c, onAdjusted }: { customer: AdminCustomerDetail; onAdjusted: (balance: number | undefined) => void }) {
+  const [amount, setAmount] = useState("");
+  const [description, setDescription] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async () => {
+    const n = Number(amount);
+    if (!amount.trim() || !Number.isFinite(n) || n === 0) return setErr("Enter an amount, e.g. 10 to add or -10 to take away.");
+    if (!description.trim()) return setErr("Add a reason. The customer sees it in their store credit activity.");
+    const value = Math.round(n * 100) / 100;
+    const msg = value > 0 ? `Add ${money(value)} store credit for ${c.fullName}?` : `Remove ${money(-value)} store credit from ${c.fullName}?`;
+    if (!window.confirm(msg)) return;
+    setErr(null);
+    setBusy(true);
+    try {
+      const res = await adminService.adjustStoreCredit(c.id, value, description.trim());
+      const d = res.data.data;
+      const balance = d?.balance;
+      toast(`${value > 0 ? "Added" : "Removed"} ${money(Math.abs(value))} store credit${balance !== undefined ? ` · balance ${money(balance)}` : ""}`);
+      setAmount("");
+      setDescription("");
+      onAdjusted(balance);
+    } catch (e) {
+      setErr(getApiErrorMessage(e, "Couldn't adjust store credit"));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <div className="d-sec">
+      <h3>Store credit</h3>
+      {c.storeCreditBalance !== undefined ? (
+        <p style={{ marginBottom: 8 }}>
+          Balance <b>{money(c.storeCreditBalance)}</b>
+        </p>
+      ) : null}
+      <div className="form">
+        <div className="row2">
+          <div className="fld">
+            <label htmlFor="scAmount">Amount (USD)</label>
+            <input className={`inp ${err && !amount.trim() ? "bad" : ""}`} id="scAmount" inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} placeholder="10.00 or -10.00" />
+          </div>
+          <div className="fld">
+            <label htmlFor="scDesc">Reason</label>
+            <input className={`inp ${err && !description.trim() ? "bad" : ""}`} id="scDesc" value={description} maxLength={255} onChange={(e) => setDescription(e.target.value)} placeholder="Goodwill: late delivery" />
+          </div>
+        </div>
+        {err ? <p className="err-text">{err}</p> : null}
+        <div className="actrow" style={{ justifyContent: "flex-start" }}>
+          <button className="btn btn-secondary btn-sm" onClick={submit} disabled={busy}>
+            {busy ? "Saving…" : "Adjust credit"}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }

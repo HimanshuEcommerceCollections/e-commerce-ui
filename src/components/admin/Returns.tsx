@@ -291,6 +291,24 @@ export function ReturnDrawer({ id, onClose, onChanged }: { id: string | null; on
   }, [id]);
 
   const next = r ? RETURN_ACTIONS[r.status] ?? [] : [];
+  const [dropping, setDropping] = useState(false);
+  // A drop-off parcel the carrier hasn't scanned into our hands yet.
+  const canDropOff = !!r && r.method === "DROPOFF" && !r.droppedOffAt && !r.receivedAt && (r.status === "REQUESTED" || r.status === "APPROVED");
+
+  const markDroppedOff = async () => {
+    if (!r) return;
+    setDropping(true);
+    try {
+      const res = await adminService.markDroppedOff(r.id);
+      setR(res.data.data ?? { ...r, droppedOffAt: new Date().toISOString() });
+      toast(`${r.rmaNumber} marked dropped off`);
+      onChanged();
+    } catch (err) {
+      toast(getApiErrorMessage(err, "Couldn't mark the return dropped off"), true);
+    } finally {
+      setDropping(false);
+    }
+  };
 
   return (
     <Drawer
@@ -301,6 +319,12 @@ export function ReturnDrawer({ id, onClose, onChanged }: { id: string | null; on
       foot={
         next.length && !action ? (
           <>
+            {canDropOff ? (
+              <button className="btn btn-secondary" onClick={markDroppedOff} disabled={dropping}>
+                <Icon name="truck" />
+                {dropping ? "Saving…" : "Mark dropped off"}
+              </button>
+            ) : null}
             {next.map((a) => (
               <button
                 key={a}
@@ -353,6 +377,14 @@ export function ReturnDrawer({ id, onClose, onChanged }: { id: string | null; on
             <dl className="kv">
               <dt>Reason</dt><dd>{r.reason}</dd>
               {r.method ? (<><dt>Method</dt><dd>{METHOD[r.method] ?? r.method}</dd></>) : null}
+              {r.dropoffCode ? (
+                <>
+                  <dt>Drop-off code</dt>
+                  <dd><code>{r.dropoffCode}</code>{r.dropoffBy ? ` · by ${dateTime(r.dropoffBy).date}` : ""}</dd>
+                </>
+              ) : null}
+              {r.method === "DROPOFF" ? (<><dt>Dropped off</dt><dd>{whenText(r.droppedOffAt)}</dd></>) : null}
+              {r.refundTo ? (<><dt>Refund to</dt><dd>{r.refundTo === "STORE_CREDIT" ? "Store credit" : "Original payment"}</dd></>) : null}
               <dt>Opened by</dt><dd>{r.requestedBy.toLowerCase()} · {whenText(r.createdAt)}</dd>
               <dt>Received</dt><dd>{whenText(r.receivedAt)}{r.receivedAt ? (r.restocked ? " · restocked" : " · not restocked") : ""}</dd>
               <dt>Refund</dt>

@@ -34,6 +34,25 @@ import type {
   SalesReport,
   StockMovement,
   TrackingEventRequest,
+  AdminCustomerStats,
+  AdminGiftCard,
+  AdminProductReview,
+  AdminPromotion,
+  AdminSellerApplication,
+  AdminSupportMessage,
+  InboxCounts,
+  InboxListParams,
+  IssuedGiftCard,
+  PromotionInput,
+  ReviewStatus,
+  SellerApplicationStatus,
+  SellerStockAlert,
+  StoreCreditAdjustment,
+  SubmissionCounts,
+  SubmissionDetail,
+  SubmissionListParams,
+  SubmissionRow,
+  SupportMessageStatus,
 } from "@/types/api/admin.types";
 
 type Paging = { page?: number; size?: number; sort?: string };
@@ -178,6 +197,81 @@ const adminService = {
   /** Blob download so the bearer token is sent; the file name is in Content-Disposition. */
   exportCatalog: (format: "csv" | "xlsx") =>
     api.get<Blob>("/api/catalog/export", { params: { format }, responseType: "blob", timeout: 180_000 }),
+
+  // Seller submissions: the review queue (admins and catalog staff)
+  listSubmissions: (params: SubmissionListParams) =>
+    api.get<ApiResponse<PageResponse<SubmissionRow>>>("/api/admin/submissions", { params }),
+
+  submissionCounts: () => api.get<ApiResponse<SubmissionCounts>>("/api/admin/submissions/counts"),
+
+  getSubmission: (ref: string) => api.get<ApiResponse<SubmissionDetail>>(`/api/admin/submissions/${ref}`),
+
+  claimSubmission: (ref: string) => api.post<ApiResponse<SubmissionDetail>>(`/api/admin/submissions/${ref}/claim`, {}),
+
+  /** Approve takes an optional note; request changes and reject need one. */
+  decideSubmission: (ref: string, decision: "approve" | "request-changes" | "reject", note?: string) =>
+    api.post<ApiResponse<SubmissionDetail>>(`/api/admin/submissions/${ref}/${decision}`, { note }, { timeout: 60_000 }),
+
+  sellerStockAlerts: (days = 7) =>
+    api.get<ApiResponse<SellerStockAlert[]>>("/api/admin/seller-stock-alerts", { params: { days } }),
+
+  // Product reviews moderation (catalog staff)
+  listReviews: (params: Paging & { status?: ReviewStatus }) =>
+    api.get<ApiResponse<PageResponse<AdminProductReview>>>("/api/admin/reviews", { params }),
+
+  publishReview: (id: string) => api.post<ApiResponse<AdminProductReview>>(`/api/admin/reviews/${id}/publish`, {}),
+
+  rejectReview: (id: string, note?: string) =>
+    api.post<ApiResponse<AdminProductReview>>(`/api/admin/reviews/${id}/reject`, { note }),
+
+  // Inbox (admin only)
+  inboxCounts: () => api.get<ApiResponse<InboxCounts>>("/api/admin/inbox/counts"),
+
+  listSupportMessages: (params: InboxListParams<SupportMessageStatus>) =>
+    api.get<ApiResponse<PageResponse<AdminSupportMessage>>>("/api/admin/support-messages", { params }),
+
+  getSupportMessage: (id: string) => api.get<ApiResponse<AdminSupportMessage>>(`/api/admin/support-messages/${id}`),
+
+  updateSupportMessage: (id: string, data: { status: SupportMessageStatus; adminNote?: string }) =>
+    api.patch<ApiResponse<AdminSupportMessage>>(`/api/admin/support-messages/${id}`, data),
+
+  listSellerApplications: (params: InboxListParams<SellerApplicationStatus>) =>
+    api.get<ApiResponse<PageResponse<AdminSellerApplication>>>("/api/admin/seller-applications", { params }),
+
+  getSellerApplication: (id: string) =>
+    api.get<ApiResponse<AdminSellerApplication>>(`/api/admin/seller-applications/${id}`),
+
+  updateSellerApplication: (id: string, data: { status: SellerApplicationStatus; adminNote?: string }) =>
+    api.patch<ApiResponse<AdminSellerApplication>>(`/api/admin/seller-applications/${id}`, data),
+
+  // Customers (D2)
+  customerStats: (params: { search?: string } = {}) =>
+    api.get<ApiResponse<AdminCustomerStats>>("/api/admin/customers/stats", { params }),
+
+  /** Signed amount: + adds credit, − takes it away. */
+  adjustStoreCredit: (id: string, amount: number, description: string) =>
+    api.post<ApiResponse<StoreCreditAdjustment>>(`/api/admin/customers/${id}/store-credit`, { amount, description }),
+
+  // Returns: a drop-off parcel handed to the carrier (C3)
+  markDroppedOff: (id: string) => api.post<ApiResponse<AdminReturn>>(`/api/admin/returns/${id}/dropped-off`, {}),
+
+  // Promotions and gift cards (admin only)
+  listPromotions: (params: Paging & { q?: string; active?: boolean } = {}) =>
+    api.get<ApiResponse<PageResponse<AdminPromotion>>>("/api/admin/promotions", { params }),
+
+  createPromotion: (data: PromotionInput) => api.post<ApiResponse<AdminPromotion>>("/api/admin/promotions", data),
+
+  updatePromotion: (id: string, data: Partial<PromotionInput>) =>
+    api.patch<ApiResponse<AdminPromotion>>(`/api/admin/promotions/${id}`, data),
+
+  /** Deactivates; codes stay on past orders. */
+  deactivatePromotion: (id: string) => api.delete<ApiResponse<unknown>>(`/api/admin/promotions/${id}`),
+
+  listGiftCards: (params: Paging) =>
+    api.get<ApiResponse<PageResponse<AdminGiftCard>>>("/api/admin/gift-cards", { params }),
+
+  issueGiftCard: (data: { amount: number; expiresAt?: string }) =>
+    api.post<ApiResponse<IssuedGiftCard>>("/api/admin/gift-cards", data),
 };
 
 export default adminService;
