@@ -234,4 +234,9 @@
 .co-page .pay-status{display:inline-flex;align-items:center;height:22px;padding:0 8px;border-radius:var(--r-pill);font-size:12px;font-weight:700;background:var(--surface);color:var(--navy)}
 .co-page .pay-status.ok{background:var(--mint-50);color:var(--leaf-700)}
 .co-page .pay-status.bad{background:#FEF3F2;color:var(--low-stock)}
+/* Design 05 additions: hidden toggles, billing address, wallet buttons */
+.co-page [hidden]{display:none!important}
+.co-page .bill-wrap{display:flex;flex-direction:column;gap:var(--s-4)}
+.co-page .pm-panel .stripe-box{background:#fff}
+.co-page .express{margin-bottom:var(--s-1)}
 .co-page .conf-note{font-size:14px;line-height:20px;color:var(--muted);margin-top:var(--s-3)}

@@ -15,6 +15,9 @@ import { addBusinessDays, CheckoutFooter, CheckoutHeader, fmtDay, readGuestOrder
 
 const ATTEMPT_KEY = "ec-checkout-attempt";
 
+/** Gateway card brands as shoppers know them (design 06). */
+const CARD_BRANDS: Record<string, string> = { visa: "Visa", mastercard: "Mastercard", amex: "Amex", discover: "Discover" };
+
 /** New-password rule (CONTRACT §4 Auth): 8+ characters with a letter and a digit. */
 const passwordError = (v: string) =>
   !v ? "Create a password." : v.length < 8 || !/[A-Za-z]/.test(v) || !/\d/.test(v) ? "Use at least 8 characters with a letter and a number." : "";
@@ -189,7 +192,17 @@ export function DayloraConfirmation({ orderNumber }: { orderNumber: string }) {
     ? `/account/orders/${encodeURIComponent(order.orderNumber)}`
     : `/track?o=${encodeURIComponent(order.orderNumber)}`;
 
-  const payMethod = manual ? "Pay later (manual confirmation)" : "Card";
+  // "Visa ending in 4242" once the gateway reports the card (contract B3).
+  const pm = order.payment;
+  const brandName = pm?.brand ? CARD_BRANDS[pm.brand.toLowerCase()] ?? pm.brand.charAt(0).toUpperCase() + pm.brand.slice(1) : null;
+  const payMethod =
+    pm?.type === "MANUAL" || (!pm && manual)
+      ? "Pay later"
+      : brandName && pm?.last4
+        ? `${brandName} ending in ${pm.last4}`
+        : pm?.type === "WALLET"
+          ? "Digital wallet"
+          : "Card";
   const payBadge = failed
     ? { cls: "bad", text: "Failed" }
     : order.paymentStatus === PaymentStatus.REFUNDED
@@ -290,7 +303,7 @@ export function DayloraConfirmation({ orderNumber }: { orderNumber: string }) {
         <section className="card" aria-labelledby="pyH">
           <h2 id="pyH">Payment</h2>
           <dl className="kv">
-            <dt>Method</dt>
+            <dt>{paid ? "Paid with" : "Method"}</dt>
             <dd>{payMethod}</dd>
             <dt>Status</dt>
             <dd><span className={`pay-status ${payBadge.cls}`}>{payBadge.text}</span></dd>
@@ -333,9 +346,15 @@ export function DayloraConfirmation({ orderNumber }: { orderNumber: string }) {
         <dl className="sum-rows" style={{ marginTop: 16 }}>
           <dt>Subtotal</dt>
           <dd>{usd(order.subtotal)}</dd>
+          {(order.savingsTotal ?? 0) > 0 && (
+            <>
+              <dt className="good">You saved</dt>
+              <dd className="good">−{usd(order.savingsTotal!)}<span className="sr-only"> included in subtotal</span></dd>
+            </>
+          )}
           {order.discountTotal > 0 && (
             <>
-              <dt className="good">Discount</dt>
+              <dt className="good">{order.promoCode ? `Promo ${order.promoCode}` : "Discount"}</dt>
               <dd className="good">−{usd(order.discountTotal)}</dd>
             </>
           )}
@@ -361,7 +380,7 @@ export function DayloraConfirmation({ orderNumber }: { orderNumber: string }) {
           ) : (
             <>
               <p>
-                Create an account with just a password. We&apos;ll use {order.customerEmail} and link this order to it.
+                Create an account with just a password. We&apos;ll use {order.customerEmail} and the address you entered.
               </p>
               <form onSubmit={createAccount} noValidate>
                 <div className={`field${pwError ? " bad" : ""}`}>

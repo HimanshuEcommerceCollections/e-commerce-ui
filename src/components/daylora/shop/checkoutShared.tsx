@@ -6,6 +6,14 @@ import { DayloraIcon } from "../DayloraIcons";
  * the minimal header/footer, delivery-date maths and the session hand-off.
  */
 
+/** The backend's message for one field of a 400 (`data: { [field]: message }`), if any. */
+export function fieldError(err: unknown, field: string): string | null {
+  const data = (err as { response?: { status?: number; data?: { data?: unknown } } })?.response?.data?.data;
+  if (!data || typeof data !== "object") return null;
+  const msg = (data as Record<string, unknown>)[field];
+  return typeof msg === "string" && msg ? msg : null;
+}
+
 /** A guest's order, readable on the confirmation page with its token (CONTRACT §4 Checkout). */
 export interface GuestOrderRef {
   orderNumber: string;
