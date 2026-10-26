@@ -28,6 +28,7 @@ import {
   PaymentPill,
   SHIPMENT_STATUS,
   ShipmentPill,
+  Thumb,
   dateTime,
   money,
   rangeText,
@@ -191,9 +192,9 @@ function Orders() {
         {(
           [
             ["To fulfil", af.UNFULFILLED ?? 0, "var(--warn)", "UNFULFILLED"],
-            ["Picked & packed", (af.PICKED ?? 0) + (af.PACKED ?? 0), "var(--info)", "PACKED"],
+            ["Packed", (af.PICKED ?? 0) + (af.PACKED ?? 0), "var(--info)", "PACKED"],
             ["Shipped", by.SHIPPED ?? 0, "var(--info)", "SHIPPED"],
-            ["Open returns", openReturns, "var(--bad)", "RETURNS"],
+            ["Returns", openReturns, "var(--bad)", "RETURNS"],
           ] as const
         ).map(([label, n, color, key]) => (
           <button className="stat" key={label} aria-pressed={tab === key} onClick={() => setTab(tab === key ? "ALL" : key)}>
@@ -521,9 +522,11 @@ function OrderDrawer({ id, onClose, onChanged }: { id: string | null; onClose: (
             <div className="items">
               {o.items.map((x) => (
                 <div className="item" key={x.id ?? x.sku}>
+                  <Thumb src={x.imageUrl ?? null} />
                   <div>
                     <strong>{x.productName}</strong>
                     <span className="sub">
+                      {x.variantName ? `${x.variantName} · ` : ""}
                       <code>{x.sku}</code>
                       {x.taxRate ? ` · tax ${x.taxRate}%${x.taxCode ? ` (${x.taxCode})` : ""}` : ""}
                       {x.returnedQuantity ? ` · ${x.returnedQuantity} returned` : ""}
@@ -847,6 +850,7 @@ function ShipForm({
           </>
         )}
         {err ? <p className="err-text">{err}</p> : null}
+        <span className="hint sub">Customers see status and tracking in their account.</span>
         <div className="actrow">
           <button className="btn btn-secondary btn-sm" onClick={onCancel} disabled={busy}>Cancel</button>
           <button className="btn btn-primary btn-sm" onClick={submit} disabled={busy}>

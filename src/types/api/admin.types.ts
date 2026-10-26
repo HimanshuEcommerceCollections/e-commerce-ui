@@ -32,6 +32,9 @@ export interface AdminProductRow {
   variantCount: number;
   minPrice: number | null;
   maxPrice: number | null;
+  /** The variants' compare-at (MRP) range; null when none has one (list rows only). */
+  minMrp?: number | null;
+  maxMrp?: number | null;
   totalStock: number;
   lowStockVariants: number;
   /** Images that failed the URL check (FR-IM-08). */
@@ -238,6 +241,9 @@ export interface AdminOrderItem {
   taxRate: number;
   taxAmount: number;
   returnedQuantity: number;
+  /** Snapshots taken at checkout. */
+  imageUrl: string | null;
+  variantName: string | null;
 }
 
 export interface OrderTimelineEntry {
@@ -391,6 +397,12 @@ export interface AdminReturn extends OrderReturnSummary {
   estimatedRefund?: number;
   adminNote: string | null;
   refundReference: string | null;
+  /** Where the refund goes: the payment method, or the customer's store credit. */
+  refundTo?: "ORIGINAL" | "STORE_CREDIT";
+  /** Drop-off returns: the code the carrier scans, its deadline, and when staff marked it dropped off. */
+  dropoffCode?: string | null;
+  dropoffBy?: string | null;
+  droppedOffAt?: string | null;
   /** What a REFUND pays by default: the lines' price and tax, capped at what's left. */
   refundDue: number;
   updatedAt: string;
@@ -431,6 +443,22 @@ export interface AdminCustomerRow {
   orders: number;
   totalSpent: number;
   lastOrderAt: string | null;
+  lastOrderNumber?: string | null;
+}
+
+/** New = one order, repeat = more than one, none = no orders yet. */
+export type CustomerSegment = "new" | "repeat" | "none";
+
+export interface AdminCustomerStats {
+  customers: number;
+  buyers: number;
+  repeatBuyers: number;
+  /** Percent of buyers. */
+  repeatRate: number;
+  averageSpend: number;
+  /** Percent of customers. */
+  marketingOptInRate: number;
+  segments: { all: number; new: number; repeat: number; none: number };
 }
 
 export interface AdminCustomerAddress extends AdminAddress {
@@ -450,6 +478,8 @@ export interface AdminCustomerDetail {
   createdAt: string;
   lastLoginAt: string | null;
   totalSpent: number;
+  /** Present once store credit is live (C11). */
+  storeCreditBalance?: number;
   addresses: AdminCustomerAddress[];
   orders: {
     id: string;
@@ -466,6 +496,7 @@ export interface AdminCustomerDetail {
 export interface AdminCustomerListParams {
   search?: string;
   role?: UserRole;
+  segment?: CustomerSegment;
   page?: number;
   size?: number;
   sort?: string;
@@ -592,4 +623,220 @@ export interface BulkUpdateReport {
   columns: string[];
   errors: ImportRowError[];
   durationMs: number;
+}
+
+// ── Seller submissions: the catalog team's review queue ─────────────────────
+
+export type SubmissionKind = "NEW_PRODUCT" | "EDIT" | "DELIST";
+export type SubmissionStatus = "SUBMITTED" | "IN_REVIEW" | "CHANGES_REQUESTED" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+type Person = { id: string; email: string; fullName: string };
+
+export interface SubmissionRow {
+  reference: string;
+  kind: SubmissionKind;
+  status: SubmissionStatus;
+  parentProductId: string;
+  parentProductCode: string;
+  productName: string;
+  skus: string[];
+  source: string;
+  merchant: Person;
+  reviewer: Person | null;
+  submittedAt: string;
+  decidedAt: string | null;
+}
+
+/** One column of one SKU: live value against the submitted one. */
+export interface SubmissionFieldChange {
+  column: string;
+  before: string;
+  after: string;
+}
+
+export interface SubmissionDetail extends SubmissionRow {
+  fileName: string | null;
+  sellerNote: string | null;
+  reviewNote: string | null;
+  reviewStartedAt: string | null;
+  changes: { sku: string; action: "UPDATE" | "ADD" | "DELIST"; fields: SubmissionFieldChange[] }[];
+  /** Oldest first. */
+  events: { status: SubmissionStatus; actorEmail: string | null; note: string | null; createdAt: string }[];
+}
+
+export type SubmissionCounts = Record<SubmissionStatus, number>;
+
+export interface SubmissionListParams {
+  status?: SubmissionStatus;
+  kind?: SubmissionKind;
+  merchantId?: string;
+  page?: number;
+  size?: number;
+  sort?: string;
+}
+
+/** A seller's stock that dropped to zero. */
+export interface SellerStockAlert {
+  at: string;
+  sku: string;
+  productId: string;
+  parentProductCode: string;
+  name: string;
+  status: ProductStatus;
+  from: number;
+  to: number;
+  /** The seller's email. */
+  seller: string | null;
+}
+
+// ── Inbox: support messages and seller applications (admin only) ───────────
+
+export type SupportMessageStatus = "OPEN" | "IN_PROGRESS" | "CLOSED";
+export type SellerApplicationStatus = "NEW" | "CONTACTED" | "APPROVED" | "REJECTED";
+
+export interface AdminSupportMessage {
+  id: string;
+  ticketNumber: string;
+  name: string;
+  email: string;
+  topic: string;
+  orderNumber: string | null;
+  message: string;
+  /** Detail only: the order the number points at, when it exists. */
+  orderId?: string | null;
+  status: SupportMessageStatus;
+  adminNote: string | null;
+  handledBy: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface AdminSellerApplication {
+  id: string;
+  reference: string;
+  fullName: string;
+  email: string;
+  phone: string;
+  categories: string[];
+  products: string;
+  street: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  consentAt: string | null;
+  status: SellerApplicationStatus;
+  adminNote: string | null;
+  handledBy: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
+export interface InboxCounts {
+  supportOpen: number;
+  sellerApplicationsNew: number;
+  reviewsPending: number;
+  submissionsOpen: number;
+}
+
+export interface InboxListParams<S> {
+  status?: S;
+  q?: string;
+  page?: number;
+  size?: number;
+}
+
+// ── Product reviews moderation (catalog staff) ──────────────────────────────
+
+export type ReviewStatus = "PENDING" | "PUBLISHED" | "REJECTED";
+
+export interface AdminProductReview {
+  id: string;
+  status: ReviewStatus;
+  rating: number;
+  title: string;
+  body: string;
+  recommend: boolean;
+  /** As shown on the store: "Jordan M." */
+  author: string;
+  customer: { id: string; name: string; email: string };
+  productId: string;
+  parentId: string;
+  productName: string;
+  sku: string;
+  /** "Indigo · M" */
+  variant: string | null;
+  verifiedBuyer: boolean;
+  moderatorNote: string | null;
+  createdAt: string;
+  publishedAt: string | null;
+}
+
+// ── Promotions, gift cards and store credit (admin only) ────────────────────
+
+export type PromotionType = "PERCENT" | "FIXED" | "FREE_SHIPPING";
+/** Derived: inactive, past its end or usage limit, not started yet, or live. */
+export type PromotionState = "ACTIVE" | "SCHEDULED" | "EXPIRED" | "INACTIVE";
+
+export interface AdminPromotion {
+  id: string;
+  code: string;
+  description: string;
+  type: PromotionType;
+  /** Percent for PERCENT, amount for FIXED, ignored for FREE_SHIPPING. */
+  value: number;
+  minSubtotal: number | null;
+  startsAt: string | null;
+  endsAt: string | null;
+  usageLimit: number | null;
+  perCustomerLimit: number | null;
+  firstOrderOnly: boolean;
+  active: boolean;
+  state: PromotionState;
+  timesUsed: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/** POST needs code, description and type; PATCH any subset. null clears a field. */
+export interface PromotionInput {
+  code: string;
+  description: string;
+  type: PromotionType;
+  value: number;
+  minSubtotal?: number | null;
+  startsAt?: string | null;
+  endsAt?: string | null;
+  usageLimit?: number | null;
+  perCustomerLimit?: number | null;
+  firstOrderOnly?: boolean;
+  active?: boolean;
+}
+
+export type GiftCardStatus = "ACTIVE" | "REDEEMED" | "DISABLED" | "EXPIRED";
+
+export interface AdminGiftCard {
+  id: string;
+  /** "••••-••••-••••-AB12" */
+  maskedCode: string;
+  last4: string;
+  amount: number;
+  currency: string;
+  status: GiftCardStatus;
+  createdAt: string;
+  createdBy: string | null;
+  expiresAt: string | null;
+  redeemedAt: string | null;
+  redeemedByUserId: string | null;
+  redeemedByEmail: string | null;
+}
+
+/** The code and PIN come back once, at issue. */
+export interface IssuedGiftCard extends AdminGiftCard {
+  /** XXXX-XXXX-XXXX-XXXX */
+  code: string;
+  pin: string;
+}
+
+export interface StoreCreditAdjustment {
+  balance: number;
+  entry: { id: string; createdAt: string; description: string; amount: number; type: string };
 }

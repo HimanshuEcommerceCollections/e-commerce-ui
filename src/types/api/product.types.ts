@@ -1,4 +1,4 @@
-import type { ProductStatus } from "./common.types";
+import type { PageResponse, ProductStatus } from "./common.types";
 import type { CategoryResponse } from "./category.types";
 
 // ─── Shared sub-shapes ───────────────────────────────────────────────────────
@@ -100,6 +100,9 @@ export interface ProductSummaryResponse extends VariantAttributes {
   unitsSold: number;
   merchantId: string;
   createdAt: string;               // ISO-8601 UTC
+  /** Parent's published-review rollup (CONTRACT A5). */
+  ratingAvg?: number;
+  ratingCount?: number;
 }
 
 /** The parent product: the catalog record every variant SKU belongs to. */
@@ -121,6 +124,8 @@ export interface ParentProductResponse {
   infographicUrl: string | null;
   /** Category attribute sheet values, e.g. { Gender: "Men", Fit: "Regular" }. */
   attributes: Record<string, string>;
+  ratingAvg?: number;
+  ratingCount?: number;
 }
 
 /** One sibling SKU of the same parent, for the PDP variant selector. */
@@ -170,4 +175,105 @@ export interface ProductDetailResponse extends VariantAttributes {
   merchantId: string;
   createdAt: string;
   updatedAt: string;
+  /** Published-review rollup of the parent (CONTRACT A5). */
+  ratingAvg?: number;
+  ratingCount?: number;
+  ratingDistribution?: RatingDistribution;
+}
+
+// ─── Storefront search (CONTRACT A1–A4) ──────────────────────────────────────
+
+/** One listing card: a parent product with its buyable SKUs summarised. */
+export interface ProductCard {
+  parentId: string;
+  /** Lead SKU's URL slug (or its id). */
+  slug: string;
+  /** Lead SKU id: what a single-variant card adds to the cart. */
+  productId: string;
+  name: string;
+  brand: string | null;
+  productType: string | null;
+  department: { slug: string; name: string } | null;
+  section: { slug: string; name: string } | null;
+  imageUrl: string | null;
+  minPrice: number;
+  maxPrice: number;
+  /** Best MRP above the price, or null. */
+  mrp: number | null;
+  discountPercent: number | null;
+  colors: { name: string; hex: string | null; imageUrl: string | null }[];
+  sizes: string[];
+  /** Total buyable units. */
+  stock: number;
+  lowStock: boolean;
+  isNew: boolean;
+  featured: boolean;
+  unitsSold: number;
+  /** 0–5, one decimal. */
+  ratingAvg: number;
+  ratingCount: number;
+  variantCount: number;
+  createdAt: string;
+}
+
+export interface FacetOption {
+  value: string;
+  label: string;
+  count: number;
+}
+
+export type SearchMode = "exact" | "corrected" | "partial" | "none";
+
+export interface ProductSearchResponse {
+  items: ProductCard[];
+  total: number;
+  page: number;
+  size: number;
+  /** Disjunctive counts per facet key (type, brand, color, size, price, fit, …, dept, g). */
+  facets: Record<string, FacetOption[]>;
+  search: { mode: SearchMode; query: string; shown: string | null } | null;
+}
+
+export interface SearchSuggestResponse {
+  suggestions: string[];
+  /** `dept`: the department slug of the type's products, when the server knows it. */
+  scoped: { query: string; type: string; label: string; dept?: string | null } | null;
+  products: ProductCard[];
+  popular: string[];
+}
+
+// ─── Reviews (CONTRACT C6, public) ───────────────────────────────────────────
+
+export type RatingDistribution = Record<"1" | "2" | "3" | "4" | "5", number>;
+
+export interface ProductReview {
+  id: string;
+  rating: number;
+  title: string | null;
+  body: string;
+  recommend: boolean | null;
+  /** "Jordan M." */
+  author: string;
+  location: string | null;
+  /** "Indigo · M" */
+  variant: string | null;
+  verifiedBuyer: boolean;
+  createdAt: string;
+}
+
+export interface ProductReviewsResponse {
+  summary: { average: number; count: number; distribution: RatingDistribution; recommendPercent: number | null };
+  page: PageResponse<ProductReview>;
+}
+
+export interface FeaturedReview extends ProductReview {
+  productName: string;
+  productSlug: string | null;
+  imageUrl?: string | null;
+}
+
+export interface FeaturedReviewsResponse {
+  reviews: FeaturedReview[];
+  average: number;
+  count: number;
 }

@@ -57,7 +57,7 @@ export function useModal(open: boolean, onOpen?: () => void) {
   return ref;
 }
 
-export function FileDrop({ title, hint, onFile }: { title: string; hint: ReactNode; onFile: (f: File) => void }) {
+export function FileDrop({ title, hint, onFile, extra }: { title: string; hint: ReactNode; onFile: (f: File) => void; extra?: ReactNode }) {
   const [drag, setDrag] = useState(false);
   const onDrop = (e: DragEvent) => {
     e.preventDefault();
@@ -90,24 +90,37 @@ export function FileDrop({ title, hint, onFile }: { title: string; hint: ReactNo
             }}
           />
         </label>
+        {extra}
       </div>
     </div>
   );
 }
 
-export function Uploading({ file, percent, working }: { file: File; percent: number; working: string }) {
+/**
+ * Upload progress. Once the file is up the server works in one request, so
+ * `working` can be a list of stages shown in turn (the last one stays).
+ */
+export function Uploading({ file, percent, working }: { file: File; percent: number; working: string | string[] }) {
+  const stages = Array.isArray(working) ? working : [working];
+  const [stage, setStage] = useState(0);
+  const uploaded = percent >= 100;
+  useEffect(() => {
+    if (!uploaded || stages.length < 2) return;
+    const t = setInterval(() => setStage((s) => Math.min(s + 1, stages.length - 1)), 1500);
+    return () => clearInterval(t);
+  }, [uploaded, stages.length]);
   return (
     <>
       <div className="item" style={{ border: "1px solid var(--line)", borderRadius: 12 }}>
         <Icon name="file" className="leaf" />
         <div>
           <strong>{file.name}</strong>
-          <span className="sub">{percent < 100 ? "Uploading…" : working}</span>
+          <span className="sub">{uploaded ? stages[stage] : "Uploading…"}</span>
         </div>
         <span className="sub">{percent}%</span>
       </div>
       <div className="progress">
-        <i style={{ width: `${percent < 100 ? percent * 0.6 : 85}%` }} />
+        <i style={{ width: `${uploaded ? Math.min(92, 70 + stage * 15) : percent * 0.6}%` }} />
       </div>
     </>
   );

@@ -189,8 +189,8 @@ export default function AdminInventoryPage() {
           row={adjust.row}
           style={{ top: adjust.top, left: adjust.left }}
           onClose={() => setAdjust(null)}
-          onSaved={(updated, before) => {
-            toast(`${updated.sku}: ${before} → ${updated.stockQuantity}`);
+          onSaved={(updated, before, reason) => {
+            toast(`${updated.sku}: ${before} → ${updated.stockQuantity} (${reason.toLowerCase()})`);
             setAdjust(null);
             load();
             refreshAdminCounts();
@@ -299,7 +299,7 @@ function AdjustPopover({
   row: AdminInventoryRow;
   style: { top: number; left: number };
   onClose: () => void;
-  onSaved: (updated: AdminInventoryRow, before: number) => void;
+  onSaved: (updated: AdminInventoryRow, before: number, reason: string) => void;
 }) {
   const [qty, setQty] = useState("0");
   const [reason, setReason] = useState(REASONS[0]);
@@ -336,7 +336,7 @@ function AdjustPopover({
     setSaving(true);
     try {
       const res = await adminService.adjustStock(row.id, delta, reason);
-      onSaved(res.data.data!, row.stockQuantity);
+      onSaved(res.data.data!, row.stockQuantity, reason);
     } catch (err) {
       setError(getApiErrorMessage(err, "Couldn't adjust stock"));
       setSaving(false);

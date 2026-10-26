@@ -36,6 +36,27 @@ export interface CartItemResponse {
   lineTotal: number;          // same as subtotal
   taxAmount: number;
   available: boolean;         // false if product was deactivated after being added
+  brand?: string | null;      // CONTRACT A6
+  discount?: number;          // this line's share of the promo discount (B1)
+}
+
+/** A promo code the server accepted for this cart (CONTRACT B1). */
+export interface AppliedPromo {
+  code: string;
+  description: string;
+  discount: number;
+  freeShipping: boolean;
+}
+
+/** POST /api/cart/promo/validate */
+export interface PromoValidation extends AppliedPromo {
+  type: "PERCENT" | "FIXED" | "FREE_SHIPPING";
+}
+
+/** Destination for tax (CONTRACT B2); state is a 2-letter code. */
+export interface TaxDestination {
+  state: string;
+  postalCode?: string;
 }
 
 /**
@@ -55,4 +76,9 @@ export interface CartResponse {
   pricesIncludeTax: boolean;
   freeShippingThreshold: number | null;
   updatedAt: string | null;    // ISO-8601 UTC
+  discountTotal?: number;      // CONTRACT B1: the promo's discount
+  promo?: AppliedPromo | null;
+  taxIsEstimate?: boolean;     // CONTRACT B2: no destination yet ("Calculated at checkout")
+  /** Why the promo code sent with this request doesn't apply (carts never 400 over a code). */
+  promoError?: string | null;
 }

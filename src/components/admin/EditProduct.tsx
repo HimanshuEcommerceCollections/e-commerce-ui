@@ -268,6 +268,10 @@ export default function EditProduct({ id, onClose, onSaved }: { id: string | nul
             </div>
           ) : null}
 
+          <div className="note">
+            <Icon name="info" />
+            <span>Catalog users can edit products and stock only. Orders and settings need an Operations or Admin role.</span>
+          </div>
         </>
       )}
     </Drawer>

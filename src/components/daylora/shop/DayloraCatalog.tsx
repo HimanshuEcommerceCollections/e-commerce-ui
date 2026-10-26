@@ -9,25 +9,21 @@ import { DayloraIcon } from "../DayloraIcons";
 import { ShopIconSprite } from "./ShopIcons";
 import { colorHex } from "./catalog";
 import { catalogHref, useDepartments, type Department } from "./departments";
-import { loadStorefrontCatalog } from "./storefrontCatalog";
+import publicProductService from "@/services/public/product.service";
+import type { FacetOption, ProductSearchResponse } from "@/types/api/product.types";
 import { PlpCard } from "./PlpCard";
+import { searchProducts, toCard, toSearchParams, type CardModel, type SearchQuery } from "./storefrontCards";
 import {
   PRICES,
   SORTS,
   TYPE_ICON,
-  buildIndex,
+  apiFacetKey,
   facetConfig,
   facetLabel,
-  facetValues,
   isSort,
-  matches,
   orderValues,
-  search,
   sizeGroups,
-  sorter,
-  toItem,
   type FacetKey,
-  type PlpItem,
   type Selection,
   type SortKey,
   type Toggles,
@@ -37,9 +33,10 @@ import {
  * Product listing and search results (design 02; FR-ST-02/03/04/05/08/13, NFR-03).
  *
  * One template for every department, section, product type, search, deals and
- * new arrivals. The whole live catalog is loaded once (shared cached loader) and
- * filtered in the browser. Every choice lives in the URL, so links can be
- * shared and the back button returns to the same results:
+ * new arrivals. Results, disjunctive facet counts, sorting and search (with
+ * spelling correction) come from GET /api/products/search, a page at a time
+ * ("Load more"). Every choice lives in the URL, so links can be shared and the
+ * back button returns to the same results:
  *   scope   dept, g (section slug), q, deals=1, new=1
  *   facets  sec, d, type, size, color, price, brand, fit, material, conn, diet,
  *           skin, format, age, activity, occasion (repeatable), stock=1, sale=1
@@ -48,11 +45,30 @@ import {
 
 const PER_DESKTOP = 16;
 const PER_MOBILE = 12;
-
-/** Shown when a search finds nothing (design), if the catalog has matches for them. */
-const POPULAR = ["Denim jacket", "Hoodie", "Wireless earbuds", "Yoga mat", "Coffee", "Water bottle", "Skincare", "Board game"];
+/** The API's page-size cap; a restored "n" pages load in one request up to this. */
+const MAX_SIZE = 100;
 
 const titleCase = (slug: string) => slug.replace(/-/g, " ").replace(/^./, (c) => c.toUpperCase());
+
+/** "Popular searches" for an empty result, from the suggest API (fetched once). */
+let popularCache: Promise<string[]> | null = null;
+const loadPopular = () =>
+  (popularCache ??= publicProductService
+    .suggest("")
+    .then((r) => r.data.data?.popular ?? [])
+    .catch(() => {
+      popularCache = null;
+      return [];
+    }));
+
+interface Results {
+  /** Query (without paging) these results are for. */
+  key: string;
+  items: CardModel[];
+  total: number;
+  facets: Record<string, FacetOption[]>;
+  search: ProductSearchResponse["search"];
+}
 
 /** Writes the URL without a navigation; useSearchParams picks it up. */
 function replaceQuery(fn: (u: URLSearchParams) => void, keepPage = false) {
@@ -67,24 +83,9 @@ export function DayloraCatalog() {
   const params = useSearchParams();
   const depts = useDepartments();
 
-  /* ---- Data ---- */
-  const [items, setItems] = useState<PlpItem[] | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [reload, setReload] = useState(0);
+  const [per, setPer] = useState<number | null>(null);
   useEffect(() => {
-    let live = true;
-    setError(null);
-    loadStorefrontCatalog()
-      .then((list) => live && setItems(list.map(toItem)))
-      .catch((e) => live && setError(getApiErrorMessage(e, "We couldn't load products.")));
-    return () => {
-      live = false;
-    };
-  }, [reload]);
-
-  const [per, setPer] = useState(PER_MOBILE);
-  useEffect(() => {
-    if (window.matchMedia("(min-width:1024px)").matches) setPer(PER_DESKTOP);
+    setPer(window.matchMedia("(min-width:1024px)").matches ? PER_DESKTOP : PER_MOBILE);
   }, []);
 
   /* ---- Scope from the URL ---- */
@@ -97,16 +98,6 @@ export function DayloraCatalog() {
   const dealsParam = params.get("deals") === "1";
   const DEALSPAGE = !dept && dealsParam;
   const deptInfo: Department | undefined = depts.find((d) => d.slug === dept);
-  const deptName =
-    deptInfo?.name ?? items?.find((x) => x.dept === dept)?.deptName ?? (dept ? titleCase(dept) : null);
-
-  const index = useMemo(() => (items ? buildIndex(items) : null), [items]);
-  const result = useMemo(() => (index && SEARCH ? search(index, q, exact) : null), [index, SEARCH, q, exact]);
-
-  const inDept = useMemo(() => {
-    if (!items) return [];
-    return items.filter((x) => (!dept || x.dept === dept) && (!result || result.scores.has(x.p.parentId)));
-  }, [items, dept, result]);
 
   const gParam = (params.get("g") ?? "").toLowerCase();
   const G = useMemo(() => {
@@ -115,19 +106,16 @@ export function DayloraCatalog() {
       (s) => s.slug === gParam || s.name.toLowerCase() === gParam || s.slug.endsWith(`-${gParam}`),
     );
     if (fromTree) return { slug: fromTree.slug, name: fromTree.name };
-    const fromData = inDept.find((x) => x.sec === gParam || x.secName?.toLowerCase() === gParam);
-    return fromData?.sec ? { slug: fromData.sec, name: fromData.secName ?? fromData.sec } : null;
-  }, [gParam, deptInfo, inDept]);
-
-  const scope = useMemo(
-    () => inDept.filter((x) => (!G || x.sec === G.slug) && (!newOnly || x.isNew) && (!DEALSPAGE || x.onSale)),
-    [inDept, G, newOnly, DEALSPAGE],
-  );
+    // Not in the menu tree: let the server match the slug as given.
+    return { slug: gParam, name: titleCase(gParam.replace(/^.*-/, "")) };
+  }, [gParam, deptInfo]);
 
   const cfg = facetConfig({ search: SEARCH, dept });
+  // A product-type link without a department (e.g. from a scoped suggestion) still filters by type.
+  const typeLink = !dept && !cfg.facets.includes("type") && params.has("type");
   const FKEYS: FacetKey[] = useMemo(
-    () => [...(!G && dept ? (["sec"] as FacetKey[]) : []), ...cfg.facets],
-    [G, dept, cfg.facets],
+    () => [...(!G && dept ? (["sec"] as FacetKey[]) : []), ...cfg.facets, ...(typeLink ? (["type"] as FacetKey[]) : [])],
+    [G, dept, cfg.facets, typeLink],
   );
 
   /* ---- Selection from the URL ---- */
@@ -147,38 +135,124 @@ export function DayloraCatalog() {
   const sort: SortKey = isSort(sortParam) ? sortParam : "rel";
   const page = Math.max(1, parseInt(params.get("n") ?? "", 10) || 1);
 
-  /* ---- Results ---- */
-  const list = useMemo(
-    () =>
-      scope
-        .filter((x) => matches(x, FKEYS, sel, toggles))
-        .sort(sorter(sort, { scores: result?.scores ?? null, deals: DEALSPAGE })),
-    [scope, FKEYS, sel, toggles, sort, result, DEALSPAGE],
+  /* ---- Server queries: the scope alone, and the scope with filters + sort ---- */
+  const scopeQuery: SearchQuery = useMemo(
+    () => ({ q: q || undefined, exact: exact && SEARCH, dept: dept ?? undefined, g: G?.slug, new: newOnly, onSale: DEALSPAGE }),
+    [q, exact, SEARCH, dept, G, newOnly, DEALSPAGE],
   );
-  const n = list.length;
-  const shownCount = Math.min(n, page * per);
-  const slice = list.slice(0, shownCount);
+  const scopeKey = toSearchParams(scopeQuery).toString();
+  const filtered = FKEYS.some((k) => sel[k]?.size) || toggles.stock || (toggles.sale && !DEALSPAGE);
+  const listQuery: SearchQuery = useMemo(() => {
+    const out: SearchQuery = { ...scopeQuery };
+    FKEYS.forEach((k) => {
+      const vals = Array.from(sel[k] ?? []);
+      if (vals.length) out[apiFacetKey(k)] = vals;
+    });
+    if (toggles.stock) out.inStock = 1;
+    if (toggles.sale || DEALSPAGE) out.onSale = 1;
+    // Relevance on the deals page favours the biggest savings, as before.
+    out.sort = sort === "rel" && DEALSPAGE && !SEARCH ? "discount" : sort;
+    return out;
+  }, [scopeQuery, FKEYS, sel, toggles, sort, DEALSPAGE, SEARCH]);
+  const listKey = toSearchParams(listQuery).toString();
 
-  /** Option counts per facet; a facet ignores its own selection (disjunctive). */
+  /* ---- Data ---- */
+  const [res, setRes] = useState<Results | null>(null);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+
+  // First page(s) whenever the query changes; a restored "n" loads all its pages at once.
+  const pageRef = useRef(page);
+  pageRef.current = page;
+  useEffect(() => {
+    if (per == null) return;
+    let live = true;
+    setError(null);
+    setBusy(true);
+    const size = Math.min(MAX_SIZE, per * pageRef.current);
+    const u = new URLSearchParams(listKey);
+    u.set("page", "0");
+    u.set("pageSize", String(size));
+    searchProducts(u)
+      .then((d) => {
+        if (!live) return;
+        setRes({ key: listKey, items: d.items.map(toCard), total: d.total, facets: d.facets ?? {}, search: d.search });
+      })
+      .catch((e) => live && setError(getApiErrorMessage(e, "We couldn't load products.")))
+      .finally(() => live && setBusy(false));
+    return () => {
+      live = false;
+    };
+  }, [listKey, per, reload]);
+
+  // "Load more": the next page, appended.
+  useEffect(() => {
+    if (per == null || !res || res.key !== listKey || loadingMore) return;
+    const want = Math.min(res.total, page * per);
+    if (res.items.length >= want) return;
+    let live = true;
+    setLoadingMore(true);
+    const u = new URLSearchParams(listKey);
+    u.set("page", String(Math.floor(res.items.length / per)));
+    u.set("pageSize", String(per));
+    searchProducts(u)
+      .then((d) => {
+        if (!live) return;
+        setRes((r) => {
+          if (!r || r.key !== listKey) return r;
+          const seen = new Set(r.items.map((c) => c.id));
+          return { ...r, total: d.total, items: [...r.items, ...d.items.map(toCard).filter((c) => !seen.has(c.id))] };
+        });
+      })
+      .catch((e) => live && setError(getApiErrorMessage(e, "We couldn't load more products.")))
+      .finally(() => live && setLoadingMore(false));
+    return () => {
+      live = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [page, per, res?.key, res?.items.length, listKey]);
+
+  // Size of the unfiltered scope, for the heading count and the empty states.
+  const [scopeTotal, setScopeTotal] = useState<{ key: string; total: number } | null>(null);
+  useEffect(() => {
+    if (!filtered || scopeTotal?.key === scopeKey) return;
+    let live = true;
+    const u = new URLSearchParams(scopeKey);
+    u.set("pageSize", "1");
+    searchProducts(u)
+      .then((d) => live && setScopeTotal({ key: scopeKey, total: d.total }))
+      .catch(() => undefined);
+    return () => {
+      live = false;
+    };
+  }, [filtered, scopeKey, scopeTotal?.key]);
+
+  const loaded = !!res && per != null;
+  const items = res?.items ?? [];
+  const n = res?.total ?? 0;
+  const scopeN = !filtered ? n : scopeTotal?.key === scopeKey ? scopeTotal.total : n;
+  const shownCount = Math.min(n, items.length);
+  const result = res?.search ?? null;
+  const facetsOf = (k: FacetKey) => res?.facets[apiFacetKey(k)] ?? [];
+
+  const deptName =
+    deptInfo?.name ?? res?.facets.dept?.find((o) => o.value === dept)?.label ?? (dept ? titleCase(dept) : null);
+
+  /** Option counts per facet, disjunctive (the server skips a facet's own selection). */
   const counts = useMemo(() => {
     const out: Partial<Record<FacetKey, Map<string, number>>> = {};
-    FKEYS.forEach((k) => {
-      const m = new Map<string, number>();
-      scope.forEach((x) => {
-        if (!matches(x, FKEYS, sel, toggles, k)) return;
-        facetValues(k, x).forEach((v) => m.set(v, (m.get(v) ?? 0) + 1));
-      });
-      out[k] = m;
-    });
+    FKEYS.forEach((k) => (out[k] = new Map((res?.facets[apiFacetKey(k)] ?? []).map((o) => [o.value, o.count]))));
     return out;
-  }, [scope, FKEYS, sel, toggles]);
+  }, [FKEYS, res]);
   const valuesOf = useCallback(
     (k: FacetKey) => {
-      const s = new Set<string>();
-      scope.forEach((x) => facetValues(k, x).forEach((v) => s.add(v)));
+      const s = new Set((res?.facets[apiFacetKey(k)] ?? []).map((o) => o.value));
+      sel[k]?.forEach((v) => s.add(v));
       return orderValues(k, Array.from(s));
     },
-    [scope],
+    [res, sel],
   );
   const visibleFacets = useMemo(
     () =>
@@ -191,19 +265,28 @@ export function DayloraCatalog() {
 
   const sectionName = useCallback(
     (slug: string) =>
-      deptInfo?.sections.find((s) => s.slug === slug)?.name ?? items?.find((x) => x.sec === slug)?.secName ?? slug,
-    [deptInfo, items],
+      deptInfo?.sections.find((s) => s.slug === slug)?.name ??
+      res?.facets.g?.find((o) => o.value === slug)?.label ??
+      slug,
+    [deptInfo, res],
   );
   const deptLabel = useCallback(
-    (slug: string) => depts.find((d) => d.slug === slug)?.name ?? items?.find((x) => x.dept === slug)?.deptName ?? slug,
-    [depts, items],
+    (slug: string) =>
+      depts.find((d) => d.slug === slug)?.name ?? res?.facets.dept?.find((o) => o.value === slug)?.label ?? slug,
+    [depts, res],
   );
   const valueLabel = (k: FacetKey, v: string) =>
-    k === "price" ? PRICES.find((r) => r.k === v)?.t ?? v : k === "sec" ? sectionName(v) : k === "d" ? deptLabel(v) : v;
+    k === "price"
+      ? PRICES.find((r) => r.k === v)?.t ?? v
+      : k === "sec"
+        ? sectionName(v)
+        : k === "d"
+          ? deptLabel(v)
+          : facetsOf(k).find((o) => o.value === v)?.label || v;
 
   /* ---- Title, breadcrumb ---- */
   let ttl: string;
-  if (SEARCH) ttl = `Results for “${result?.shown ?? q}”`;
+  if (SEARCH) ttl = `Results for “${(result?.mode === "corrected" && result.shown) || q}”`;
   else if (!dept) ttl = DEALSPAGE ? "Today's deals" : newOnly ? "New arrivals" : "All products";
   else if (dept === "clothing" && G) ttl = `${G.name}'s clothing`;
   else ttl = G?.name ?? deptName ?? "Products";
@@ -216,10 +299,11 @@ export function DayloraCatalog() {
   /* ---- Analytics: one SEARCH event per query (FR-IN-05) ---- */
   const tracked = useRef<string | null>(null);
   useEffect(() => {
-    if (!SEARCH || !items || tracked.current === q) return;
+    if (!SEARCH || !res || res.key !== listKey || tracked.current === q) return;
+    if (filtered && scopeTotal?.key !== scopeKey) return; // wait for the scope count
     tracked.current = q;
-    track("SEARCH", { properties: { query: q, results: scope.length, mode: result?.mode ?? "none" } });
-  }, [SEARCH, items, q, scope.length, result]);
+    track("SEARCH", { properties: { query: q, results: scopeN, mode: result?.mode ?? "none" } });
+  }, [SEARCH, res, listKey, q, scopeN, result, filtered, scopeTotal, scopeKey]);
 
   /* ---- Actions (all write the URL) ---- */
   const toggleValue = useCallback((k: FacetKey, v: string) => {
@@ -399,20 +483,19 @@ export function DayloraCatalog() {
   /* ---- Quick chips: product types in a department, departments elsewhere ---- */
   const quick = useMemo(() => {
     if (dept) {
-      const byType = new Map<string, number>();
-      scope.forEach((x) => x.type && byType.set(x.type, (byType.get(x.type) ?? 0) + 1));
-      return Array.from(byType.entries())
-        .sort((a, b) => b[1] - a[1])
-        .map(([t]) => ({ k: "type" as FacetKey, v: t, label: t, icon: TYPE_ICON[t] ?? null }));
+      return [...(res?.facets.type ?? [])]
+        .filter((o) => o.count > 0)
+        .sort((a, b) => b.count - a.count)
+        .map((o) => ({ k: "type" as FacetKey, v: o.value, label: o.label || o.value, icon: TYPE_ICON[o.value] ?? null }));
     }
-    const present = new Set(scope.map((x) => x.dept));
+    const present = new Set((res?.facets.dept ?? []).filter((o) => o.count > 0).map((o) => o.value));
     if (SEARCH && present.size < 2) return [];
     return depts
       .filter((d) => present.has(d.slug))
       .map((d) => ({ k: "d" as FacetKey, v: d.slug, label: d.name, icon: d.icon }));
-  }, [dept, scope, SEARCH, depts]);
+  }, [dept, res, SEARCH, depts]);
 
-  /* ---- Search notes ---- */
+  /* ---- Search notes (modes from the server, as plpModel's search had them) ---- */
   const searchNote = (() => {
     if (!SEARCH || !result) return null;
     if (result.mode === "corrected")
@@ -427,34 +510,27 @@ export function DayloraCatalog() {
     // Category shortcut: the query names a product type that most results share.
     const qt = q.toLowerCase().trim();
     if (qt.length < 3) return null;
-    const types = new Map<string, { dept: string; n: number }>();
-    scope.forEach((x) => {
-      if (x.type && x.dept && x.type.toLowerCase().startsWith(qt)) {
-        const e = types.get(x.type) ?? { dept: x.dept, n: 0 };
-        e.n++;
-        types.set(x.type, e);
-      }
-    });
-    if (types.size !== 1) return null;
-    const [type, info] = Array.from(types.entries())[0];
-    if (info.n < scope.length / 2) return null;
+    const types = (res?.facets.type ?? []).filter((o) => o.count > 0 && o.value.toLowerCase().startsWith(qt));
+    if (types.length !== 1) return null;
+    const { value: type, count } = types[0];
+    if (count < scopeN / 2) return null;
+    const typeDept = dept ?? items.find((x) => x.productType === type)?.departmentSlug;
+    if (!typeDept) return null;
     return (
       <p>
         Looking for a category?
-        <Link href={catalogHref({ dept: info.dept, type })}>
-          Shop all {type.toLowerCase()} in {deptLabel(info.dept)}
+        <Link href={catalogHref({ dept: typeDept, type })}>
+          Shop all {type.toLowerCase()} in {deptLabel(typeDept)}
         </Link>
       </p>
     );
   })();
 
-  const popular = useMemo(
-    () => (index ? POPULAR.filter((p) => search(index, p).scores.size > 0) : []),
-    [index],
-  );
-
-  const loaded = !!items;
-  const noResults = loaded && SEARCH && !scope.length;
+  const noResults = loaded && SEARCH && !scopeN && res?.key === listKey;
+  const [popular, setPopular] = useState<string[]>([]);
+  useEffect(() => {
+    if (noResults) loadPopular().then(setPopular);
+  }, [noResults]);
   const shownText = `${n} ${SEARCH ? "result" : "product"}${n === 1 ? "" : "s"}`;
   const sortLabel = SORTS.find((s) => s.k === sort)!.t;
   const colorSel = sel.color?.size ? sel.color : null;
@@ -487,7 +563,7 @@ export function DayloraCatalog() {
             <h1>{ttl}</h1>
             {loaded && (
               <span id="count">
-                {SEARCH ? `${scope.length} result${scope.length === 1 ? "" : "s"}` : `${scope.length} products`}
+                {SEARCH ? `${scopeN} result${scopeN === 1 ? "" : "s"}` : `${scopeN} products`}
               </span>
             )}
           </div>
@@ -758,13 +834,13 @@ export function DayloraCatalog() {
                   <span className="empty-ic">
                     <DayloraIcon name="filter" />
                   </span>
-                  <h2>{scope.length ? "No products match these filters" : "Nothing here yet"}</h2>
+                  <h2>{scopeN ? "No products match these filters" : "Nothing here yet"}</h2>
                   <p>
-                    {scope.length
+                    {scopeN
                       ? `Try removing a filter or two, or browse the full ${ttl.toLowerCase()} range.`
                       : "We're adding products to this range. Browse another department in the meantime."}
                   </p>
-                  {scope.length ? (
+                  {scopeN ? (
                     <button className="btn btn-primary" onClick={clearAll}>
                       Clear all filters
                     </button>
@@ -776,9 +852,9 @@ export function DayloraCatalog() {
                 </div>
               </div>
             ) : (
-              <div className="pgrid" ref={gridRef}>
-                {slice.map((x, i) => (
-                  <PlpCard key={x.p.parentId} x={x} colors={colorSel} delay={Math.min(i % per, 11) * 35} />
+              <div className="pgrid" ref={gridRef} aria-busy={busy}>
+                {items.map((x, i) => (
+                  <PlpCard key={x.id} c={x} colors={colorSel} delay={Math.min(i % (per ?? PER_MOBILE), 11) * 35} />
                 ))}
               </div>
             )}
@@ -793,11 +869,11 @@ export function DayloraCatalog() {
                     <div className="more-bar" aria-hidden="true">
                       <i style={{ width: `${(shownCount / n) * 100}%` }} />
                     </div>
-                    <button className="btn btn-secondary" onClick={loadMore}>
+                    <button className="btn btn-secondary" onClick={loadMore} disabled={loadingMore} aria-busy={loadingMore}>
                       Load more
                     </button>
                   </>
-                ) : n > per ? (
+                ) : n > (per ?? PER_MOBILE) ? (
                   <>
                     <p>You&apos;ve viewed all {n} products</p>
                     <div className="more-bar" aria-hidden="true">

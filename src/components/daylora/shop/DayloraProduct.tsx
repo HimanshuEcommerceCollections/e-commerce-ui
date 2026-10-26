@@ -9,12 +9,23 @@ import { getApiErrorMessage } from "@/lib/apiError";
 import { track } from "@/lib/analytics";
 import { useStoreConfig } from "@/hooks/useStoreConfig";
 import { DayloraIcon } from "../DayloraIcons";
+import { Stars } from "../DayloraRating";
+import { SaveHeart } from "../DayloraSaveHeart";
 import { ShopIconSprite } from "./ShopIcons";
 import { colorHex, compareSizes, stockState, usd } from "./catalog";
 import { catalogHref } from "./departments";
-import { loadStorefrontCatalog } from "./storefrontCatalog";
-import { toItem, type PlpItem } from "./plpModel";
+import { toCard, type CardModel } from "./storefrontCards";
 import { PlpCard } from "./PlpCard";
+import {
+  ChokingWarning,
+  NutritionPanel,
+  PdpReviews,
+  SizeGuideTables,
+  needsChokingWarning,
+  packCount,
+  parseNutrition,
+  toSteps,
+} from "./pdpExtras";
 
 /**
  * Product detail page (design 03; FR-ST-06/07/13, NFR-04).
@@ -113,7 +124,10 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
     if (!root || inited.current) return;
     inited.current = true;
     const me = root.variants.find((v) => v.id === root.id);
-    setColor(me?.color ?? root.color ?? colors[0] ?? null);
+    // ?color= from a colour-filtered listing card opens on that colour.
+    const urlColor = new URLSearchParams(window.location.search).get("color");
+    const pickedColor = urlColor ? colors.find((c) => c.toLowerCase() === urlColor.toLowerCase()) : undefined;
+    setColor(pickedColor ?? me?.color ?? root.color ?? colors[0] ?? null);
     setOption(me ? me.variantName ?? me.sku : null);
     const urlSize = new URLSearchParams(window.location.search).get("size");
     if (!needsSize) setSize(sizes[0] ?? null);
@@ -182,6 +196,8 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
   const lightRef = useRef<HTMLDialogElement>(null);
   const guideRef = useRef<HTMLDialogElement>(null);
   const [lightIdx, setLightIdx] = useState(0);
+  /** The uploaded size chart didn't load: the built-in tables stand in. */
+  const [chartFailed, setChartFailed] = useState(false);
   const openLight = (i: number) => {
     setLightIdx(i);
     lightRef.current?.showModal();
@@ -226,29 +242,21 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
     return () => io.disconnect();
   }, [root]);
 
-  /* ---- "More in …" rail: same subcategory, most popular, in stock ---- */
-  const [rail, setRail] = useState<PlpItem[]>([]);
-  const [railSameType, setRailSameType] = useState(false);
+  /* ---- "More in …" rail: same section/type first, in stock (GET /api/products/:id/related) ---- */
+  const [rail, setRail] = useState<CardModel[]>([]);
+  const parentId = root?.parent.id;
   useEffect(() => {
-    if (!root) return;
+    if (!parentId) return;
     let live = true;
-    const sub = root.parent.subcategory?.slug;
-    loadStorefrontCatalog()
-      .then((all) => {
-        if (!live || !sub) return;
-        const pool = all
-          .map(toItem)
-          .filter((x) => x.p.parentId !== root.parent.id && x.sec === sub && x.card.stockState !== "out");
-        const same = pool.filter((x) => x.type === root.parent.productType).sort((a, b) => b.p.popularity - a.p.popularity);
-        const rest = pool.filter((x) => x.type !== root.parent.productType).sort((a, b) => b.p.popularity - a.p.popularity);
-        setRailSameType(same.length > 0);
-        setRail([...same, ...rest].slice(0, 4));
-      })
+    publicProductService
+      .getRelated(parentId, 4)
+      .then((res) => live && setRail((res.data.data ?? []).map(toCard)))
       .catch(() => undefined);
     return () => {
       live = false;
     };
-  }, [root]);
+  }, [parentId]);
+  const railSameType = !!root?.parent.productType && rail.some((c) => c.productType === root.parent.productType);
 
   /* ---- Add to cart ---- */
   const [adding, setAdding] = useState(false);
@@ -328,7 +336,14 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
   const priced = resolved ?? inColor.find((v) => v.price === minPrice) ?? display;
   const was = priced.mrp && priced.mrp > price ? priced.mrp : null;
   const savePct = was ? Math.round(((was - price) / was) * 100) : 0;
-  const priceNote = !resolved && maxPrice > minPrice ? `Up to ${usd(maxPrice)} depending on size` : "";
+  // Packs: what one unit costs ("$2.33 each").
+  const units = options.length && resolved ? packCount(resolved.variantName) : 1;
+  const priceNote =
+    !resolved && maxPrice > minPrice
+      ? `Up to ${usd(maxPrice)} depending on size`
+      : units > 1
+        ? `${usd(Math.round((price / units) * 100) / 100)} each`
+        : "";
 
   const what = resolved?.size && needsSize ? ` in ${resolved.size}` : options.length && resolved ? ` in ${option}` : colors.length > 1 ? ` in ${color}` : "";
   const stockText = soldOut
@@ -340,7 +355,7 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
     : state === "low"
       ? `Only ${resolved!.stockQuantity} left${what}. Order soon`
       : state === "in"
-        ? "In stock · ready to ship"
+        ? "In stock · ships in 1–2 business days"
         : someSizesOut
           ? colors.length > 1
             ? "Some sizes are sold out in this color"
@@ -387,12 +402,56 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
 
   const shown = resolved ?? display;
   const attrs = parent.attributes ?? {};
-  const specMap = new Map<string, string>();
-  const addSpec = (k: string, v: string | null | undefined) => {
-    if (v && !specMap.has(k)) specMap.set(k, v);
+  const deptSlug = dept?.slug;
+  /** Attribute keys already shown in a fixed row or panel, so the generic rows skip them. */
+  const used = new Set<string>();
+  const attr = (...keys: string[]) => {
+    for (const k of keys) {
+      const hit = Object.keys(attrs).find((a) => a.toLowerCase().replace(/[\s_-]+/g, "") === k.toLowerCase().replace(/[\s_-]+/g, ""));
+      if (hit && attrs[hit]) {
+        used.add(hit);
+        return attrs[hit];
+      }
+    }
+    return undefined;
   };
+  const specMap = new Map<string, string>();
+  const addSpec = (k: string, v: string | number | null | undefined) => {
+    if (v != null && v !== "" && !specMap.has(k)) specMap.set(k, String(v));
+  };
+  const isBook = deptSlug === "books-stationery" && (/book/i.test(sub?.name ?? "") || !!attr("Author"));
+
+  // Grocery: diet badges, and the label panel when the import carries nutrition data.
+  const diet = deptSlug === "grocery" ? (attr("Dietary") ?? "").split(/\s*,\s*/).filter(Boolean) : [];
+  const nutritionRaw = deptSlug === "grocery" ? attr("Nutrition", "Nutrition_Facts") : undefined;
+  const nutrition = parseNutrition(nutritionRaw);
+  const ingredients = deptSlug === "grocery" ? attr("Ingredients") : undefined;
+  const age = Object.entries(attrs).find(([k]) => /^age([\s_-]?group)?$/i.test(k))?.[1];
+  const choking = needsChokingWarning(deptSlug, type, age);
+
+  if (deptSlug === "clothing") {
+    // Fixed clothing rows (design), each when the catalog has it.
+    addSpec("Gender", attr("Gender"));
+    addSpec("Fit", attr("Fit"));
+    addSpec("Material", shown.material ?? attr("Material"));
+    addSpec("Care", attr("Care_Instructions", "Care"));
+    addSpec("Origin", attr("Country_of_Origin", "Origin"));
+    addSpec("What's included", parent.whatsIncluded);
+  } else if (isBook) {
+    addSpec("Author", attr("Author"));
+    addSpec("Format", attr("Format"));
+    addSpec("Pages", attr("Pages", "Page_Count", "Number_of_Pages"));
+    addSpec("Publisher", attr("Publisher"));
+    addSpec("Language", attr("Language"));
+    addSpec("ISBN-13", attr("ISBN-13", "ISBN_13", "ISBN13", "ISBN"));
+  }
   addSpec("Brand", parent.brand);
-  Object.entries(attrs).forEach(([k, v]) => addSpec(k.replace(/_/g, " "), v));
+  Object.entries(attrs).forEach(([k, v]) => {
+    if (used.has(k)) return;
+    // Long label text has its own panel.
+    if ((nutrition || ingredients) && /^(nutrition|nutrition_facts|ingredients)$/i.test(k)) return;
+    addSpec(k.replace(/_/g, " "), v);
+  });
   specRows(root.specifications).forEach(([k, v]) => addSpec(k, v));
   addSpec("Color", colors.length > 1 ? null : shown.color);
   addSpec("Size", needsSize ? null : shown.size);
@@ -411,7 +470,31 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
   const skuLabel = resolved?.sku ?? parent.code;
   const addLabel = soldOut ? "Out of stock" : adding ? "Adding…" : "Add to cart";
   const tip = needsSize ? fitTip(attrs.Fit, type) : null;
-  const deptSlug = dept?.slug;
+  // Clothing with sizes always gets a size guide: the uploaded chart, else the built-in tables.
+  const hasGuide = needsSize && deptSlug === "clothing";
+  const women = /women/i.test(attrs.Gender ?? sub?.name ?? "");
+  const optLabel = deptSlug === "grocery" ? "Pack size" : deptSlug === "beauty" ? "Size" : "Option";
+  const singlePrice = variants.find((v) => packCount(v.variantName) === 1)?.price;
+  /** Sub-label under a pack or size option: the saving per unit for packs, else its price when prices differ. */
+  const optSub = (v: ProductVariantResponse | undefined) => {
+    if (!v) return null;
+    const n = packCount(v.variantName);
+    if (n > 1 && singlePrice) {
+      const save = Math.round((1 - v.price / (n * singlePrice)) * 100);
+      return save > 0 ? { text: `Save ${save}%`, muted: false } : null;
+    }
+    return new Set(variants.map((x) => x.price)).size > 1 ? { text: usd(v.price), muted: true } : null;
+  };
+  const steps = parent.usageInstructions && deptSlug === "beauty" ? toSteps(parent.usageInstructions) : null;
+  const ratingCount = root.ratingCount ?? parent.ratingCount ?? 0;
+  const ratingAvg = Number(root.ratingAvg ?? parent.ratingAvg ?? 0);
+  const openReviews = (e: React.MouseEvent) => {
+    const el = document.getElementById("reviews") as HTMLDetailsElement | null;
+    if (!el) return;
+    e.preventDefault();
+    el.open = true;
+    el.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
   const railTitle =
     deptSlug === "clothing" && sub && type ? `${sub.name}'s ${type.toLowerCase()}` : (sub?.name ?? dept?.name ?? "this range").toLowerCase();
   const railHref = catalogHref({ dept: deptSlug, g: sub?.slug, type: railSameType && type ? type : undefined });
@@ -447,7 +530,7 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
         <div className="pdp-grid">
           {/* ============ GALLERY ============ */}
           <section className="gallery" aria-label="Product images">
-            <div className={`gallery-wrap${images.length <= 1 && !parent.sizeChartUrl ? " single" : ""}${images.length <= 1 ? " one" : ""}`}>
+            <div className={`gallery-wrap${images.length <= 1 && !hasGuide ? " single" : ""}${images.length <= 1 ? " one" : ""}`}>
               <div className="stage">
                 <div
                   className="track"
@@ -500,14 +583,14 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                 )}
               </div>
               <div className="thumbs">
-                {(images.length > 1 || parent.sizeChartUrl) &&
+                {(images.length > 1 || hasGuide) &&
                   images.map((url, i) => (
                     <button key={url} className="thumb" aria-label={`Show image ${i + 1}`} aria-current={i === idx} onClick={() => go(i)}>
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={url} alt="" />
                     </button>
                   ))}
-                {parent.sizeChartUrl && (
+                {hasGuide && (
                   <button className="thumb thumb-chart" aria-label="Open size chart" onClick={() => guideRef.current?.showModal()}>
                     <DayloraIcon name="ruler" />
                     Size chart
@@ -529,6 +612,15 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                 </Link>
               )}
               <h1>{parent.name}</h1>
+              {ratingCount > 0 && (
+                <div className="rating" role="group" aria-label={`Rated ${ratingAvg.toFixed(1)} out of 5`}>
+                  <Stars avg={ratingAvg} />
+                  <b>{ratingAvg.toFixed(1)}</b>
+                  <a href="#reviews" onClick={openReviews}>
+                    {ratingCount} review{ratingCount === 1 ? "" : "s"}
+                  </a>
+                </div>
+              )}
             </div>
 
             <div className="pdp-price" aria-live="polite">
@@ -576,9 +668,9 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                 <fieldset className={`opt${sizeError ? " has-error" : ""}`} ref={sizeOptRef}>
                   <legend>
                     Size: <span>{size ?? "Select a size"}</span>
-                    {parent.sizeChartUrl && (
+                    {hasGuide && (
                       <a
-                        href={parent.sizeChartUrl}
+                        href={parent.sizeChartUrl ?? "#size-guide"}
                         className="link"
                         onClick={(e) => {
                           e.preventDefault();
@@ -626,17 +718,19 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
               {options.length > 0 && (
                 <fieldset className="opt">
                   <legend>
-                    Option: <span>{option}</span>
+                    {optLabel}: <span>{option}</span>
                   </legend>
-                  <div className="sizes">
+                  <div className="sizes" id="vars">
                     {options.map((o, i) => {
                       const v = variants.find((x) => (x.variantName ?? x.sku) === o);
                       const out = !v || v.stockQuantity <= 0;
+                      const small = optSub(v);
                       return (
                         <React.Fragment key={o}>
                           <input type="radio" name="option" id={`o-${i}`} value={o} checked={option === o} onChange={() => setOption(o)} />
-                          <label className="size" htmlFor={`o-${i}`} style={{ minWidth: "auto", padding: "0 16px" }}>
+                          <label className="size pack" htmlFor={`o-${i}`}>
                             {o}
+                            {small && <small className={small.muted ? "m" : undefined}>{small.text}</small>}
                             {out && <span className="sr-only">, out of stock</span>}
                           </label>
                         </React.Fragment>
@@ -665,6 +759,7 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
               <button ref={addRef} className="btn btn-primary btn-cart" disabled={soldOut || adding} onClick={addToCart}>
                 {addLabel}
               </button>
+              <SaveHeart productId={shown.id} name={parent.name} className="pdp-heart" />
             </div>
             {cartError && (
               <p className="opt-error" role="alert" style={{ display: "flex" }}>
@@ -715,13 +810,23 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
 
           {/* ============ DETAILS ============ */}
           <section className="details" aria-label="Product details" ref={detailsRef}>
-            {(description || parent.keyFeatures.length > 0) && (
+            {(description || parent.keyFeatures.length > 0 || diet.length > 0 || choking) && (
               <details className="acc" open>
                 <summary>
                   Description
                   <DayloraIcon name="chev" />
                 </summary>
                 <div className="acc-body">
+                  {diet.length > 0 && (
+                    <div className="badges">
+                      {diet.map((d) => (
+                        <span key={d}>
+                          <DayloraIcon name="check" />
+                          {d}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                   {description && <p>{description}</p>}
                   {parent.keyFeatures.length > 0 && (
                     <ul className="feat">
@@ -730,6 +835,7 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                       ))}
                     </ul>
                   )}
+                  {choking && <ChokingWarning />}
                 </div>
               </details>
             )}
@@ -751,14 +857,42 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                 </div>
               </details>
             )}
+            {(nutrition || ingredients) && (
+              <details className="acc">
+                <summary>
+                  Nutrition &amp; ingredients
+                  <DayloraIcon name="chev" />
+                </summary>
+                <div className="acc-body">
+                  {nutrition ? <NutritionPanel n={nutrition} /> : nutritionRaw && <p>{nutritionRaw}</p>}
+                  {ingredients && (
+                    <p>
+                      <b>Ingredients:</b> {ingredients}
+                    </p>
+                  )}
+                  <p className="opt-hint">Always check the package before use.</p>
+                </div>
+              </details>
+            )}
             {parent.usageInstructions && (
-              <details className="acc" open>
+              <details className="acc" open={!steps}>
                 <summary>
                   {deptSlug === "clothing" ? "Care" : "How to use"}
                   <DayloraIcon name="chev" />
                 </summary>
                 <div className="acc-body">
-                  <p>{parent.usageInstructions}</p>
+                  {steps ? (
+                    <>
+                      <ol className="steps-list">
+                        {steps.map((s, i) => (
+                          <li key={i}>{s}</li>
+                        ))}
+                      </ol>
+                      <p className="opt-hint">For external use only. Stop use if irritation occurs.</p>
+                    </>
+                  ) : (
+                    <p>{parent.usageInstructions}</p>
+                  )}
                 </div>
               </details>
             )}
@@ -791,10 +925,19 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
                     Free within {returnDays} days of delivery, from your order page. {ret.long}
                   </dd>
                   <dt>Refunds</dt>
-                  <dd>To your original payment method once we receive the return.</dd>
+                  <dd>To your original payment method, 5–7 business days after we receive the return.</dd>
                 </dl>
               </div>
             </details>
+            <PdpReviews
+              key={parent.id}
+              productId={parent.id}
+              fallback={
+                ratingCount && root.ratingDistribution
+                  ? { average: ratingAvg, count: ratingCount, distribution: root.ratingDistribution }
+                  : null
+              }
+            />
           </section>
         </div>
 
@@ -807,27 +950,40 @@ export function DayloraProduct({ requested, initial }: { requested: string; init
               </Link>
             </div>
             <div className="mgrid">
-              {rail.map((x) => (
-                <PlpCard key={x.p.parentId} x={x} colors={null} delay={0} />
+              {rail.map((c) => (
+                <PlpCard key={c.id} c={c} colors={null} delay={0} />
               ))}
             </div>
           </section>
         )}
       </div>
 
-      {/* Size guide (Size_Chart_URL) */}
-      {parent.sizeChartUrl && (
-        <dialog ref={guideRef} aria-labelledby="dlgTitle" onClick={backdropClose}>
+      {/* Size guide: the uploaded Size_Chart_URL, else the design's built-in tables */}
+      {hasGuide && (
+        <dialog ref={guideRef} id="size-guide" aria-labelledby="dlgTitle" onClick={backdropClose}>
           <div className="dlg-head">
-            <h2 id="dlgTitle">Size guide{sub && type ? ` · ${sub.name}'s ${type.toLowerCase()}` : ""}</h2>
+            <h2 id="dlgTitle">
+              Size guide{sub ? ` · ${type ? `${sub.name}'s ${type.toLowerCase()}` : sub.name}` : ""}
+            </h2>
             <button className="icon-btn" aria-label="Close size guide" onClick={() => guideRef.current?.close()}>
               <DayloraIcon name="close" />
             </button>
           </div>
           <div className="dlg-body">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={parent.sizeChartUrl} alt={`Size chart for ${parent.name}`} style={{ width: "100%", height: "auto" }} />
-            {tip && <p className="opt-hint">{tip}</p>}
+            {parent.sizeChartUrl && !chartFailed ? (
+              <>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={parent.sizeChartUrl}
+                  alt={`Size chart for ${parent.name}`}
+                  style={{ width: "100%", height: "auto" }}
+                  onError={() => setChartFailed(true)}
+                />
+                {tip && <p className="opt-hint">{tip}</p>}
+              </>
+            ) : (
+              <SizeGuideTables sizes={sizes} women={women} fit={attrs.Fit} jackets={type === "Jackets & coats"} />
+            )}
           </div>
         </dialog>
       )}

@@ -2,7 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { DayloraProductCard, type AddToCart } from "./DayloraProductCard";
-import type { CardModel } from "./shop/storefrontCatalog";
+import type { CardModel } from "./shop/storefrontCards";
 
 interface DayloraProductRailProps {
   id?: string;

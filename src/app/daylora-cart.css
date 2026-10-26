@@ -133,7 +133,7 @@
 .cart-page .sum-card h2{font-size:18px}
 .cart-page .sum-card .ship-meter{margin:0;padding:var(--s-3) var(--s-4);font-size:13px;line-height:18px}
 .cart-page .sum-card .ship-meter .bar-t{height:6px;margin-top:var(--s-2);background:#fff}
-.cart-page .sum-card .ship-meter a{display:none}
+.cart-page .sum-card .ship-meter a{font-size:13px}
 .cart-page .sum-rows{font-size:14px;gap:var(--s-3) var(--s-4)}
 .cart-page .sum-total{padding-top:var(--s-4);border-top:1px solid var(--line)}
 .cart-page .sum-total b{font-size:22px}
@@ -179,3 +179,28 @@
 @keyframes cart-skel{to{background-position:-200% 0}}
 @media (prefers-reduced-motion:reduce){ .cart-page .skel{animation:none} }
 .cart-page .toast #undoBtn[hidden]{display:none}
+.cart-page .promo[hidden]{display:none}
+.cart-page .sum-rows dt.good{display:flex;align-items:baseline;flex-wrap:wrap}
+
+/* Recommendations rail (design 04 #recs): the listing card markup (PlpCard), as on the PDP */
+.cart-page .more-rail .rail-head{display:flex;align-items:flex-end;justify-content:space-between;gap:var(--s-4);margin-bottom:var(--s-5)}
+.cart-page .more-rail h2{font-size:20px;line-height:28px;font-weight:700;color:var(--ink)}
+.cart-page .mgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:var(--s-5) var(--gutter)}
+@media (min-width:768px){ .cart-page .mgrid{grid-template-columns:repeat(4,minmax(0,1fr))} }
+.cart-page .pcard{position:relative;display:flex;flex-direction:column;gap:var(--s-1);min-width:0}
+.cart-page .pcard .p-media{position:relative;display:grid;place-items:center;aspect-ratio:3/4;border-radius:var(--r-md);overflow:hidden;margin-bottom:var(--s-2);background:var(--img);transition:box-shadow .2s}
+.cart-page .pcard:hover .p-media{box-shadow:0 8px 24px rgba(18,53,91,.12)}
+.cart-page .pcard .p-media .media-img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:transform .3s}
+.cart-page .pcard:hover .p-media .media-img{transform:scale(1.04)}
+.cart-page .pcard .p-ph{width:34%;height:34%;stroke-width:1.1}
+.cart-page .pcard .badge{position:absolute;z-index:1;top:var(--s-2);left:var(--s-2);font-size:12px;line-height:16px;font-weight:700;padding:var(--s-1) var(--s-2);border-radius:var(--r-pill)}
+.cart-page .pcard .badge-sale{background:var(--peach);color:var(--navy)}
+.cart-page .pcard .badge-new{background:var(--navy);color:#fff}
+.cart-page .pcard .brand{font-size:11px;line-height:16px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.cart-page .pcard .p-name{font-size:14px;line-height:20px;font-weight:500;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.cart-page .pcard .p-name::after{content:"";position:absolute;inset:0}
+.cart-page .pcard:hover .p-name{text-decoration:underline;text-underline-offset:2px}
+.cart-page .pcard .save{display:none}
+.cart-page .pcard .p-sw{order:10;display:flex;align-items:center;gap:6px;min-height:16px;margin-top:var(--s-1);font-size:12px;color:var(--muted)}
+.cart-page .pcard .p-sw i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
+.cart-page .pcard .oos{position:absolute;left:var(--s-2);bottom:var(--s-2);padding:2px var(--s-2);border-radius:var(--r-pill);background:#fff;font-size:12px;font-weight:600}

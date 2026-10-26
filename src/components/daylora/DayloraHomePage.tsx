@@ -11,43 +11,61 @@ import { DayloraCategories } from "./DayloraCategories";
 import { DayloraProductRail } from "./DayloraProductRail";
 import { DayloraDeals } from "./DayloraDeals";
 import { DayloraTrust } from "./DayloraTrust";
+import { DayloraReviews } from "./DayloraReviews";
 import type { AddToCart } from "./DayloraProductCard";
-import type { ListingProduct } from "./shop/catalog";
-import { catalogHref, deptIcon, useDepartments } from "./shop/departments";
-import { bestDiscount, loadStorefrontCatalog, toCardModel } from "./shop/storefrontCatalog";
+import { catalogHref, useDepartments } from "./shop/departments";
+import { NEW_ARRIVALS, searchProducts, toCard, type CardModel } from "./shop/storefrontCards";
 
 const FEATURED_SIZE = 5;
 const DEALS_SIZE = 3;
 const NEW_SIZE = 6;
 
-const iconOf = (p: ListingProduct) => deptIcon(p.variants[0]?.categorySlug);
+interface Rails {
+  featured: CardModel[];
+  deals: CardModel[];
+  fresh: CardModel[];
+}
+
+const none = () => ({ items: [] as never[] });
 
 /**
- * Featured: products staff flagged as featured, best sellers first; topped up
- * with the store's best sellers when fewer than five are flagged.
+ * The homepage rails, each one small server query (CONTRACT A1).
+ * Featured: staff-flagged products, best sellers first, topped up with the
+ * store's best sellers when fewer than five are flagged. Deals: biggest saving
+ * first. New arrivals: the same rule as /catalog?new=1.
  */
-function pickFeatured(all: ListingProduct[]): ListingProduct[] {
-  const inStock = all.filter((p) => p.stock > 0);
-  const byPop = (a: ListingProduct, b: ListingProduct) => b.popularity - a.popularity || a.rank - b.rank;
-  const flagged = inStock.filter((p) => p.featured).sort(byPop).slice(0, FEATURED_SIZE);
-  if (flagged.length >= FEATURED_SIZE) return flagged;
-  const rest = inStock.filter((p) => !p.featured).sort(byPop);
-  return [...flagged, ...rest].slice(0, FEATURED_SIZE);
+async function loadRails(): Promise<Rails> {
+  const [flagged, deals, fresh] = await Promise.all([
+    searchProducts({ featured: 1, inStock: 1, sort: "pop", pageSize: FEATURED_SIZE }).catch(none),
+    searchProducts({ onSale: 1, inStock: 1, sort: "discount", pageSize: DEALS_SIZE }).catch(none),
+    searchProducts({ ...NEW_ARRIVALS, pageSize: NEW_SIZE }).catch(none),
+  ]);
+  let featured = flagged.items;
+  if (featured.length < FEATURED_SIZE) {
+    const top = await searchProducts({
+      inStock: 1,
+      sort: "pop",
+      pageSize: FEATURED_SIZE,
+      exclude: featured.map((p) => p.parentId),
+    }).catch(none);
+    featured = [...featured, ...top.items].slice(0, FEATURED_SIZE);
+  }
+  return { featured: featured.map(toCard), deals: deals.items.map(toCard), fresh: fresh.items.map(toCard) };
 }
 
 /** Homepage content (FR-ST-01); the shell (header, nav, footer) comes from the storefront layout. */
 export function DayloraHomePage() {
   const departments = useDepartments();
   const addToCart = useCartStore((s) => s.add);
-  const [products, setProducts] = useState<ListingProduct[] | null>(null);
+  const [data, setData] = useState<Rails | null>(null);
   const [toast, setToast] = useState<{ ok: boolean; text: string } | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout>>();
 
   useEffect(() => {
     let live = true;
-    loadStorefrontCatalog()
-      .then((all) => live && setProducts(all))
-      .catch(() => live && setProducts([]));
+    loadRails()
+      .then((r) => live && setData(r))
+      .catch(() => live && setData({ featured: [], deals: [], fresh: [] }));
     return () => {
       live = false;
       clearTimeout(toastTimer.current);
@@ -55,20 +73,17 @@ export function DayloraHomePage() {
   }, []);
 
   const rails = useMemo(() => {
-    const all = products ?? [];
-    const featured = pickFeatured(all);
-    const onSale = all.filter((p) => p.onSale && p.stock > 0).sort((a, b) => bestDiscount(b) - bestDiscount(a));
-    const fresh = [...all].sort((a, b) => b.createdAt - a.createdAt).slice(0, NEW_SIZE);
-    const heroPick = featured.find((p) => p.image && p.onSale) ?? featured.find((p) => p.image) ?? null;
+    const featured = data?.featured ?? [];
+    const deals = data?.deals ?? [];
     return {
-      hero: heroPick ? toCardModel(heroPick, iconOf(heroPick)) : null,
-      maxDealPct: onSale.length ? Math.round(bestDiscount(onSale[0]) * 100) : 0,
-      featured: featured.map((p) => toCardModel(p, iconOf(p))),
-      deals: onSale.slice(0, DEALS_SIZE).map((p) => toCardModel(p, iconOf(p), { dealPrice: true })),
-      fresh: fresh.map((p) => toCardModel(p, iconOf(p))),
+      hero: featured.find((p) => p.image && p.was) ?? featured.find((p) => p.image) ?? null,
+      maxDealPct: deals[0]?.savePct ?? 0,
+      featured,
+      deals,
+      fresh: data?.fresh ?? [],
     };
-  }, [products]);
-  const loading = products === null;
+  }, [data]);
+  const loading = data === null;
 
   const showToast = (ok: boolean, text: string) => {
     setToast({ ok, text });
@@ -129,6 +144,9 @@ export function DayloraHomePage() {
         dataNote="FR-ST-01 · New arrivals"
         onAdd={onAdd}
       />
+
+      {/* 8. WHAT OUR CUSTOMERS SAY — only once there are published reviews */}
+      <DayloraReviews />
 
       {/* 9. TRUST & SERVICE */}
       <DayloraTrust />

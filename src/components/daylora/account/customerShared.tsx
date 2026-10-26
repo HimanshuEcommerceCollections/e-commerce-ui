@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { DayloraIcon } from "../DayloraIcons";
 import type { DeliveryWindow, Order, OrderStatus, OrderSummary, Shipment } from "@/types/api/order.types";
 
@@ -67,7 +67,7 @@ interface OrderLike {
   latestShipment?: OrderSummary["latestShipment"];
   shippedAt?: string | null;
   timeline?: { status: string; note: string | null; at: string }[];
-  returns?: Order["returns"];
+  returns?: (Pick<Order["returns"][number], "rmaNumber" | "status"> & { refundedAt?: string | null })[];
   refundedTotal?: number;
 }
 
@@ -294,6 +294,13 @@ export function useToast() {
   };
   return { toast, show, hide: () => setToast(null) };
 }
+
+/**
+ * The account shell's toast, shared with every view it renders: the shell provides
+ * `show` and renders <Toast>; views call `useAccountToast()(msg)`.
+ */
+export const AccountToastContext = createContext<(t: ToastMsg) => void>(() => {});
+export const useAccountToast = () => useContext(AccountToastContext);
 
 export function Toast({ toast }: { toast: ToastMsg | null }) {
   return (

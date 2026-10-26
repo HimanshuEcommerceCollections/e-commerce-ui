@@ -9,9 +9,11 @@ import type {
   GuestCheckoutRequest,
   GuestCheckoutResponse,
   Order,
+  OrderCounts,
   OrderListParams,
   OrderReturn,
   OrderSummary,
+  QuoteRequest,
   ReturnRequestBody,
   ShippingMethod,
   TrackedOrder,
@@ -32,10 +34,11 @@ const orderService = {
 
   /**
    * Shipping options and totals (FR-ST-10). Guests send their lines; a signed-in
-   * customer sends none and the server cart is used.
+   * customer sends none and the server cart is used. `extra` carries the promo
+   * code and the tax destination (contract B1/B2).
    */
-  quote: (shippingMethod?: ShippingMethod, items?: CartLineInput[]) =>
-    api.post<ApiResponse<CheckoutQuote>>("/api/checkout/quote", { shippingMethod, items }),
+  quote: (shippingMethod?: ShippingMethod, items?: CartLineInput[], extra?: Omit<QuoteRequest, "shippingMethod" | "items">) =>
+    api.post<ApiResponse<CheckoutQuote>>("/api/checkout/quote", { shippingMethod, items, ...extra }),
 
   /** A guest's order, readable with the token returned at checkout. */
   getGuestOrder: (orderNumber: string, guestToken: string) =>
@@ -53,6 +56,14 @@ const orderService = {
 
   getOrders: (params?: OrderListParams) =>
     api.get<ApiResponse<PageResponse<OrderSummary>>>("/api/orders", { params }),
+
+  /** Chip counts for the orders list, for the same period and search (contract C2). */
+  getOrderCounts: (params?: { period?: string; q?: string }) =>
+    api.get<ApiResponse<OrderCounts>>("/api/orders/counts", { params }),
+
+  /** Emails the invoice to the account's address (202). */
+  emailInvoice: (id: string) =>
+    api.post<ApiResponse<null>>(`/api/orders/${encodeURIComponent(id)}/invoice/email`),
 
   /** By id or order number (EC-1234567). */
   getOrder: (idOrNumber: string) =>
