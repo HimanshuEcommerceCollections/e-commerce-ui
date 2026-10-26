@@ -47,14 +47,27 @@ export const CATEGORIES: CategoryItem[] = [
   { name: "Lifestyle", shortName: "Lifestyle", icon: "gift", img: "/daylora/lamp.jpg", href: "/catalog?dept=lifestyle" },
 ];
 
+/** "$35" / "$35.50": the free-shipping threshold as the shell shows it. */
+const wholeUsd = (n: number) => "$" + (Number.isInteger(n) ? String(n) : n.toFixed(2));
+
+/** Free-shipping copy from the store's threshold (store config); null when shipping is never free. */
+export function shippingPromise(threshold: number | string | null | undefined): { short: string; title: string } | null {
+  if (threshold == null) return null;
+  const n = Number(threshold);
+  if (!Number.isFinite(n)) return null;
+  if (n <= 0) return { short: "on every order", title: "Free shipping on every order" };
+  return { short: `on orders ${wholeUsd(n)}+`, title: `Free shipping on ${wholeUsd(n)}+` };
+}
+
+/** Trust band; the shipping and returns titles come from the store config (see DayloraTrust). */
 export const TRUST_ITEMS: TrustItem[] = [
   {
-    title: "Free shipping on $35+",
+    title: "Free shipping",
     description: "Fast delivery to your door, tracked every step.",
     icon: "truck",
   },
   {
-    title: "Free 30-day returns",
+    title: "Free returns",
     description: "Changed your mind? Send it back, no hassle.",
     icon: "return",
   },

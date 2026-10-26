@@ -3,130 +3,45 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import publicProductService from "@/services/public/product.service";
+import type { SearchSuggestResponse } from "@/types/api/product.types";
 import { DayloraIcon } from "./DayloraIcons";
-import { usd, type ListingProduct } from "./shop/catalog";
-import { catalogHref, deptIcon } from "./shop/departments";
-import { loadStorefrontCatalog } from "./shop/storefrontCatalog";
+import { usd } from "./shop/catalog";
+import { catalogHref, deptIcon, useDepartments, type Department } from "./shop/departments";
 
 /**
  * Header search with suggestions (FR-ST-08), following the design's
  * autocomplete: up to 7 query suggestions with the untyped part in bold, the
  * top one scoped to its main product type, 3 product matches, "See all
  * results", recent and popular searches on an empty box, ↑ ↓ Enter Esc, and
- * the ARIA combobox pattern. Suggestions come from the live catalog.
+ * the ARIA combobox pattern. Suggestions come from GET /api/search/suggest.
  */
 
 const RECENT_KEY = "ec-recent-searches";
-
 const norm = (t: string) => t.toLowerCase().replace(/['’]/g, "").replace(/[^a-z0-9&%]+/g, " ").trim();
-const words = (t: string) => norm(t).split(" ").filter((w) => w && w !== "&");
-/** "Stainless Steel Cookware Set, 10-Piece" → "Stainless Steel Cookware Set". */
-const cleanName = (n: string) =>
-  n.replace(/,.*$/, "").replace(/\s+\d[\d,.]*[- ]?(Piece|Pieces|Pack|oz|lb|ml|in|mm|L)\b.*$/i, "").trim();
 
-interface Entry {
-  t: string;
-  pop: number;
-  /** "deptSlug|type" → products. */
-  cats: Record<string, number>;
-  noScope?: boolean;
+/** Suggest responses by normalized query, for the page's lifetime (the empty query holds "Popular searches"). */
+const suggestCache = new Map<string, SearchSuggestResponse>();
+const EMPTY: SearchSuggestResponse = { suggestions: [], scoped: null, products: [], popular: [] };
+
+function fetchSuggest(q: string): Promise<SearchSuggestResponse> {
+  const key = norm(q);
+  const hit = suggestCache.get(key);
+  if (hit) return Promise.resolve(hit);
+  return publicProductService
+    .suggest(q)
+    .then((res) => {
+      const data = { ...EMPTY, ...(res.data.data ?? {}) };
+      suggestCache.set(key, data);
+      return data;
+    })
+    .catch(() => EMPTY);
 }
 
-interface Index {
-  entries: Entry[];
-  popular: string[];
-  products: { p: ListingProduct; hay: string[]; pop: number }[];
-}
-
-function buildIndex(products: ListingProduct[]): Index {
-  const dict = new Map<string, Entry>();
-  const add = (phrase: string | null | undefined, p: ListingProduct, pop: number, boost = 0) => {
-    if (!phrase) return null;
-    const k = norm(phrase);
-    if (k.length < 2) return null;
-    const e = dict.get(k) ?? { t: phrase.toLowerCase(), pop: 0, cats: {} };
-    e.pop += pop + boost;
-    const dept = p.variants[0]?.categorySlug ?? "";
-    if (p.productType) {
-      const c = `${dept}|${p.productType}`;
-      e.cats[c] = (e.cats[c] ?? 0) + 1;
-    }
-    dict.set(k, e);
-    return e;
-  };
-  const typePop = new Map<string, number>();
-  const ranked = products.map((p) => {
-    // Popularity on a 0–100-ish scale: units sold, with a floor so new items still surface.
-    const pop = Math.min(100, 10 + Math.sqrt(p.popularity) * 10);
-    const name = cleanName(p.name);
-    add(name, p, pop, 10);
-    add(p.productType, p, pop, 20);
-    add(p.brand, p, pop);
-    p.colors.forEach((c) => {
-      const e = add(c, p, 2);
-      if (e) e.noScope = true;
-    });
-    const w = name.toLowerCase().replace(/[^a-z0-9'’ -]+/g, " ").split(/\s+/).filter(Boolean);
-    if (w.length > 2) add(w.slice(-2).join(" "), p, pop, 15);
-    if (w.length > 1) add(w[w.length - 1], p, pop, 5);
-    const sub = p.subcategory;
-    if (p.variants[0]?.categorySlug === "clothing" && sub && /^(men|women)$/i.test(sub) && w.length) {
-      const last = w[w.length - 1];
-      add(`${sub.toLowerCase()}'s ${last}${/s$/.test(last) ? "" : "s"}`, p, pop, 8);
-    }
-    if (p.productType) typePop.set(p.productType, (typePop.get(p.productType) ?? 0) + pop);
-    const hay = words([p.name, p.brand, p.productType, sub, ...p.colors].filter(Boolean).join(" "));
-    return { p, hay, pop };
-  });
-  // Popular searches: the busiest product types in the catalog.
-  const popular = Array.from(typePop.entries())
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([t]) => t);
-  popular.forEach((q) => {
-    const e = dict.get(norm(q));
-    if (e) e.pop += 400;
-  });
-  return { entries: Array.from(dict.values()), popular, products: ranked };
-}
-
-function querySuggestions(index: Index, q: string): Entry[] {
-  const qw = words(q);
-  if (!qw.length) return [];
-  const last = qw[qw.length - 1];
-  const full = qw.slice(0, -1);
-  const scored: { e: Entry; score: number }[] = [];
-  for (const e of index.entries) {
-    const ew = words(e.t);
-    const okFull = full.every((f) => ew.some((w) => w === f || w === f + "s" || w + "s" === f));
-    const okLast = ew.some((w) => w.startsWith(last));
-    if (!okFull || !okLast) continue;
-    const starts = norm(e.t).startsWith(norm(q));
-    scored.push({ e, score: e.pop + (starts ? 1000 : 0) - ew.length * 5 });
-  }
-  scored.sort((a, b) => b.score - a.score);
-  const seen = new Set<string>();
-  const out: Entry[] = [];
-  for (const { e } of scored) {
-    const k = norm(e.t);
-    if (seen.has(k)) continue;
-    seen.add(k);
-    out.push(e);
-    if (out.length === 7) break;
-  }
-  return out;
-}
-
-function productMatches(index: Index, q: string): ListingProduct[] {
-  const qw = words(q);
-  if (!qw.length) return [];
-  return index.products
-    .filter(({ hay }) =>
-      qw.every((w, i) => hay.some((h) => (i === qw.length - 1 ? h.startsWith(w) : h === w || h === w + "s" || h + "s" === w))),
-    )
-    .sort((a, b) => b.pop - a.pop)
-    .slice(0, 3)
-    .map((x) => x.p);
+/** The department whose sections list this product type, for a scoped suggestion's link. */
+function deptOfType(depts: Department[], type: string): string | undefined {
+  const t = type.toLowerCase();
+  return depts.find((d) => d.sections.some((s) => s.types.some((x) => x.toLowerCase() === t)))?.slug;
 }
 
 /** The part the shopper has NOT typed yet is bold. */
@@ -187,8 +102,11 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
   const [typed, setTyped] = useState("");
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(-1);
-  const [index, setIndex] = useState<Index | null>(null);
+  /** Suggestions for `typed` (kept while the next ones load, so the list doesn't flicker). */
+  const [result, setResult] = useState<{ q: string; data: SearchSuggestResponse } | null>(null);
+  const [popular, setPopular] = useState<string[]>([]);
   const [recent, setRecent] = useState<string[]>([]);
+  const depts = useDepartments();
   const boxId = `${id}-ac`;
   const pathname = usePathname();
 
@@ -204,15 +122,25 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
     return () => window.removeEventListener("popstate", sync);
   }, [pathname]);
 
-  /** The catalog is fetched the first time a search box is used. */
-  const ensureIndex = useCallback(() => {
-    if (index) return;
-    loadStorefrontCatalog()
-      .then((products) => setIndex(buildIndex(products)))
-      .catch(() => setIndex(buildIndex([])));
-  }, [index]);
+  /** Popular searches are fetched the first time a search box is used. */
+  const ensurePopular = useCallback(() => {
+    if (popular.length) return;
+    fetchSuggest("").then((d) => setPopular(d.popular.slice(0, 8)));
+  }, [popular.length]);
 
   const q = typed.trim();
+
+  // Suggestions for what was typed (the input is already debounced into `typed`).
+  useEffect(() => {
+    if (!q || !open) return;
+    let live = true;
+    fetchSuggest(q).then((data) => live && setResult({ q, data }));
+    return () => {
+      live = false;
+    };
+  }, [q, open]);
+  const data = q ? result?.data ?? null : null;
+
   const options: Option[] = useMemo(() => {
     const opts: Option[] = [];
     if (!q) {
@@ -229,7 +157,7 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
           ),
         }),
       );
-      (index?.popular ?? []).forEach((p) =>
+      popular.forEach((p) =>
         opts.push({
           key: `p-${p}`,
           href: catalogHref({ q: p }),
@@ -244,66 +172,60 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
       );
       return opts;
     }
-    if (!index) return opts;
-    const qs = querySuggestions(index, q);
-    const ps = productMatches(index, q);
-    qs.forEach((e, i) => {
+    if (!data) return opts;
+    data.suggestions.slice(0, 7).forEach((t, i) => {
       opts.push({
-        key: `q-${e.t}`,
-        href: catalogHref({ q: e.t }),
-        q: e.t,
+        key: `q-${t}`,
+        href: catalogHref({ q: t }),
+        q: t,
         node: (
           <>
             <DayloraIcon name="search" />
             <span>
-              <Highlight text={e.t} q={q} />
+              <Highlight text={t} q={q} />
             </span>
           </>
         ),
       });
-      if (i === 0 && !e.noScope) {
-        // Scoped suggestion: the top term within its main product type.
-        const top = Object.entries(e.cats).sort((a, b) => b[1] - a[1])[0];
-        if (top) {
-          const [dept, type] = top[0].split("|");
-          if (type && norm(type) !== norm(e.t)) {
-            opts.push({
-              key: `s-${e.t}`,
-              href: catalogHref({ dept: dept || undefined, type }),
-              q: e.t,
-              node: (
-                <>
-                  <span style={{ width: 18, flex: "none" }} />
-                  <span>
-                    <Highlight text={e.t} q={q} /> <span className="ac-scope">in {type}</span>
-                  </span>
-                </>
-              ),
-            });
-          }
-        }
+      // Scoped suggestion: the top term within its main product type.
+      const s = data.scoped;
+      if (i === 0 && s && s.type && norm(s.type) !== norm(s.query)) {
+        const dept = s.dept || deptOfType(depts, s.type);
+        opts.push({
+          key: `s-${s.query}`,
+          href: catalogHref({ dept, type: s.type }),
+          q: s.query,
+          node: (
+            <>
+              <span style={{ width: 18, flex: "none" }} />
+              <span>
+                <Highlight text={s.query} q={q} /> <span className="ac-scope">{s.label || `in ${s.type}`}</span>
+              </span>
+            </>
+          ),
+        });
       }
     });
-    ps.forEach((p) =>
+    data.products.slice(0, 3).forEach((p) =>
       opts.push({
         key: `x-${p.parentId}`,
-        href: p.href,
+        href: `/product/${p.slug || p.productId}`,
         className: "ac-prod",
         node: (
           <>
             <span className="ac-thumb">
-              {p.image ? (
+              {p.imageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={p.image} alt="" />
+                <img src={p.imageUrl} alt="" />
               ) : (
-                <DayloraIcon name={deptIcon(p.variants[0]?.categorySlug)} />
+                <DayloraIcon name={deptIcon(p.department?.slug)} />
               )}
             </span>
             <span className="ac-pname">
               {p.name}
               <small>{[p.brand, p.productType].filter(Boolean).join(" · ")}</small>
             </span>
-            <span className="ac-price">{usd(p.minPrice)}</span>
+            <span className="ac-price">{usd(Number(p.minPrice))}</span>
           </>
         ),
       }),
@@ -321,7 +243,7 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
       ),
     });
     return opts;
-  }, [q, index, recent]);
+  }, [q, data, popular, recent, depts]);
 
   // Section breaks: recent | popular, and queries | products | see all.
   const firstProduct = options.findIndex((o) => o.key.startsWith("x-"));
@@ -337,7 +259,7 @@ export function DayloraSearch({ id, className, placeholder }: DayloraSearchProps
   }, []);
 
   const openBox = () => {
-    ensureIndex();
+    ensurePopular();
     setRecent(getRecent());
     setActive(-1);
     setOpen(true);

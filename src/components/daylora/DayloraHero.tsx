@@ -5,7 +5,7 @@ import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { usd } from "./shop/catalog";
 import { catalogHref } from "./shop/departments";
-import type { CardModel } from "./shop/storefrontCatalog";
+import type { CardModel } from "./shop/storefrontCards";
 
 /** Name on the price tag, without the pack or size suffix: "Cookware Set, 10-Piece" → "Cookware Set". */
 const tagName = (name: string) => name.replace(/,.*$/, "");

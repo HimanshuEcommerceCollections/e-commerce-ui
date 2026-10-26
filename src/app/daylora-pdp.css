@@ -195,3 +195,46 @@
 .pdp .pcard .p-sw i{width:12px;height:12px;border-radius:50%;box-shadow:inset 0 0 0 1px rgba(0,0,0,.15)}
 .pdp .pcard .p-ph{width:34%;height:34%;stroke-width:1.1}
 .pdp .pcard .oos{position:absolute;left:var(--s-2);bottom:var(--s-2);padding:2px var(--s-2);border-radius:var(--r-pill);background:#fff;font-size:12px;font-weight:600}
+/* ---- Rating under the title, reviews accordion (design 03 reviewsHTML) ---- */
+.pdp .buy .rating{margin:0;font-size:14px;line-height:20px}
+.pdp .buy .rating a{color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+.pdp .acc-reviews summary > span{display:inline-flex;align-items:center;gap:var(--s-2)}
+.pdp .pdp-rev{display:grid;gap:var(--s-5)}
+@media (min-width:768px){.pdp .pdp-rev{grid-template-columns:220px 1fr}}
+.pdp .rev-score{display:flex;flex-direction:column;gap:var(--s-2)}
+.pdp .rev-score b{font-size:40px;line-height:48px;font-weight:700}
+.pdp .bars{display:grid;gap:6px;margin-top:var(--s-2);font-size:12px;line-height:16px;color:var(--muted)}
+.pdp .bars div{display:grid;grid-template-columns:36px 1fr 28px;align-items:center;gap:var(--s-2)}
+.pdp .bars i{height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+.pdp .bars i::before{content:"";display:block;height:100%;width:var(--w);background:var(--navy)}
+.pdp .rev-list{display:grid;gap:var(--s-4)}
+.pdp .rev-title{font-size:16px;line-height:24px;font-weight:600;color:var(--ink)}
+.pdp .rev-more{justify-self:start}
+/* ---- Size guide tables tip, pack options, grocery badges, warnings, Nutrition Facts, steps ---- */
+.pdp .fit-tip{display:flex;gap:var(--s-3);padding:var(--s-4);border-radius:var(--r-md);background:var(--mint-50);font-size:14px;line-height:20px;color:var(--ink)}
+.pdp .fit-tip .icon{color:var(--leaf);flex:none}
+.pdp .size.pack{min-width:auto;padding:0 var(--s-4);display:flex;flex-direction:column;justify-content:center;height:auto;min-height:56px;gap:0;line-height:18px}
+.pdp .size.pack small{font-size:12px;font-weight:500;color:var(--save)}
+.pdp .size.pack small.m{color:var(--muted)}
+.pdp input:checked + .size.pack small{color:var(--mint)}
+@media (max-width:767px){.pdp #vars{display:flex}.pdp #vars .size.pack{flex:1;padding:0 var(--s-3)}}
+.pdp .badges{display:flex;flex-wrap:wrap;gap:var(--s-2)}
+.pdp .badges span{display:inline-flex;align-items:center;gap:6px;height:28px;padding:0 var(--s-3);border-radius:var(--r-pill);background:var(--mint-50);color:var(--leaf-700);font-size:13px;font-weight:600}
+.pdp .badges .icon{width:14px;height:14px}
+.pdp .warn-box{display:flex;gap:var(--s-3);padding:var(--s-4);border-radius:var(--r-md);background:#FFF8E6;border:1px solid #F5D98A;font-size:14px;line-height:20px;color:var(--ink)}
+.pdp .warn-box b{display:block;letter-spacing:.02em}
+.pdp .warn-box .tri{flex:none;width:0;height:0;border-left:11px solid transparent;border-right:11px solid transparent;border-bottom:19px solid #1A2433;position:relative;margin-top:1px}
+.pdp .warn-box .tri::after{content:"!";position:absolute;left:-2px;top:4px;color:#FFF8E6;font-size:12px;font-weight:800}
+.pdp .nf{max-width:320px;border:2px solid var(--ink);padding:6px 8px;font-size:14px;line-height:18px;color:var(--ink);background:#fff}
+.pdp .nf h4{font-size:26px;line-height:30px;font-weight:800;letter-spacing:-.5px;border-bottom:1px solid var(--ink);padding-bottom:2px}
+.pdp .nf .serv{border-bottom:8px solid var(--ink);padding:4px 0}
+.pdp .nf .cal{display:flex;justify-content:space-between;align-items:flex-end;border-bottom:4px solid var(--ink);padding:4px 0;font-weight:800}
+.pdp .nf .cal b{font-size:30px;line-height:32px}
+.pdp .nf .row{display:flex;justify-content:space-between;border-bottom:1px solid #9AA5B4;padding:3px 0}
+.pdp .nf .row.ind{padding-left:14px}
+.pdp .nf .dv{text-align:right;font-weight:700;border-bottom:1px solid #9AA5B4;padding:3px 0;font-size:12px}
+.pdp .nf .foot{font-size:11px;line-height:14px;padding-top:4px;color:var(--muted)}
+.pdp .steps-list{display:grid;gap:var(--s-2);counter-reset:s;list-style:none}
+.pdp .steps-list li{position:relative;padding-left:var(--s-7);min-height:28px}
+.pdp .steps-list li::before{counter-increment:s;content:counter(s);position:absolute;left:0;top:0;width:28px;height:28px;border-radius:50%;background:var(--surface);color:var(--navy);font-weight:700;font-size:13px;display:grid;place-items:center}
+.pdp .pcard .rating{margin-top:0}

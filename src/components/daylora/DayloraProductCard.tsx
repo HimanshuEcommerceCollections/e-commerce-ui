@@ -4,7 +4,9 @@ import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { usd } from "./shop/catalog";
-import type { CardModel } from "./shop/storefrontCatalog";
+import type { CardModel } from "./shop/storefrontCards";
+import { CardRating } from "./DayloraRating";
+import { SaveHeart } from "./DayloraSaveHeart";
 
 /** Resolves true when the item went into the cart. */
 export type AddToCart = (p: CardModel) => Promise<boolean>;
@@ -77,25 +79,27 @@ function Media({ product }: { product: CardModel }) {
 interface DayloraProductCardProps {
   product: CardModel;
   onAdd: AddToCart;
-  /** Show the "New" badge (new arrivals rail). */
+  /** Show the "New" badge: every card in the new arrivals rail is new by the rail's own rule. */
   showNew?: boolean;
 }
 
-/** Rail card: brand, name, variant summary, price/was/save, stock line, action. */
+/** Rail card: brand, name, variant summary, rating, price/was/save, stock line, action, saved heart. */
 export function DayloraProductCard({ product, onAdd, showNew = false }: DayloraProductCardProps) {
   const isOut = product.stockState === "out";
   return (
     <article className={`card${isOut ? " is-out" : ""}`}>
       <Link href={product.href} className="card-media" aria-label={product.name} tabIndex={-1}>
         <Media product={product} />
-        {showNew && product.isNew ? <span className="badge badge-new">New</span> : null}
+        {showNew ? <span className="badge badge-new">New</span> : null}
       </Link>
+      <SaveHeart productId={product.skuId} name={product.name} />
       <div className="card-body">
         {product.brand && <span className="brand">{product.brand}</span>}
         <Link href={product.href} className="name">
           {product.name}
         </Link>
         {product.variant && <span className="variant">{product.variant}</span>}
+        <CardRating avg={product.ratingAvg} count={product.ratingCount} />
         <div className="price-row">
           <span className="price">
             {product.variantCount > 1 && <span className="sr-only">From </span>}

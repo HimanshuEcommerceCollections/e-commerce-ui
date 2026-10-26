@@ -405,3 +405,15 @@ header.header[data-note]{position:sticky} /* keep the header sticky; [data-note]
 @media (min-width:768px){ .grid-overlay .daylora-container{grid-template-columns:repeat(8,1fr)} .grid-overlay span:nth-child(n+5){display:block} .grid-overlay span:nth-child(n+9){display:none} }
 @media (min-width:1024px){ .grid-overlay .daylora-container{grid-template-columns:repeat(12,1fr)} .grid-overlay span:nth-child(n+9){display:block} }
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{transition:none!important;scroll-behavior:auto!important} }
+
+/* ---- Saved-items heart (rail cards, listing cards incl. the cart's rail, PDP) ---- */
+.save-heart{position:absolute;z-index:2;top:var(--s-2);right:var(--s-2);display:grid;place-items:center;width:40px;height:40px;border-radius:50%;background:rgba(255,255,255,.92);color:var(--navy);box-shadow:var(--shadow-1);cursor:pointer;transition:transform .15s,color .15s}
+.save-heart .icon{width:20px;height:20px}
+.save-heart:hover{transform:scale(1.06)}
+.save-heart.on{color:var(--save)}
+.save-heart:disabled{cursor:default;opacity:.6}
+.save-heart:focus-visible{outline:2px solid var(--leaf);outline-offset:2px}
+.pcard .save-heart{top:var(--s-2);right:var(--s-2)}
+.pcard .rating,.card .rating{margin-top:0}
+.pdp-heart{position:static;flex:none;width:56px;height:56px;box-shadow:none;border:1px solid #C4CDD8;background:#fff}
+@media (prefers-reduced-motion:reduce){ .save-heart:hover{transform:none} }

@@ -9,12 +9,62 @@ import { BRAND_NAME } from "./dayloraData";
 import { DayloraSearch } from "./DayloraSearch";
 import { catalogHref, useDepartments, type Department } from "./shop/departments";
 
-/** "Shop by" column of the mega menu, per department. */
+/** "Shop by" column of the mega menu, per department (design TAX.shopBy; Clothing adds the denim shop). */
 const shopBy = (d: Department) => [
   { t: "New arrivals", href: catalogHref({ dept: d.slug, new: true }) },
   { t: "Deals", href: catalogHref({ dept: d.slug, deals: true }), deals: true },
+  ...(d.slug === "clothing" ? [{ t: "Denim shop", href: `${catalogHref({ dept: d.slug })}&material=Denim` }] : []),
   { t: "Best sellers", href: catalogHref({ dept: d.slug, sort: "pop" }) },
 ];
+
+/** Only Clothing's sections (Women, Men) get a "Shop all {section}" link, as in the design. */
+const hasSectionAll = (d: Department) => d.slug === "clothing";
+
+/**
+ * The design's product types per section (TAX), shown while a section has no
+ * live product types yet (fallback tree, or an empty section).
+ */
+const TAX_TYPES: Record<string, Record<string, string[]>> = {
+  clothing: {
+    women: ["Tops", "Dresses", "Bottoms", "Sweaters & hoodies", "Jackets & coats", "Activewear", "Sleep & lounge"],
+    men: ["T-shirts & polos", "Shirts", "Jeans", "Pants & shorts", "Sweaters & hoodies", "Jackets & coats", "Activewear"],
+  },
+  electronics: {
+    "audio & smart tech": ["Headphones & earbuds", "Speakers", "Smart home", "Wearables"],
+    "computer & phone": ["Phone cases & chargers", "Keyboards & mice", "Cables & hubs", "Laptop accessories"],
+  },
+  "home-kitchen": {
+    kitchen: ["Cookware", "Small appliances", "Kitchen tools", "Coffee & tea makers"],
+    home: ["Storage & organization", "Home décor", "Lighting", "Bedding & bath"],
+  },
+  grocery: {
+    pantry: ["Snacks", "Breakfast & cereal", "Pantry staples", "International foods"],
+    "drinks & treats": ["Coffee & tea", "Juices & drinks", "Candy & chocolate"],
+  },
+  beauty: {
+    beauty: ["Skin care", "Makeup", "Hair care", "Fragrance"],
+    "personal care": ["Bath & body", "Oral care", "Shaving & grooming"],
+  },
+  "books-stationery": {
+    books: ["Fiction", "Non-fiction", "Children's books"],
+    stationery: ["Notebooks & journals", "Pens & pencils", "Art supplies", "Office supplies"],
+  },
+  "toys-kids": {
+    toys: ["Building sets", "Learning toys", "Games & puzzles", "Outdoor play"],
+    "kids & baby": ["Baby essentials", "Kids' room", "School & backpacks"],
+  },
+  "sports-fitness": {
+    fitness: ["Yoga & pilates", "Weights & training", "Fitness accessories"],
+    outdoors: ["Camping & hiking", "Cycling", "Water bottles"],
+  },
+  lifestyle: {
+    gifts: ["Gift sets", "Seasonal", "Party supplies"],
+    everyday: ["Bags & travel", "Pet supplies", "Candles & home fragrance"],
+  },
+};
+
+const sectionTypes = (d: Department, s: Department["sections"][number]) =>
+  s.types.length ? s.types : TAX_TYPES[d.slug]?.[s.name.toLowerCase()] ?? [];
 
 interface DayloraHeaderProps {
   cartCount: number;
@@ -169,10 +219,12 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
                     {active?.sections.map((s) => (
                       <div key={s.slug} className="dm-col">
                         <h4>{s.name}</h4>
-                        <Link href={catalogHref({ dept: active.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
-                          Shop all {s.name.toLowerCase()}
-                        </Link>
-                        {s.types.map((t) => (
+                        {hasSectionAll(active) && (
+                          <Link href={catalogHref({ dept: active.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
+                            Shop all {s.name.toLowerCase()}
+                          </Link>
+                        )}
+                        {sectionTypes(active, s).map((t) => (
                           <Link key={t} href={catalogHref({ dept: active.slug, g: s.slug, type: t })} onClick={closeAll}>
                             {t}
                           </Link>
@@ -255,10 +307,12 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
                     {d.sections.map((s) => (
                       <React.Fragment key={s.slug}>
                         <h4>{s.name}</h4>
-                        <Link href={catalogHref({ dept: d.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
-                          Shop all {s.name.toLowerCase()}
-                        </Link>
-                        {s.types.map((t) => (
+                        {hasSectionAll(d) && (
+                          <Link href={catalogHref({ dept: d.slug, g: s.slug })} className="dm-all" onClick={closeAll}>
+                            Shop all {s.name.toLowerCase()}
+                          </Link>
+                        )}
+                        {sectionTypes(d, s).map((t) => (
                           <Link key={t} href={catalogHref({ dept: d.slug, g: s.slug, type: t })} onClick={closeAll}>
                             {t}
                           </Link>

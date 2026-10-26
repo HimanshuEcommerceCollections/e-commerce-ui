@@ -3,32 +3,43 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { DayloraIcon } from "../DayloraIcons";
+import { CardRating } from "../DayloraRating";
+import { SaveHeart } from "../DayloraSaveHeart";
 import { colorHex, usd } from "./catalog";
-import { deptIcon } from "./departments";
-import { DEPT_TINT, TYPE_ICON, type PlpItem } from "./plpModel";
+import { DEPT_TINT, TYPE_ICON, itemToCard, type PlpItem } from "./plpModel";
+import type { CardModel } from "./storefrontCards";
 
-/** Listing card (design pcard): photo or icon, badge, brand, name, price, stock, colour swatches. */
-export function PlpCard({ x, colors, delay }: { x: PlpItem; colors: Set<string> | null; delay: number }) {
-  const c = x.card;
-  // With a colour filter on, show and link the variant in that colour.
-  const v = colors
-    ? x.p.variants.find((s) => s.color && colors.has(s.color) && s.stockQuantity > 0) ??
-      x.p.variants.find((s) => s.color && colors.has(s.color))
-    : undefined;
-  const href = v ? `/product/${v.urlSlug ?? v.id}` : c.href;
-  const image = v?.primaryImageUrl ?? c.image;
+/** Listing card (design pcard): photo or icon, badge, heart, brand, name, rating, price, stock, colour swatches. */
+export function PlpCard({
+  c: card,
+  x,
+  colors,
+  delay,
+}: {
+  c?: CardModel;
+  /** Legacy input; prefer `c`. */
+  x?: PlpItem;
+  colors: Set<string> | null;
+  delay: number;
+}) {
+  const c = card ?? itemToCard(x!);
+  // With a colour filter on, show that colour's photo and open the PDP on it.
+  const picked = colors ? c.colors.find((x) => colors.has(x.name)) : undefined;
+  const href = picked ? `${c.href}?color=${encodeURIComponent(picked.name)}` : c.href;
+  const image = picked?.imageUrl ?? c.image;
   const [failed, setFailed] = useState<string | null>(null);
   const showImg = !!image && failed !== image;
   const out = c.stockState === "out";
-  const c0 = x.p.colors[0];
+  const c0 = c.colors[0];
+  const swatch = (x: CardModel["colors"][number]) => x.hex || colorHex(x.name);
   const bg = showImg
     ? undefined
     : c0
-      ? `color-mix(in srgb, ${colorHex(c0)} 18%, #F4F6F8)`
-      : DEPT_TINT[x.dept ?? ""] ?? "#EEF1F4";
-  const icon = (x.type && TYPE_ICON[x.type]) || deptIcon(x.dept);
-  const sw = x.p.colors.length > 1 ? x.p.colors : [];
-  const fromPrice = x.prices.length > 1;
+      ? `color-mix(in srgb, ${swatch(c0)} 18%, #F4F6F8)`
+      : DEPT_TINT[c.departmentSlug ?? ""] ?? "#EEF1F4";
+  const icon = (c.productType && TYPE_ICON[c.productType]) || c.icon;
+  const sw = c.colors.length > 1 ? c.colors : [];
+  const fromPrice = c.maxPrice > c.price;
 
   return (
     <article className={`pcard${out ? " is-out" : ""}`} style={{ "--d": `${delay}ms` } as React.CSSProperties}>
@@ -38,26 +49,28 @@ export function PlpCard({ x, colors, delay }: { x: PlpItem; colors: Set<string> 
           // eslint-disable-next-line @next/next/no-img-element
           <img className="media-img" src={image!} alt="" loading="lazy" onError={() => setFailed(image)} />
         )}
-        {x.isNew ? (
+        {c.isNew ? (
           <span className="badge badge-new">New</span>
         ) : c.savePct ? (
           <span className="badge badge-sale">Save {c.savePct}%</span>
         ) : null}
         {out && <span className="oos">Out of stock</span>}
       </div>
+      <SaveHeart productId={c.skuId} name={c.name} />
       <div
         className="p-sw"
-        {...(sw.length ? { "aria-label": `${sw.length} colors: ${sw.join(", ")}` } : { "aria-hidden": true })}
+        {...(sw.length ? { "aria-label": `${sw.length} colors: ${sw.map((x) => x.name).join(", ")}` } : { "aria-hidden": true })}
       >
         {sw.slice(0, 4).map((col) => (
-          <i key={col} style={{ background: colorHex(col) }} title={col} />
+          <i key={col.name} style={{ background: swatch(col) }} title={col.name} />
         ))}
         {sw.length > 4 && `+${sw.length - 4}`}
       </div>
-      {x.brand && <span className="brand">{x.brand}</span>}
+      {c.brand && <span className="brand">{c.brand}</span>}
       <Link href={href} className="p-name">
-        {x.p.name}
+        {c.name}
       </Link>
+      <CardRating avg={c.ratingAvg} count={c.ratingCount} />
       <div className="price-row">
         <span className="price">
           {fromPrice && <span className="sr-only">From </span>}

@@ -5,7 +5,7 @@ import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { DayloraDealCard, type AddToCart } from "./DayloraProductCard";
 import { catalogHref } from "./shop/departments";
-import type { CardModel } from "./shop/storefrontCatalog";
+import type { CardModel } from "./shop/storefrontCards";
 
 /** Seconds to the next midnight, US Eastern (deals reset daily). */
 function secondsToMidnightET(): number {
