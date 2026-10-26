@@ -28,10 +28,13 @@ api.interceptors.response.use(
     if (error.response?.status === 401 && error.config?.headers?.Authorization && !authCall) {
       localStorage.removeItem("accessToken");
       localStorage.removeItem("nexus-auth"); // the persisted session
-      // Admin pages have their own sign-in page.
-      const inAdmin = window.location.pathname.startsWith("/admin");
-      if (window.location.pathname !== "/admin/login") {
-        window.location.replace(inAdmin ? "/admin/login" : "/login");
+      // Admin pages have their own sign-in page; the storefront one brings
+      // the shopper back to where they were (?next=).
+      const { pathname, search, hash } = window.location;
+      if (pathname.startsWith("/admin")) {
+        if (pathname !== "/admin/login") window.location.replace("/admin/login");
+      } else if (pathname !== "/login") {
+        window.location.replace(`/login?next=${encodeURIComponent(pathname + search + hash)}`);
       }
     }
     return Promise.reject(error);

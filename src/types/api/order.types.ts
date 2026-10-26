@@ -1,4 +1,4 @@
-import type { CartItemResponse, CartLineInput } from "./cart.types";
+import type { AppliedPromo, CartItemResponse, CartLineInput, TaxDestination } from "./cart.types";
 
 // ─── Enums ───────────────────────────────────────────────────────────────────
 
@@ -57,6 +57,16 @@ export interface OrderItem {
   taxRate:          number;
   taxAmount:        number;
   returnedQuantity: number;
+  /** List price at checkout when it was above the price paid (contract B3). */
+  mrp?:             number | null;
+  productSlug?:     string | null;
+}
+
+/** How the order was paid (contract B3); null until payment succeeds. */
+export interface OrderPayment {
+  type:  "CARD" | "PAYPAL" | "WALLET" | "MANUAL";
+  brand: string | null;
+  last4: string | null;
 }
 
 /** One entry of the order's timeline (FR-ST-12). */
@@ -107,7 +117,16 @@ export interface OrderReturn {
   createdAt:       string;
   receivedAt:      string | null;
   refundedAt:      string | null;
+  /** Contract C3. */
+  refundTo?:       ReturnRefundTo;
+  dropoffCode?:    string | null;
+  dropoffBy?:      string | null;
+  droppedOffAt?:   string | null;
+  pickupDate?:     string | null;
+  pickupWindow?:   string | null;
 }
+
+export type ReturnRefundTo = "ORIGINAL" | "STORE_CREDIT";
 
 /** ISO dates, business days after payment (or placement). */
 export interface DeliveryWindow {
@@ -139,6 +158,12 @@ export interface Order {
   returns:           OrderReturn[];
   /** Delivered + the return window; null until delivered. */
   returnableUntil:   string | null;
+  /** Contract B3. */
+  promoCode?:             string | null;
+  savingsTotal?:          number;
+  payment?:               OrderPayment | null;
+  billingSameAsShipping?: boolean;
+  hasReturnableItems?:    boolean;
   paidAt:            string | null;
   shippedAt:         string | null;
   deliveredAt:       string | null;
@@ -154,6 +179,10 @@ export interface OrderSummaryItem {
   size:        string | null;
   imageUrl:    string | null;
   quantity:    number;
+  /** Contract B3. */
+  parentId?:    string | null;
+  productSlug?: string | null;
+  mrp?:         number | null;
 }
 
 export interface OrderSummary {
@@ -171,7 +200,22 @@ export interface OrderSummary {
   items:             OrderSummaryItem[];
   latestShipment:    { carrier: string; trackingNumber: string; trackingUrl: string | null; status: ShipmentStatus } | null;
   returnableUntil:   string | null;
+  /** Contract C2: delivered + the return window, when something can still be returned. */
+  returnBy?:           string | null;
+  hasReturnableItems?: boolean;
+  returns?:            { id: string; rmaNumber: string; status: ReturnStatus }[];
 }
+
+/** GET /api/orders/counts (contract C2). */
+export interface OrderCounts {
+  all:       number;
+  open:      number;
+  delivered: number;
+  returned:  number;
+  cancelled: number;
+}
+
+export type OrderListFilter = "open" | "delivered" | "returned" | "cancelled" | "done";
 
 /** POST /api/orders returns the order and, for Stripe, the secret to confirm payment with. */
 export interface CheckoutResponse {
@@ -208,12 +252,35 @@ export interface CheckoutQuote {
   grandTotal:            number;
   pricesIncludeTax:      boolean;
   lines:                 CartItemResponse[];
+  /** Contract B1/B2. */
+  promo?:                AppliedPromo | null;
+  taxIsEstimate?:        boolean;
+  /** Why the promo code sent doesn't apply; the quote is then priced without it (never a 400). */
+  promoError?:           string | null;
+}
+
+/** POST /api/checkout/quote body. Guests send their lines; signed-in customers none. */
+export interface QuoteRequest {
+  shippingMethod?:  ShippingMethod;
+  items?:           CartLineInput[];
+  promoCode?:       string;
+  /** Destination for tax once a state is chosen (contract B2). */
+  shippingAddress?: TaxDestination;
+}
+
+/** Billing address when it differs from shipping (contract B3). */
+export interface BillingAddressInput {
+  addressLine1: string;
+  postalCode:   string;
 }
 
 export interface ReturnRequestBody {
   items:   { orderItemId: string; quantity: number }[];
   reason:  string;
   method?: ReturnMethod;
+  refundTo?:   ReturnRefundTo;
+  /** ISO date (PICKUP); the server defaults to the next business day. */
+  pickupDate?: string;
 }
 
 /** POST /api/orders/track: a guest's view of one order (FR-ST-12, FR-IN-04). */
@@ -251,6 +318,9 @@ export interface CheckoutRequest {
   shippingAddress?: ShippingAddressInput;
   saveAddress?:     boolean;
   shippingMethod?:  ShippingMethod;
+  promoCode?:       string;
+  billingSameAsShipping?: boolean;
+  billingAddress?:  BillingAddressInput;
 }
 
 export interface GuestCheckoutRequest {
@@ -259,13 +329,20 @@ export interface GuestCheckoutRequest {
   shippingAddress: ShippingAddressInput;
   shippingMethod?: ShippingMethod;
   items:           CartLineInput[];
+  promoCode?:      string;
+  billingSameAsShipping?: boolean;
+  billingAddress?: BillingAddressInput;
 }
 
 export interface OrderListParams {
   page?:   number;
   size?:   number;
-  /** open = on the way; done = delivered, cancelled or refunded. */
-  status?: "open" | "done";
+  /** open = on the way; done = delivered, cancelled or refunded; the rest per contract C2. */
+  status?: OrderListFilter;
+  /** Order number or item name. */
+  q?:      string;
+  /** 30d | 3m | 6m | a year such as 2026. */
+  period?: string;
 }
 
 // ─── Status Helpers ──────────────────────────────────────────────────────────

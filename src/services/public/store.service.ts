@@ -23,6 +23,16 @@ export interface StoreConfig {
   paymentProvider: "manual" | "stripe";
   /** For Stripe Elements; null under the manual gateway. */
   stripePublishableKey: string | null;
+  /** Saved cards in the account (Stripe only). Optional until every backend serves it. */
+  savedPaymentMethods?: boolean;
+  twoFactorAvailable?: boolean;
+  /** True once a real SMS provider sends codes and delivery texts; absent means codes are only logged. */
+  smsAvailable?: boolean;
+  stripePublishableKeyIsTest?: boolean;
+  /** CONTRACT E (cart / checkout). */
+  promoCodesEnabled?: boolean;
+  taxMode?: "destination" | "flat";
+  supportHours?: string;
 }
 
 const storeService = {
