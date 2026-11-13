@@ -18,7 +18,7 @@ const COUNT_LABEL: Record<Count, string> = {
   submissions: "waiting for review",
   reviews: "pending",
   support: "open",
-  applications: "new",
+  applications: "undecided",
 };
 
 /**
@@ -38,7 +38,7 @@ const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adm
   { href: "/admin/reviews", label: "Product reviews", icon: "star", count: "reviews" },
   { href: "/admin/audit-log", label: "Audit log", icon: "file" },
   { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
-  { href: "/admin/seller-applications", label: "Seller applications", icon: "store", count: "applications", adminOnly: true },
+  { href: "/admin/seller-applications", label: "Supplier approvals", icon: "store", count: "applications", adminOnly: true },
   { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
   { href: "/admin/integrations", label: "API integrations", icon: "gear", adminOnly: true, group: "Integrations" },
 ];
