@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DayloraIcon } from "../DayloraIcons";
+import { BrandMark } from "../BrandMark";
 
 /**
  * Bits shared by checkout (design 05) and the order confirmation (design 06):
@@ -64,6 +65,7 @@ export function CheckoutHeader({ back }: { back: "cart" | "shop" }) {
     <header className="co-header">
       <div className="daylora-container co-hrow">
         <Link href="/" className="logo">
+          <BrandMark />
           <span>Ecommerce Collections</span>
         </Link>
         {back === "cart" ? (

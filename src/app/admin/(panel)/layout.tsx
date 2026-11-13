@@ -7,6 +7,7 @@ import integrationService from "@/services/admin/integration.service";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
+import { BrandMark } from "@/components/daylora/BrandMark";
 import { ADMIN_INTEGRATIONS_EVENT, ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
 import type { IntegrationNavItem } from "@/types/api/integration.types";
 
@@ -17,7 +18,7 @@ const COUNT_LABEL: Record<Count, string> = {
   submissions: "waiting for review",
   reviews: "pending",
   support: "open",
-  applications: "new",
+  applications: "undecided",
 };
 
 /**
@@ -33,10 +34,11 @@ const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adm
   { href: "/admin/inventory", label: "Inventory", icon: "stack", count: "stock" },
   { href: "/admin/customers", label: "Customers", icon: "users", adminOnly: true },
   { href: "/admin/reports", label: "Reports", icon: "chart", adminOnly: true, also: ["/admin/analytics"] },
-  { href: "/admin/submissions", label: "Submissions", icon: "review", count: "submissions", group: "Review" },
+  { href: "/admin/submissions", label: "Review queue", icon: "review", count: "submissions", group: "Review" },
   { href: "/admin/reviews", label: "Product reviews", icon: "star", count: "reviews" },
+  { href: "/admin/audit-log", label: "Audit log", icon: "file" },
   { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
-  { href: "/admin/seller-applications", label: "Seller applications", icon: "store", count: "applications", adminOnly: true },
+  { href: "/admin/seller-applications", label: "Supplier approvals", icon: "store", count: "applications", adminOnly: true },
   { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
   { href: "/admin/integrations", label: "API integrations", icon: "gear", adminOnly: true, group: "Integrations" },
 ];
@@ -163,8 +165,11 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       <div className="app">
         <aside className="side" aria-label="Admin navigation">
           <div className="brandrow">
-            <b>Ecommerce Collections</b>
-            <span>Admin</span>
+            <BrandMark />
+            <div className="brandname">
+              <b>Ecommerce Collections</b>
+              <span>Admin</span>
+            </div>
             <div className="side-top">{menu("top")}</div>
           </div>
           <nav className="snav">

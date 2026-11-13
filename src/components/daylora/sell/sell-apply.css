@@ -1,0 +1,171 @@
+/* =====================================================================
+   Seller application (design: seller-portal-application) and the
+   "Apply to sell" card on /sell. Builds on daylora-sell.css (.sell-page
+   .form-card, .field, .input, .err, .consent); everything here is scoped
+   under .sell-page.
+   ===================================================================== */
+
+/* Shared bits */
+.sell-page .btn.block{width:100%}
+.sell-page .btn-ghost{background:transparent;color:var(--navy);min-height:44px}
+.sell-page .btn-ghost:hover{background:rgba(18,53,91,.06)}
+.sell-page .btn-sm{min-height:36px;padding:0 var(--s-3);font-size:14px}
+.sell-page .btn:disabled{opacity:.55;cursor:not-allowed}
+.sell-page .req{color:var(--low-stock)}
+.sell-page .hint{font-size:13px;line-height:18px;color:var(--muted)}
+.sell-page .grow{flex:1;min-width:0}
+.sell-page .icon.flip{transform:rotate(180deg)}
+.sell-page .mt{margin-top:var(--s-5)}
+.sell-page .mb{margin-bottom:var(--s-4)}
+.sell-page .block{display:block}
+.sell-page .err.show{display:flex}
+.sell-page .err.warn{color:var(--save)}
+.sell-page .alert{display:flex;gap:var(--s-3);align-items:flex-start;padding:var(--s-3) var(--s-4);border-radius:var(--r-md);font-size:14px;line-height:20px;color:var(--ink);text-align:left}
+.sell-page .alert .icon{flex:none;width:20px;height:20px;margin-top:0}
+.sell-page .alert ul{margin:var(--s-1) 0 0 18px;list-style:disc}
+.sell-page .alert a{color:inherit;font-weight:600;text-decoration:underline}
+.sell-page .alert.info{background:#EFF5FB;border:1px solid #CFE0F1}
+.sell-page .alert.info .icon{color:var(--navy)}
+.sell-page .alert.ok{background:var(--mint-50);border:1px solid var(--mint)}
+.sell-page .alert.ok .icon{color:var(--leaf)}
+.sell-page .alert.warn{background:var(--peach-50);border:1px solid #F5D3B8}
+.sell-page .alert.warn .icon{color:var(--save)}
+.sell-page .alert.bad{background:#FEF3F2;border:1px solid #FECDCA}
+.sell-page .alert.bad .icon{color:var(--low-stock)}
+
+/* Mini step list (the /sell card and the status screen) */
+.sell-page .steps-mini{display:grid;gap:var(--s-3);list-style:none;margin:var(--s-5) 0}
+.sell-page .steps-mini li{display:flex;gap:var(--s-3);align-items:flex-start;font-size:14px;line-height:20px;color:var(--muted)}
+.sell-page .steps-mini li b{display:block;color:var(--ink);font-weight:600}
+.sell-page .steps-mini .d{flex:none;display:grid;place-items:center;width:28px;height:28px;border-radius:50%;border:1.5px solid #C4CDD8;background:#fff;font-size:13px;font-weight:700;color:var(--muted)}
+.sell-page .steps-mini li.done .d{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.sell-page .steps-mini li.now .d{border-color:var(--navy);color:var(--navy);box-shadow:0 0 0 3px rgba(18,53,91,.12)}
+.sell-page .steps-mini li.now b{color:var(--navy)}
+.sell-page .sell-cta .btn-submit .icon{width:20px;height:20px}
+.sell-page .sell-cta .fine{margin-top:var(--s-3)}
+.sell-page .sell-cta .fine a{color:var(--leaf);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+
+/* Application layout */
+.sell-apply{background:var(--surface);min-height:60vh;padding-bottom:var(--section)}
+.sell-apply .obbar{background:#fff;border-bottom:1px solid var(--line)}
+.sell-apply .obbar ol{display:flex;gap:var(--s-2);justify-content:space-between;max-width:880px;margin:0 auto;padding:var(--s-4);list-style:none;overflow-x:auto}
+.sell-apply .obbar li{display:flex;align-items:center;gap:var(--s-2);flex:none;font-size:13px;font-weight:600;color:var(--muted)}
+.sell-apply .obbar li i{display:grid;place-items:center;width:26px;height:26px;border-radius:50%;border:1.5px solid #C4CDD8;font-style:normal;font-size:12px;background:#fff}
+.sell-apply .obbar li.done{color:var(--leaf)}
+.sell-apply .obbar li.done i{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.sell-apply .obbar li.now{color:var(--navy)}
+.sell-apply .obbar li.now i{border-color:var(--navy);color:var(--navy);box-shadow:0 0 0 3px rgba(18,53,91,.12)}
+@media (max-width:639px){ .sell-apply .obbar li:not(.now) span{display:none} }
+.sell-apply .ob{max-width:880px;margin:0 auto;padding:var(--s-6) var(--margin) 0}
+.sell-apply .ob-loading{text-align:center;color:var(--muted);padding:var(--s-7) 0}
+.sell-apply h1:focus{outline:none}
+
+/* Account + status cards */
+.sell-apply .ob-auth,.sell-apply .ob-status{max-width:520px;margin:0 auto;display:flex;flex-direction:column;gap:var(--s-4)}
+.sell-apply .ob-auth h1,.sell-apply .ob-status h1{font-size:26px;line-height:32px;font-weight:700;color:var(--navy);letter-spacing:-.3px}
+.sell-apply .ob-auth .form{margin-top:0}
+.sell-apply .back{display:inline-flex;align-items:center;gap:var(--s-2);font-size:14px;font-weight:600;color:var(--navy)}
+.sell-apply .back .icon{width:18px;height:18px}
+.sell-apply .pw{position:relative;display:block}
+.sell-apply .pw .input{padding-right:72px}
+.sell-apply .pw button{position:absolute;right:6px;top:50%;transform:translateY(-50%);min-height:36px;padding:0 var(--s-3);border-radius:var(--r-sm);font-size:14px;font-weight:600;color:var(--navy)}
+.sell-apply .meter{height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+.sell-apply .meter i{display:block;height:100%;width:0;transition:width .2s,background .2s}
+.sell-apply .rules{display:grid;gap:2px;list-style:none;font-size:13px;line-height:18px;color:var(--muted)}
+.sell-apply .rules li::before{content:"○ ";color:#9AA5B4}
+.sell-apply .rules li.met{color:var(--in-stock)}
+.sell-apply .rules li.met::before{content:"✓ ";color:var(--in-stock)}
+.sell-apply .auth-foot{text-align:center;font-size:14px;color:var(--muted)}
+.sell-apply .auth-foot a{color:var(--leaf);font-weight:600;text-decoration:underline;text-underline-offset:3px}
+.sell-apply .big-ic{display:grid;place-items:center;flex:none;align-self:flex-start;box-sizing:border-box;width:56px;height:56px;min-height:56px;max-height:56px;padding:0;border-radius:50%;overflow:hidden}
+.sell-apply .big-ic svg{width:28px;height:28px}
+.sell-apply .big-ic .icon{width:28px;height:28px}
+.sell-apply .big-ic.info{background:#EFF5FB;color:var(--navy)}
+.sell-apply .big-ic.ok{background:var(--mint-50);color:var(--leaf)}
+.sell-apply .big-ic.warn{background:var(--peach-50);color:var(--save)}
+.sell-apply .ob-status .sub{font-size:15px;line-height:22px;margin-top:var(--s-2)}
+.sell-apply .ob-status .ref{font-size:13px;color:var(--muted);margin-top:var(--s-2)}
+.sell-apply .ob-status .steps-mini{margin:0}
+
+/* The form */
+.sell-apply .crumb{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:var(--s-2)}
+.sell-apply .substeps{display:flex;flex-wrap:wrap;gap:var(--s-2);list-style:none;margin-bottom:var(--s-4)}
+.sell-apply .substeps li{padding:4px 12px;border-radius:var(--r-pill);background:#fff;border:1px solid var(--line);font-size:13px;font-weight:600;color:var(--muted)}
+.sell-apply .substeps li.done{color:var(--leaf);border-color:var(--mint)}
+.sell-apply .substeps li.now{background:var(--navy);border-color:var(--navy);color:#fff}
+.sell-apply .obh{font-size:22px;line-height:28px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
+.sell-apply .obh1{font-size:clamp(24px,3vw,30px);line-height:1.2;font-weight:700;color:var(--navy);letter-spacing:-.02em}
+.sell-apply .obd{font-size:15px;line-height:22px;color:var(--muted);margin:var(--s-1) 0 var(--s-5)}
+.sell-apply .g2{display:grid;gap:var(--s-4) var(--s-5)}
+@media (min-width:768px){
+  .sell-apply .g2{grid-template-columns:1fr 1fr}
+  .sell-apply .g2 .full{grid-column:1 / -1}
+}
+.sell-apply .g2.tight{gap:var(--s-3)}
+.sell-apply fieldset.field{border:0;padding:0;margin:0;min-width:0}
+.sell-apply fieldset.field legend{font-size:14px;line-height:20px;font-weight:600;color:var(--ink);margin-bottom:var(--s-2);padding:0}
+.sell-apply .seg{display:flex;flex-wrap:wrap;gap:var(--s-2)}
+.sell-apply .segopt{position:relative;cursor:pointer}
+.sell-apply .segopt input,.sell-apply .chip input,.sell-apply .feed input{position:absolute;opacity:0;width:1px;height:1px}
+.sell-apply .segopt span,.sell-apply .chip span{display:inline-flex;align-items:center;min-height:44px;padding:0 var(--s-4);border:1px solid #AEB8C5;border-radius:var(--r-pill);background:#fff;font-size:15px;font-weight:500;color:var(--ink)}
+.sell-apply .segopt input:checked + span,.sell-apply .chip input:checked + span{background:var(--navy);border-color:var(--navy);color:#fff}
+.sell-apply .segopt input:focus-visible + span,.sell-apply .chip input:focus-visible + span,.sell-apply .feed input:focus-visible + span{outline:2px solid var(--leaf);outline-offset:2px}
+.sell-apply .chips{display:flex;flex-wrap:wrap;gap:var(--s-2)}
+.sell-apply .chip{cursor:pointer}
+.sell-apply .chip span{min-height:40px;font-size:14px}
+.sell-apply .feeds{display:grid;gap:var(--s-2)}
+@media (min-width:768px){ .sell-apply .feeds{grid-template-columns:1fr 1fr} }
+.sell-apply .feed{position:relative;cursor:pointer}
+.sell-apply .feed span{display:flex;flex-direction:column;gap:2px;padding:var(--s-3) var(--s-4);border:1px solid #AEB8C5;border-radius:var(--r-md);background:#fff;height:100%}
+.sell-apply .feed b{font-size:15px;color:var(--ink)}
+.sell-apply .feed small{font-size:13px;color:var(--muted)}
+.sell-apply .feed input:checked + span{border-color:var(--leaf);box-shadow:0 0 0 2px var(--leaf);background:var(--mint-50)}
+.sell-apply .unit{display:flex;align-items:center;gap:var(--s-2)}
+.sell-apply .unit span{color:var(--muted);font-size:14px}
+.sell-apply .revgrid{display:grid;gap:var(--s-3)}
+@media (min-width:768px){ .sell-apply .revgrid{grid-template-columns:1fr 1fr} }
+.sell-apply .revc{border:1px solid var(--line);border-radius:var(--r-md);padding:var(--s-4)}
+.sell-apply .revh{display:flex;align-items:center;justify-content:space-between;margin-bottom:var(--s-2)}
+.sell-apply .revh h3{font-size:16px;font-weight:700;color:var(--navy)}
+.sell-apply .kv{display:grid;gap:var(--s-1);font-size:14px;line-height:20px}
+.sell-apply .kv div{display:grid;grid-template-columns:120px minmax(0,1fr);gap:var(--s-3)}
+.sell-apply .kv dt{color:var(--muted)}
+.sell-apply .kv dd{color:var(--ink);font-weight:500;overflow-wrap:anywhere}
+.sell-apply .obnav{display:flex;align-items:center;justify-content:space-between;gap:var(--s-3);margin-top:var(--s-6);padding-top:var(--s-4);border-top:1px solid var(--line)}
+.sell-apply .obnav .hint{text-align:center}
+@media (max-width:519px){ .sell-apply .obnav .hint{display:none} }
+
+/* Documents */
+.sell-apply .prog{height:8px;border-radius:4px;background:#fff;border:1px solid var(--line);overflow:hidden;margin-top:var(--s-4)}
+.sell-apply .prog i{display:block;height:100%;background:var(--leaf);transition:width .2s}
+.sell-apply .prog + .hint{margin-top:var(--s-2)}
+.sell-apply .docs{display:grid;gap:var(--s-4)}
+.sell-apply .doc{display:flex;flex-direction:column;gap:var(--s-3)}
+.sell-apply .doc.is-ok{border-color:var(--mint)}
+.sell-apply .doc-h{display:flex;gap:var(--s-3);align-items:flex-start}
+.sell-apply .doc-h h2{font-size:17px;line-height:24px}
+.sell-apply .doc-h .cd{font-size:14px;line-height:20px;color:var(--muted)}
+.sell-apply .doc-ic{flex:none;display:grid;place-items:center;width:40px;height:40px;border-radius:var(--r-sm);background:var(--surface);color:var(--navy)}
+.sell-apply .doc-ic .icon{width:22px;height:22px}
+.sell-apply .doc-ic.ok{background:var(--mint-50);color:var(--leaf)}
+.sell-apply .doc-ic.info{background:#EFF5FB}
+.sell-apply .pill{flex:none;display:inline-flex;align-items:center;height:24px;padding:0 10px;border-radius:var(--r-pill);font-size:12px;font-weight:600}
+.sell-apply .pill.ok{background:var(--mint-50);color:var(--leaf)}
+.sell-apply .pill.bad{background:#FEF3F2;color:var(--low-stock)}
+.sell-apply .pill.off{background:var(--surface);color:var(--muted)}
+.sell-apply .dl{align-self:flex-start;padding-left:0;color:var(--leaf)}
+.sell-apply .dl .icon{width:18px;height:18px}
+.sell-apply .exp{max-width:260px}
+.sell-apply .drop{display:flex;flex-direction:column;align-items:center;gap:2px;padding:var(--s-5);border:1.5px dashed #AEB8C5;border-radius:var(--r-md);background:var(--surface);cursor:pointer;text-align:center}
+.sell-apply .drop:hover{border-color:var(--leaf)}
+.sell-apply .drop b{color:var(--leaf)}
+.sell-apply .drop.bad{border-color:var(--low-stock)}
+.sell-apply input[type="file"]:focus-visible + .drop,.sell-apply .drop:focus-within{outline:2px solid var(--leaf);outline-offset:2px}
+.sell-apply .fileline{display:flex;align-items:center;gap:var(--s-3);padding:var(--s-3);border:1px solid var(--line);border-radius:var(--r-md)}
+.sell-apply .fileline .fi{display:grid;place-items:center;width:36px;height:36px;border-radius:var(--r-sm);background:var(--surface);color:var(--navy)}
+.sell-apply .fileline .fi .icon{width:20px;height:20px}
+.sell-apply .fileline b{display:block;font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sell-apply .fileline small{font-size:12px;color:var(--muted)}
+.sell-apply .fromus{display:flex;gap:var(--s-3);align-items:flex-start;margin-top:var(--s-4);padding:var(--s-4)}
+.sell-apply .fromus p{font-size:14px;line-height:20px;color:var(--muted)}
+.sell-apply .fromus b{color:var(--ink)}

@@ -1,0 +1,86 @@
+/* Supplier approvals (design: catalog-supplier-approvals). Scoped under
+   .dla .sup so it builds on the admin styles without changing them. */
+
+.dla .sup .grow{flex:1;min-width:0}
+.dla .sup .block{display:block}
+.dla .sup .mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.dla .sup .linkish{color:var(--leaf);font-weight:600;text-decoration:underline;text-underline-offset:3px;background:none;padding:0;min-height:0}
+.dla .sup .req{color:var(--bad)}
+.dla .sup .p-navy{background:#E8EEF5;color:var(--navy)}
+.dla .sup .note.ok{background:var(--ok-50)}
+.dla .sup .note.ok .icon{color:var(--ok)}
+.dla .sup .sup-gap{margin-top:var(--s-3)}
+.dla .sup .sup-wide{width:100%;margin-top:var(--s-3)}
+.dla .sup .sup-up{color:var(--ok)}
+.dla .sup .sup-dn{color:var(--bad)}
+.dla .sup .sup-bad,.dla .sup .sup-red{color:var(--bad)}
+.dla .sup .sup-amber{color:var(--warn)}
+.dla .sup .sup-row{display:flex;flex-wrap:wrap;gap:var(--s-2);align-items:flex-end}
+
+/* List */
+.dla .sup .stat small{font-size:12px;color:var(--muted)}
+.dla .sup .stat.red{border-color:#FECDCA;background:var(--bad-50)}
+.dla .sup .sup-exp{margin-bottom:var(--s-3)}
+.dla .sup .sup-av{display:inline-grid;place-items:center;flex:none;border-radius:var(--r-sm);color:var(--navy);font-weight:800}
+.dla .sup .sup-item{display:flex;align-items:center;gap:var(--s-3);min-width:0}
+.dla .sup .sup-item strong{display:block}
+.dla .sup .sup-item .sub{display:block}
+
+/* Detail header */
+.dla .sup .sup-crumb{font-size:13px;color:var(--muted);margin-bottom:var(--s-3)}
+.dla .sup .sup-crumb a{color:var(--leaf);font-weight:600}
+.dla .sup .sup-head{margin-bottom:var(--s-5);overflow:visible}
+.dla .sup .sup-dhead{display:flex;gap:var(--s-4);align-items:center}
+.dla .sup .sup-dhead h1{font-size:22px;line-height:28px;font-weight:700;color:var(--navy)}
+.dla .sup .sup-meta{display:flex;flex-wrap:wrap;gap:var(--s-2) var(--s-4);align-items:center;margin-top:var(--s-1);color:var(--muted)}
+.dla .sup .sup-trk{display:flex;gap:var(--s-2);list-style:none;margin-top:var(--s-4);padding-top:var(--s-4);border-top:1px solid var(--line);overflow-x:auto}
+.dla .sup .sup-trk li{flex:1 0 auto;display:flex;align-items:center;gap:var(--s-2);font-weight:600;color:var(--muted);font-size:13px}
+.dla .sup .sup-trk li i{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;border:1.5px solid #C4CDD8;font-style:normal;font-size:12px;background:#fff}
+.dla .sup .sup-trk li.done{color:var(--leaf)}
+.dla .sup .sup-trk li.done i{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.dla .sup .sup-trk li.now{color:var(--navy)}
+.dla .sup .sup-trk li.now i{border-color:var(--navy);color:var(--navy);box-shadow:0 0 0 3px rgba(18,53,91,.12)}
+.dla .sup .sup-trk li.fail{color:var(--bad)}
+.dla .sup .sup-trk li.fail i{border-color:var(--bad);background:var(--bad);color:#fff}
+
+/* Detail body */
+.dla .sup .sup-det{display:grid;grid-template-columns:minmax(0,1fr);gap:var(--s-5);align-items:start}
+@media (min-width:1100px){ .dla .sup .sup-det{grid-template-columns:minmax(0,1fr) 320px} .dla .sup .sup-decide{position:sticky;top:var(--s-5)} }
+.dla .sup .sup-col{display:grid;gap:var(--s-5);min-width:0}
+.dla .sup .sup-decide{order:-1}
+@media (min-width:1100px){ .dla .sup .sup-decide{order:0} }
+.dla .sup .panel.pad h2{font-size:16px;line-height:24px;font-weight:700;color:var(--navy);margin-bottom:var(--s-3);display:flex;flex-wrap:wrap;align-items:center;gap:var(--s-2)}
+.dla .sup .sup-h-note{font-size:13px;font-weight:500}
+.dla .sup .sup-sc{border:1px solid var(--line);border-radius:var(--r-sm)}
+.dla .sup .sup-rate{display:inline-flex;border:1px solid #C4CDD8;border-radius:var(--r-sm);overflow:hidden}
+.dla .sup .sup-rate label{position:relative;cursor:pointer}
+.dla .sup .sup-rate label + label{border-left:1px solid #C4CDD8}
+.dla .sup .sup-rate input{position:absolute;opacity:0;width:1px;height:1px}
+.dla .sup .sup-rate span{display:grid;place-items:center;width:38px;height:34px;font-weight:600;color:var(--muted)}
+.dla .sup .sup-rate input:checked + span{background:var(--navy);color:#fff}
+.dla .sup .sup-rate input:focus-visible + span{outline:2px solid var(--leaf);outline-offset:-2px}
+.dla .sup .sup-total{display:flex;flex-wrap:wrap;align-items:baseline;gap:var(--s-3);margin-top:var(--s-3)}
+.dla .sup .sup-total > span:first-child{font-weight:600}
+.dla .sup .sup-total b{font-size:22px}
+.dla .sup .sup-override{display:flex;flex-wrap:wrap;gap:var(--s-3);align-items:flex-end;margin-top:var(--s-3);padding:var(--s-3);border:1px solid var(--line);border-radius:var(--r-sm);background:var(--surface)}
+.dla .sup .sup-override .fld:first-child{width:120px}
+.dla .sup .sup-docl{display:grid;gap:0;list-style:none}
+.dla .sup .sup-docl li{display:flex;flex-wrap:wrap;gap:var(--s-3);align-items:center;padding:var(--s-3) 0;border-top:1px solid var(--line)}
+.dla .sup .sup-docl li:first-child{border-top:0}
+.dla .sup .sup-doc-ic{display:grid;place-items:center;width:36px;height:36px;border-radius:var(--r-sm);background:var(--grey-50);color:var(--navy);flex:none}
+.dla .sup .sup-doc-ic.ok{background:var(--ok-50);color:var(--ok)}
+.dla .sup .sup-doc-ic .icon{width:18px;height:18px}
+.dla .sup .sup-dacts{display:flex;flex-wrap:wrap;gap:var(--s-2);align-items:center}
+.dla .sup .sup-date{width:160px;min-height:32px}
+.dla .sup .sup-ask{width:220px;min-height:32px}
+.dla .sup .sup-checks{display:grid;gap:var(--s-2);list-style:none}
+.dla .sup .sup-checks li{display:flex;gap:var(--s-3);align-items:flex-start}
+.dla .sup .sup-checks .ci{display:grid;place-items:center;width:24px;height:24px;border-radius:50%;flex:none}
+.dla .sup .sup-checks .ci .icon{width:14px;height:14px}
+.dla .sup .sup-checks li.ok .ci{background:var(--ok-50);color:var(--ok)}
+.dla .sup .sup-checks li.bad .ci{background:var(--bad-50);color:var(--bad)}
+.dla .sup .sup-chk2{display:grid;gap:var(--s-2);list-style:none;margin-top:var(--s-2)}
+.dla .sup .sup-chk2 li{display:flex;gap:var(--s-2);align-items:center;color:var(--muted)}
+.dla .sup .sup-chk2 li .icon{width:16px;height:16px}
+.dla .sup .sup-chk2 li.ok{color:var(--ok);font-weight:600}
+.dla .sup .sup-check{display:flex;gap:var(--s-2);align-items:center;margin-top:var(--s-3);font-weight:500;cursor:pointer}

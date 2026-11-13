@@ -1,0 +1,62 @@
+/* Review queue and audit log (scoped under .dla like admin.css). */
+
+.dla .stat.amber b{color:var(--warn)}
+.dla .stat.red b{color:var(--bad)}
+.dla .stat small{font-size:12px;color:var(--muted)}
+
+.dla .callout{display:flex;align-items:flex-start;gap:var(--s-2);padding:var(--s-3) var(--s-4);border-radius:var(--r-md);border:1px solid var(--line);background:#fff;font-size:14px;line-height:20px}
+.dla .callout .icon{width:18px;height:18px;flex:none;margin-top:1px}
+.dla .callout.bad{border-color:#F3B8B2;background:var(--bad-50);color:#7A271A}
+.dla .callout.bad .icon{color:var(--bad)}
+.dla .callout.warn{border-color:#F5D0A0;background:var(--warn-50);color:#7A3E06}
+.dla .callout.warn .icon{color:var(--warn)}
+.dla .callout.info{border-color:#B9D3F0;background:var(--info-50)}
+.dla .callout.info .icon{color:var(--info)}
+
+/* Queue rows */
+.dla .flags{display:flex;flex-wrap:wrap;gap:4px;white-space:normal;max-width:260px}
+.dla .sla-cell{min-width:150px;white-space:normal}
+.dla .sla-bar{height:4px;border-radius:2px;background:var(--grey-50);margin:6px 0 4px;overflow:hidden}
+.dla .sla-bar i{display:block;height:100%}
+.dla .over{color:var(--bad);font-weight:600}
+.dla .soon{color:var(--warn);font-weight:600}
+.dla .dn{color:var(--bad)}
+.dla .up{color:var(--ok)}
+.dla .bulk .warn-text{color:var(--warn);font-size:13px}
+
+/* Automatic checks */
+.dla .checks{list-style:none;margin:0;padding:0;display:grid;gap:var(--s-2)}
+.dla .checks li{display:flex;gap:var(--s-3);align-items:flex-start}
+.dla .checks .ci{display:grid;place-items:center;width:22px;height:22px;border-radius:50%;flex:none}
+.dla .checks .ci .icon{width:14px;height:14px}
+.dla .checks li.pass .ci{background:var(--ok-50);color:var(--ok)}
+.dla .checks li.warn .ci{background:var(--warn-50);color:var(--warn)}
+.dla .checks li.fail .ci{background:var(--bad-50);color:var(--bad)}
+.dla .checks b{display:block;font-weight:600}
+.dla .checks small{display:block;color:var(--muted);font-size:12px;line-height:16px}
+
+/* Decision form */
+.dla .choice-row{display:flex;flex-wrap:wrap;gap:var(--s-2)}
+.dla .choice-row .btn[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--navy)}
+.dla .chip{display:inline-flex;align-items:center;gap:6px;min-height:32px;padding:0 var(--s-3);border:1px solid #C4CDD8;border-radius:var(--r-pill);font-size:13px;cursor:pointer;background:#fff}
+.dla .chip:has(input:checked){border-color:var(--leaf);background:var(--mint-50);color:var(--navy);font-weight:600}
+.dla .chip input{accent-color:var(--leaf)}
+
+/* Price history */
+.dla .ph-list{list-style:none;margin:0;padding:0}
+.dla .ph-list li{display:flex;justify-content:space-between;gap:var(--s-3);padding:var(--s-2) 0;border-bottom:1px solid var(--line);font-size:13px}
+.dla .ph-list li:last-child{border-bottom:0}
+
+/* Audit log */
+.dla .filters .sel{min-width:0}
+.dla .check-inline{display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:500;white-space:nowrap}
+.dla td.wrap{white-space:normal;overflow-wrap:anywhere}
+.dla .ba{white-space:normal;min-width:180px;max-width:360px;overflow-wrap:anywhere}
+.dla .ba .before{color:var(--muted)}
+.dla .who{display:inline-flex;align-items:center;gap:4px;font-weight:600}
+.dla .who.system{color:var(--muted)}
+.dla .who.team{color:var(--navy)}
+.dla tr.alert-row td:first-child{box-shadow:inset 3px 0 0 var(--bad)}
+.dla tr.drow td{background:#F7F9FB;white-space:normal}
+.dla tr.drow .kv{grid-template-columns:140px minmax(0,1fr);font-size:13px}
+.dla tr.drow pre{margin:0;white-space:pre-wrap;overflow-wrap:anywhere;font-size:12px;background:#fff;border:1px solid var(--line);border-radius:var(--r-sm);padding:var(--s-2) var(--s-3);max-height:240px;overflow:auto}
