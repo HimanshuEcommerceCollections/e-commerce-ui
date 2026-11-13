@@ -27,7 +27,12 @@
 .dla .brandrow span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:var(--mint);border-radius:var(--r-pill);padding:2px 8px}
 .dla .snav{display:flex;gap:var(--s-1);overflow-x:auto;scrollbar-width:none}
 .dla .snav::-webkit-scrollbar{display:none}
-@media (min-width:1024px){.dla .snav{flex-direction:column;overflow:visible}}
+@media (min-width:1024px){
+  /* The sidebar is pinned at 100vh: on short windows the nav scrolls inside it
+     instead of spilling past the navy background, keeping the footer in view. */
+  .dla .snav{flex-direction:column;flex:1 1 auto;min-height:0;overflow-x:hidden;overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.2) transparent}
+  .dla .side>:not(.snav){flex:none}
+}
 .dla .snav button,.dla .snav a{flex:none;display:flex;align-items:center;gap:var(--s-3);min-height:40px;padding:0 var(--s-3);border-radius:var(--r-sm);font-weight:500;color:#C9D6E5;white-space:nowrap}
 .dla .snav button:hover,.dla .snav a:hover{background:rgba(255,255,255,.08);color:#fff}
 .dla .snav [aria-current="page"]{background:rgba(191,227,207,.16);color:#fff;font-weight:600}
