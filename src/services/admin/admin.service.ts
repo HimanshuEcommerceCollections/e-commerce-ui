@@ -95,6 +95,9 @@ const adminService = {
       { parentIds, status }
     ),
 
+  deleteProducts: (parentIds: string[]) =>
+    api.post<ApiResponse<{ products: number; variantsDeleted: number }>>("/api/admin/products/delete", { parentIds }),
+
   updateVariant: (id: string, data: AdminVariantUpdate) =>
     api.patch<ApiResponse<AdminInventoryRow>>(`/api/admin/variants/${id}`, data),
 

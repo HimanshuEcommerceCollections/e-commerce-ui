@@ -3,10 +3,12 @@ import { Fragment, useCallback, useEffect, useRef, useState, type ReactNode, typ
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import adminService from "@/services/admin/admin.service";
+import integrationService from "@/services/admin/integration.service";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
-import { ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
+import { ADMIN_INTEGRATIONS_EVENT, ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
+import type { IntegrationNavItem } from "@/types/api/integration.types";
 
 type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications";
 const COUNT_LABEL: Record<Count, string> = {
@@ -36,6 +38,7 @@ const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adm
   { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
   { href: "/admin/seller-applications", label: "Seller applications", icon: "store", count: "applications", adminOnly: true },
   { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
+  { href: "/admin/integrations", label: "API integrations", icon: "gear", adminOnly: true, group: "Integrations" },
 ];
 const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0 };
 const ADMIN_ONLY = [...NAV.filter((n) => n.adminOnly).flatMap((n) => [n.href, ...(n.also ?? [])]), "/admin/settings"];
@@ -74,6 +77,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   const { logout } = useAuth();
   const { ready, isStaff, isAdmin, user, role } = useAdminSession();
   const [counts, setCounts] = useState<Record<Count, number>>(NO_COUNTS);
+  const [vendorTabs, setVendorTabs] = useState<IntegrationNavItem[]>([]);
   const blocked = isStaff && !isAdmin && ADMIN_ONLY.some((h) => pathname.startsWith(h));
   const rootRef = useRef<HTMLDivElement>(null);
   useCellLabels(rootRef);
@@ -120,6 +124,19 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
     return () => window.removeEventListener(ADMIN_REFRESH_EVENT, loadCounts);
   }, [isStaff, loadCounts]);
 
+  // One sidebar tab per enabled API integration (Settings › API integrations).
+  useEffect(() => {
+    if (!isStaff) return;
+    const load = () =>
+      integrationService
+        .nav()
+        .then((r) => setVendorTabs(r.data.data ?? []))
+        .catch(() => setVendorTabs([]));
+    load();
+    window.addEventListener(ADMIN_INTEGRATIONS_EVENT, load);
+    return () => window.removeEventListener(ADMIN_INTEGRATIONS_EVENT, load);
+  }, [isStaff]);
+
   if (!isStaff || !user) return <div className="dla" ref={rootRef} />;
 
   const signOut = () => {
@@ -151,7 +168,18 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
             <div className="side-top">{menu("top")}</div>
           </div>
           <nav className="snav">
-            {NAV.filter((item) => isAdmin || !item.adminOnly).map((item) => {
+            {[
+              ...NAV.filter((item) => isAdmin || !item.adminOnly),
+              ...vendorTabs.map((v, i) => ({
+                href: `/admin/vendors/${v.slug}`,
+                label: v.name,
+                icon: "truck",
+                count: undefined as Count | undefined,
+                also: undefined,
+                // Catalog staff don't see "API integrations", so the first tab opens the group.
+                group: !isAdmin && i === 0 ? "Integrations" : undefined,
+              })),
+            ].map((item) => {
               const n = item.count ? counts[item.count] : 0;
               return (
                 <Fragment key={item.href}>

@@ -143,6 +143,25 @@ export default function AdminProductsPage() {
     }
   };
 
+  const removeSelected = async () => {
+    const n = selected.size;
+    const what = `${n} product${n === 1 ? "" : "s"}`;
+    if (!window.confirm(`Delete ${what} and all their SKUs? They're removed from the catalog, inventory, carts and saved lists. Past orders keep their details. This can't be undone.`)) return;
+    setBusy(true);
+    try {
+      const res = await adminService.deleteProducts(Array.from(selected));
+      const d = res.data.data!.products;
+      toast(`${d} product${d === 1 ? "" : "s"} deleted`);
+      setSelected(new Set());
+      await load();
+      refreshAdminCounts();
+    } catch (err) {
+      toast(getApiErrorMessage(err, "Couldn't delete the products"), true);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <section aria-labelledby="h-products">
       <div className="page-head">
@@ -218,6 +237,7 @@ export default function AdminProductsPage() {
           <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => bulk("ACTIVE")}>Publish</button>
           <button className="btn btn-secondary btn-sm" disabled={busy} onClick={() => bulk("INACTIVE")}>Unpublish</button>
           <button className="btn btn-secondary btn-sm" onClick={() => setSelected(new Set())}>Clear</button>
+          <button className="btn btn-danger btn-sm" disabled={busy} onClick={removeSelected}>Delete</button>
         </div>
         <div className="twrap">
           <table>
