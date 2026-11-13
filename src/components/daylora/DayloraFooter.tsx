@@ -1,6 +1,7 @@
 import React from "react";
 import Link from "next/link";
 import { BRAND_NAME } from "./dayloraData";
+import { BrandMark } from "./BrandMark";
 import { FALLBACK_DEPARTMENTS, catalogHref } from "./shop/departments";
 
 const HELP = [
@@ -55,6 +56,7 @@ export function DayloraFooter() {
         <div className="foot-grid">
           <div className="foot-brand">
             <Link href="/" className="logo">
+              <BrandMark />
               <span>{BRAND_NAME}</span>
             </Link>
             <p>One store for everyday needs: clothing, electronics, home, grocery, beauty and more.</p>

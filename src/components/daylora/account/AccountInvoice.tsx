@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 import { DayloraIcon } from "../DayloraIcons";
+import { BrandMark } from "../BrandMark";
 import orderService from "@/services/order.service";
 import { useAuthStore } from "@/store/useAuthStore";
 import { useStoreConfig } from "@/hooks/useStoreConfig";
@@ -52,7 +53,10 @@ export function InvoiceView({ orderRef, onLoaded }: { orderRef: string; onLoaded
       <article className="inv" aria-label={`Invoice for order ${order.orderNumber}`}>
         <div className="inv-top">
           <div>
-            <p className="inv-brand">{config?.storeName ?? "Ecommerce Collections"}</p>
+            <p className="inv-brand">
+              <BrandMark />
+              {config?.storeName ?? "Ecommerce Collections"}
+            </p>
             <small>Sold and shipped by {config?.storeName ?? "Ecommerce Collections"}</small>
           </div>
           <dl className="inv-meta">

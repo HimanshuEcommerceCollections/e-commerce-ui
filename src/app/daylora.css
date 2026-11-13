@@ -91,8 +91,12 @@ ul{list-style:none}
 .icon-btn{position:relative;display:inline-flex;align-items:center;justify-content:center;gap:var(--s-2);min-width:44px;height:44px;border-radius:var(--r-pill);padding:0 var(--s-2)}
 .icon-btn:hover{background:rgba(255,255,255,.1)}
 .logo{display:inline-flex;align-items:center;gap:var(--s-2);font-size:20px;line-height:28px;font-weight:700;letter-spacing:-.3px;white-space:nowrap;margin-right:auto}
-.logo-mark{width:32px;height:32px;border-radius:var(--r-sm);background:var(--mint);color:var(--navy);display:grid;place-items:center}
-.logo-mark svg{width:20px;height:20px}
+/* Brand logo (BrandMark): the navy/green mark on a white tile so it reads on the navy header too. */
+/* Same 32px slot as the design's .logo-mark tile; the image gets a fixed pixel
+   height (a % height inside an auto-sized box falls back to its natural 141px). */
+.logo-mark{--logo-h:32px;flex:none;display:inline-flex;align-items:center;justify-content:center;box-sizing:border-box;height:var(--logo-h);padding:0 5px;border-radius:var(--r-sm);background:#fff;overflow:hidden}
+.logo-mark img{display:block;height:calc(var(--logo-h) - 6px);width:auto;max-width:none}
+@media (max-width:767px){ header .logo-mark{--logo-h:28px;padding:0 4px} }
 @media (max-width:767px){ header .logo{font-size:clamp(13px,4vw,20px);letter-spacing:-.2px;min-width:0;overflow:hidden} header .logo span{overflow:hidden;text-overflow:ellipsis} }
 @media (max-width:379px){ header a.icon-btn[data-account]{display:none} }
 .search{display:flex;align-items:center;height:44px;background:#fff;border-radius:var(--r-pill);padding:0 var(--s-1) 0 var(--s-4);border:2px solid transparent}

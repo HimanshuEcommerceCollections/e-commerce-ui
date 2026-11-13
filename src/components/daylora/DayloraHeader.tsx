@@ -7,6 +7,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { DayloraIcon } from "./DayloraIcons";
 import { BRAND_NAME } from "./dayloraData";
 import { DayloraSearch } from "./DayloraSearch";
+import { BrandMark } from "./BrandMark";
 import { catalogHref, useDepartments, type Department } from "./shop/departments";
 
 /** "Shop by" column of the mega menu, per department (design TAX.shopBy; Clothing adds the denim shop). */
@@ -148,6 +149,7 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
             </button>
 
             <Link href="/" className="logo" aria-label={`${BRAND_NAME} home`}>
+              <BrandMark />
               <span>{BRAND_NAME}</span>
             </Link>
 

@@ -5,6 +5,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { getApiErrorMessage } from "@/lib/apiError";
 import { Icon, usePageTitle } from "@/components/admin/ui";
 import { PANEL_ROLES, useAdminSession } from "@/components/admin/useAdminSession";
+import { BrandMark } from "@/components/daylora/BrandMark";
 
 export default function AdminLoginPage() {
   usePageTitle("Sign in");
@@ -49,6 +50,7 @@ export default function AdminLoginPage() {
     <div className="dla login-page">
       <main className="login-card">
         <div className="login-brand">
+          <BrandMark />
           <b>Ecommerce Collections</b>
           <span>Admin</span>
         </div>

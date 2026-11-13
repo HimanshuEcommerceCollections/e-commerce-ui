@@ -7,6 +7,7 @@ import integrationService from "@/services/admin/integration.service";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
+import { BrandMark } from "@/components/daylora/BrandMark";
 import { ADMIN_INTEGRATIONS_EVENT, ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
 import type { IntegrationNavItem } from "@/types/api/integration.types";
 
@@ -163,8 +164,11 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       <div className="app">
         <aside className="side" aria-label="Admin navigation">
           <div className="brandrow">
-            <b>Ecommerce Collections</b>
-            <span>Admin</span>
+            <BrandMark />
+            <div className="brandname">
+              <b>Ecommerce Collections</b>
+              <span>Admin</span>
+            </div>
             <div className="side-top">{menu("top")}</div>
           </div>
           <nav className="snav">

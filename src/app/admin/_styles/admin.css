@@ -25,6 +25,14 @@
 .dla .brandrow{display:flex;align-items:center;justify-content:space-between;padding:0 var(--s-2) var(--s-3)}
 .dla .brandrow b{font-size:20px;line-height:28px;font-weight:700;color:#fff;letter-spacing:-.3px}
 .dla .brandrow span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--navy);background:var(--mint);border-radius:var(--r-pill);padding:2px 8px}
+/* The logo tile is a span too: undo the "Admin" pill styles above for it. */
+.dla .brandrow{gap:var(--s-2)}
+/* The 240px sidebar can't fit logo + name + pill in one row: name and pill stack beside the logo. */
+.dla .brandrow .brandname{display:flex;flex-direction:column;align-items:flex-start;gap:4px;min-width:0;margin-right:auto}
+.dla .brandrow .brandname b{font-size:18px;line-height:22px;margin-right:0}
+.dla .brandrow .logo-mark{align-self:flex-start;margin-top:2px}
+.dla .brandrow .logo-mark,.dla .login-brand .logo-mark{--logo-h:32px;height:var(--logo-h);padding:0 5px;background:#fff;border-radius:var(--r-sm);letter-spacing:0;text-transform:none}
+.dla .login-brand .logo-mark{box-shadow:0 0 0 1px var(--line, #e3e8ef)}
 .dla .snav{display:flex;gap:var(--s-1);overflow-x:auto;scrollbar-width:none}
 .dla .snav::-webkit-scrollbar{display:none}
 @media (min-width:1024px){
