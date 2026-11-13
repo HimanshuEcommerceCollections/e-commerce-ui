@@ -21,6 +21,7 @@ const ACCOUNT = [
 const COMPANY = [
   { t: "About us", href: "/about" },
   { t: `Sell on ${BRAND_NAME}`, href: "/sell" },
+  { t: "Seller sign in", href: "/merchant/login" },
   { t: "Careers", href: "/about#careers" },
   { t: "Press", href: "/about#press" },
 ];

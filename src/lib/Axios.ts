@@ -33,6 +33,11 @@ api.interceptors.response.use(
       const { pathname, search, hash } = window.location;
       if (pathname.startsWith("/admin")) {
         if (pathname !== "/admin/login") window.location.replace("/admin/login");
+      } else if (pathname.startsWith("/merchant")) {
+        // The Seller Portal has its own sign-in page too.
+        if (pathname !== "/merchant/login") {
+          window.location.replace(`/merchant/login?next=${encodeURIComponent(pathname + search + hash)}`);
+        }
       } else if (pathname !== "/login") {
         window.location.replace(`/login?next=${encodeURIComponent(pathname + search + hash)}`);
       }

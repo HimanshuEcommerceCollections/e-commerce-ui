@@ -1,16 +1,18 @@
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import Navbar from "@/components/home/Navbar";
+import { SellerGate } from "@/components/seller/SellerGate";
+import "../seller-portal.css";
 
+export const metadata: Metadata = {
+  title: { default: "Seller Portal", template: "%s · Seller Portal" },
+  robots: { index: false, follow: false },
+};
+
+/** The seller portal: its own shell, outside the storefront's header and footer. */
 export default function MerchantLayout({ children }: { children: ReactNode }) {
   return (
-    <div className="flex min-h-screen flex-col">
-      <Navbar />
-      <div className="flex flex-1">
-        <aside className="w-60 border-r border-border bg-slate-50 p-4">
-          <p className="text-sm font-semibold text-slate-500">Merchant Dashboard</p>
-        </aside>
-        <main className="flex-1 p-8">{children}</main>
-      </div>
+    <div className="sp">
+      <SellerGate>{children}</SellerGate>
     </div>
   );
 }
