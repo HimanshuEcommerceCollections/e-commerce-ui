@@ -1,0 +1,236 @@
+/* =====================================================================
+   HOMEPAGE v2 REFINEMENT LAYER (designs/01-homepage_1_2) — overrides only,
+   on top of daylora.css + daylora-home.css. White header with the
+   full-colour logo, calmer cards, tighter mobile rhythm, responsive rails,
+   payment marks in the footer. Also the one header height every sticky
+   element offsets from (--header-h).
+   ===================================================================== */
+:root{
+  --shadow-2:0 8px 24px rgba(18,53,91,.10);
+  --ring:0 0 0 3px rgba(22,121,76,.18);
+  /* Sticky header height: row 60 + mobile search 44 + 12 gap + 1 border (mobile/tablet);
+     row 76 + nav 48 + 3 borders (desktop). */
+  --header-h:117px;
+}
+@media (min-width:1024px){ :root{ --header-h:127px } }
+html{scroll-padding-top:calc(var(--header-h) + var(--s-4))}
+img{max-width:100%}
+html,body{overflow-x:clip}
+
+/* ---- Logo: full-colour mark, proportions locked ---- */
+.logo{gap:10px;min-width:0}
+.logo-mark.logo-mark-full{height:44px;width:auto;padding:0;background:none;border-radius:0;overflow:visible}
+.logo-mark.logo-mark-full img{height:100%;width:auto;max-width:none;display:block}
+.logo-word{font-size:19px;line-height:24px;font-weight:700;letter-spacing:-.2px;white-space:nowrap}
+
+/* ---- Header: white, logo only ---- */
+.header{background:#fff;color:var(--ink);border-bottom:1px solid var(--line)}
+.header-row{gap:var(--s-1);height:60px}
+.header .icon-btn{color:var(--navy);transition:background .15s}
+.header .icon-btn:hover{background:var(--surface)}
+.header .label-desktop{color:var(--ink)}
+.cart-count{top:3px;right:2px;min-width:18px;height:18px;line-height:18px;font-size:11px;background:var(--leaf);color:#fff;box-shadow:0 0 0 2px #fff}
+.header .logo-solo{gap:0;flex:none;padding:4px 0;margin-left:-2px;overflow:visible;color:var(--navy)}
+.header .logo-solo .logo-mark-full{height:44px}
+.search{height:46px;background:var(--surface);border:1px solid #DCE4EC;transition:box-shadow .15s,border-color .15s,background .15s}
+.search:focus-within{background:#fff;border-color:var(--leaf);box-shadow:var(--ring)}
+.search button{width:38px;height:38px;transition:background .15s}
+.search-mobile{height:44px;margin-bottom:var(--s-3);padding-bottom:0}
+.nav{border-top:1px solid var(--line)}
+.nav ul{gap:var(--s-2)}
+.nav a{transition:color .15s,border-color .15s}
+.nav .all{transition:color .15s}.nav .all:hover{color:var(--leaf)}
+.dept-menu{box-shadow:var(--shadow-2);border-radius:0 0 var(--r-lg) var(--r-lg)}
+@media (max-width:379px){ .header .logo-solo .logo-mark-full{height:40px} }
+@media (min-width:768px) and (max-width:1023px){ .header .logo-solo .logo-mark-full{height:50px} }
+@media (min-width:1024px){
+  .header-row{height:76px;gap:var(--s-5)}
+  .header .logo-solo{margin-right:var(--s-3)}
+  .header .logo-solo .logo-mark-full{height:58px}
+  .header .icon-btn{padding:0 var(--s-3)}
+  .header-row>.icon-btn:last-child{margin-left:calc(var(--s-4) * -1)}
+  .header-row a[aria-label^="Cart"] .cart-count{position:static;margin-left:-2px;box-shadow:none}
+  .search-desktop{margin:0 auto 0 var(--s-6);max-width:680px}
+}
+
+/* ---- Mobile drawer ---- */
+.drawer{width:min(340px,88vw);box-shadow:0 0 40px rgba(12,24,40,.25)}
+.drawer-head{height:60px;padding:0 var(--s-2) 0 var(--s-4)}
+.drawer-head a{font-size:15px}
+.drawer-body{padding-top:0}
+.drawer h3{padding:var(--s-5) var(--s-4) var(--s-2);font-size:11px}
+.drawer-body a,.dr-sub{min-height:50px;font-size:15px}
+.drawer-body>div>a,.drawer-body>a,.dr-sub{border-bottom:1px solid #F1F3F6}
+.dr-panel{border-bottom:1px solid #F1F3F6}
+
+/* ---- Buttons ---- */
+.btn{min-height:50px;padding:0 var(--s-6);transition:background .15s,border-color .15s,box-shadow .15s,transform .15s}
+.btn-primary:hover{box-shadow:0 6px 16px rgba(22,121,76,.25)}
+.btn-primary:active,.add:active{transform:translateY(1px)}
+.btn .icon{width:18px;height:18px}
+
+/* ---- Hero ---- */
+.hero{padding-top:var(--s-5)}
+.hero-wrap{padding:var(--s-6) var(--s-5);gap:var(--s-6);border:1px solid #E6EDF4}
+.hero-copy .t-eyebrow{font-size:11.5px}
+.hero-copy h1{margin:var(--s-4) 0}
+.hero-copy > p{font-size:17px;line-height:26px;max-width:40ch}
+.hero-ctas{margin-top:var(--s-6)}
+.tile{border-radius:var(--r-md)}
+.tile strong{font-size:17px;letter-spacing:-.1px}
+.tile .pill{letter-spacing:.01em}
+.tag{padding-right:var(--s-5)}
+@media (max-width:767px){
+  .hero{padding-top:var(--s-3)}
+  .hero-wrap{padding:var(--s-6) var(--s-4) var(--s-4);border-radius:var(--r-lg)}
+  .hero-copy h1{font-size:clamp(28px,8.4vw,34px);line-height:1.18;letter-spacing:-.6px;margin:var(--s-3) 0}
+  .hero-copy > p{font-size:16px;line-height:24px}
+  .hero-ctas{margin-top:var(--s-5)}
+  .hero-ctas .btn{width:100%}
+  .tile-main{min-height:clamp(220px,62vw,300px)}
+  .tile{min-height:168px;padding:var(--s-4)}
+  .tile strong{font-size:16px}
+  .tag{left:var(--s-3);bottom:var(--s-3);max-width:calc(100% - 24px)}
+}
+/* Narrow phones: promo tiles go full width so their copy never sits on the product */
+@media (max-width:479px){
+  .bento{grid-template-columns:1fr;gap:var(--s-3)}
+  .tile-promo{min-height:150px}
+  .tile-deals::after,.tile-new::after{background:linear-gradient(90deg,rgba(255,255,255,.95) 38%,rgba(255,255,255,0) 72%)}
+  .tile-promo .media-img{left:30%;width:70%}
+  .tile-new,.tile-deals{justify-content:center}
+}
+@media (min-width:768px) and (max-width:1023px){
+  .hero-wrap{padding:var(--s-7) var(--s-6)}
+  .hero-copy > p{max-width:52ch}
+}
+@media (min-width:1024px){
+  .hero-wrap{padding:var(--s-7) var(--s-7) var(--s-7) 64px;min-height:500px;gap:var(--s-6)}
+  .hero-copy{padding-right:var(--s-5)}
+  .bento{min-height:420px;gap:var(--s-4)}
+}
+@media (min-width:1440px){ .hero-copy h1{font-size:54px;line-height:60px} }
+
+/* ---- Section rhythm ---- */
+.section-head{gap:var(--s-4);align-items:flex-end}
+.section-head > div{min-width:0}
+.section-head .link{flex:none}
+.section-head p{font-size:15px;line-height:22px}
+.t-h2{letter-spacing:-.3px}
+@media (min-width:1024px){ .t-h2{font-size:26px;line-height:34px} }
+@media (max-width:767px){
+  .section-head{margin-bottom:var(--s-4)}
+  .section-head p{font-size:14px;line-height:20px}
+  .link{min-height:40px}
+}
+
+/* ---- Shop by department ---- */
+.cat{gap:var(--s-3);transition:color .15s}
+.cat:hover{color:var(--leaf)}
+.cat-img{border:1px solid #E3EAF1;transition:background .2s,border-color .2s,transform .2s}
+.cat:hover .cat-img{border-color:var(--mint)}
+@media (min-width:480px) and (max-width:767px){ .cat-grid{grid-template-columns:repeat(4,1fr)} }
+@media (max-width:359px){ .cat-img{width:64px} .cat{font-size:12px;line-height:16px} }
+
+/* ---- Product cards: one calm button style everywhere except deals ---- */
+.card{border-color:#E8ECF1}
+.card:hover{border-color:#D3DAE3;box-shadow:var(--shadow-2)}
+.card-media{border-bottom:1px solid #F0F2F5}
+.brand{font-size:11.5px;letter-spacing:.06em}
+.price{letter-spacing:-.2px}
+.add{min-height:44px;background:transparent;border:1.5px solid var(--navy);color:var(--navy);transition:background .15s,color .15s,border-color .15s}
+.add:hover{background:var(--navy);color:#fff}
+.add.added{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.add:disabled{border-color:transparent}
+.feat .card-media{border-bottom:0}
+.feat .name{min-height:44px}
+.feat .add{min-height:44px}
+.feat .add.added{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.deals .add{background:var(--leaf);border-color:var(--leaf);color:#fff}
+.deals .add:hover{background:var(--leaf-700);border-color:var(--leaf-700)}
+.deals .add.added{background:var(--navy);border-color:var(--navy)}
+.deals .add:disabled{background:var(--disabled-bg);border-color:transparent;color:var(--disabled-fg)}
+@media (max-width:767px){
+  .card-body{padding:var(--s-3)}
+  .price{font-size:16px}
+  .add{font-size:14px}
+}
+/* Rails: fewer, wider cards on phones so names and prices breathe */
+@media (max-width:479px){ .rail{grid-auto-columns:calc((100% - var(--gutter)) / 1.65)} .rev-grid{grid-auto-columns:calc(100% - 40px)} }
+@media (min-width:480px) and (max-width:767px){ .rail{grid-auto-columns:calc((100% - var(--gutter)) / 2.3)} }
+@media (min-width:768px) and (max-width:1023px){ .rail.feat{grid-auto-columns:calc((100% - var(--gutter) * 2) / 3)} }
+@media (min-width:1024px) and (max-width:1279px){
+  .rail:not(.feat):not(.rev-grid){grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--s-5) var(--gutter)}
+  .rail.feat{gap:var(--s-6) var(--s-5)}
+}
+@media (min-width:1280px){ .rail:not(.feat):not(.rev-grid){grid-template-columns:repeat(6,minmax(0,1fr))} }
+
+/* ---- Deals band ---- */
+.deals .section-head{flex-wrap:wrap}
+.deal{border:1px solid rgba(181,71,8,.08)}
+.d-price{flex-wrap:wrap;column-gap:var(--s-2);row-gap:0}
+.d-badge{font-size:13px;font-weight:700}
+@media (max-width:599px){
+  .deal{grid-template-columns:116px minmax(0,1fr)}
+  .d-media{min-height:0}
+  .d-body{padding:var(--s-3) var(--s-4) var(--s-4);gap:4px}
+  .d-body .name{font-size:15px;line-height:20px}
+  .d-price .price{font-size:20px;line-height:26px}
+  .d-badge{left:var(--s-2);top:var(--s-2);padding:2px 8px;font-size:12px}
+  .deal-end{padding:6px 6px 6px 12px;gap:var(--s-2)}
+  .deal-end b{font-size:14px;padding:4px 10px}
+  .d-body .add{min-height:42px}
+}
+.deals-all{margin-top:var(--s-6)}
+
+/* ---- Reviews ---- */
+.rev{transition:box-shadow .15s,border-color .15s}
+.rev:hover{border-color:#D3DAE3;box-shadow:var(--shadow-2)}
+@media (max-width:767px){ .rev{padding:var(--s-4)} .rev q{font-size:15px;line-height:23px} }
+
+/* ---- Trust ---- */
+.trust-ic{box-shadow:none;border:1px solid #E3EAF1}
+@media (max-width:767px){ .trust-grid{gap:var(--s-4)} .trust-item > div{padding-top:var(--s-1)} }
+
+/* ---- Footer ---- */
+footer{padding-top:64px}
+footer h2{letter-spacing:.01em}
+footer li a{min-height:36px;transition:color .15s}
+.foot-brand .logo{color:#fff;gap:12px;margin-bottom:var(--s-4);max-width:100%}
+.foot-brand .logo-mark.logo-mark-full{height:56px;background:#fff;border-radius:var(--r-md);padding:6px 10px;box-sizing:border-box}
+.foot-brand .logo-word{color:#fff;font-size:20px;white-space:normal}
+@media (max-width:767px){
+  footer{padding:var(--s-7) 0 var(--s-6)}
+  .foot-grid{gap:var(--s-6) var(--s-5)}
+  footer li a{min-height:40px}
+  .foot-bottom{margin-top:var(--s-6)}
+  .legal{gap:var(--s-1) var(--s-4)}
+  .legal a{display:inline-flex;align-items:center;min-height:32px}
+  .foot-brand .logo-word{font-size:18px}
+}
+@media (max-width:379px){ .foot-brand .logo-word{font-size:16px} .foot-brand .logo-mark.logo-mark-full{height:50px} }
+
+/* ---- Footer payment marks (icon only, one row, shared baseline) ---- */
+.pay{gap:14px;align-items:center}
+.pay span{height:auto;padding:0;border:0;border-radius:0;display:flex;align-items:center}
+.pay .pm{display:block;height:30px;width:auto;fill:#fff;opacity:.88;transition:opacity .15s}
+.pay .pm:hover{opacity:1}
+@media (max-width:767px){ .pay{gap:12px} .pay .pm{height:28px} }
+@media (max-width:359px){ .pay{gap:10px} .pay .pm{height:26px} }
+
+/* =====================================================================
+   SITE-WIDE ALIGNMENT: sticky elements sit under the (taller, white)
+   header instead of behind it.
+   ===================================================================== */
+.bar,.plp .bar{top:var(--header-h)}
+@media (min-width:1024px){
+  .plp .fbar{top:var(--header-h)}
+  .pdp .buy{top:calc(var(--header-h) + var(--s-4))}
+  .cx .acct-nav{top:calc(var(--header-h) + var(--s-4))}
+  .help .hnav{top:calc(var(--header-h) + var(--s-4))}
+  .sell-page .sell-form-wrap{top:calc(var(--header-h) + var(--s-4))}
+  .cart-page .summary{top:calc(var(--header-h) + var(--s-5))}
+}
+.info-sec,.help .faq,.sell-page .form-card{scroll-margin-top:calc(var(--header-h) + var(--s-4))}
+.help .field input,.help .field select,.help .field textarea,
+.sell-page .input,.sell-page .summary,.sell-page .consent input{scroll-margin-top:calc(var(--header-h) + var(--s-6))}

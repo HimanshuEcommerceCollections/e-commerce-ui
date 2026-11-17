@@ -13,6 +13,7 @@ import "./daylora-sell.css";
 import "./daylora-cart.css";
 import "./daylora-checkout.css";
 import "./daylora-customer.css";
+import "./daylora-refine.css";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 

@@ -148,9 +148,8 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
               <DayloraIcon name="menu" />
             </button>
 
-            <Link href="/" className="logo" aria-label={`${BRAND_NAME} home`}>
-              <BrandMark />
-              <span>{BRAND_NAME}</span>
+            <Link href="/" className="logo logo-solo" aria-label={`${BRAND_NAME} home`}>
+              <BrandMark full />
             </Link>
 
             <DayloraSearch id="q1" className="search-desktop" placeholder="Search products, brands and categories" />
@@ -174,7 +173,7 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
             </Link>
           </div>
 
-          <DayloraSearch id="q2" className="search-mobile" placeholder="Search products and brands" />
+          <DayloraSearch id="q2" className="search-mobile" placeholder="Search products, brands…" />
         </div>
 
         {/* NAVIGATION (desktop) */}

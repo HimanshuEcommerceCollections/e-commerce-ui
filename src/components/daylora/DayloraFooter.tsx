@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { BRAND_NAME } from "./dayloraData";
 import { BrandMark } from "./BrandMark";
+import { PAYMENT_ICONS } from "./paymentIcons";
 import { FALLBACK_DEPARTMENTS, catalogHref } from "./shop/departments";
 
 const HELP = [
@@ -26,8 +27,6 @@ const COMPANY = [
   { t: "Press", href: "/about#press" },
 ];
 
-/** Card brands and wallets the Stripe Payment Element accepts (NFR-07: we never see the card). */
-const PAYMENT_METHODS = ["Visa", "Mastercard", "Amex", "Discover", "Apple Pay", "Google Pay"];
 
 function Column({ title, links }: { title: string; links: { t: string; href: string }[] }) {
   return (
@@ -56,9 +55,9 @@ export function DayloraFooter() {
       <div className="daylora-container">
         <div className="foot-grid">
           <div className="foot-brand">
-            <Link href="/" className="logo">
-              <BrandMark />
-              <span>{BRAND_NAME}</span>
+            <Link href="/" className="logo" aria-label={`${BRAND_NAME} home`}>
+              <BrandMark full />
+              <span className="logo-word">{BRAND_NAME}</span>
             </Link>
             <p>One store for everyday needs: clothing, electronics, home, grocery, beauty and more.</p>
           </div>
@@ -80,9 +79,14 @@ export function DayloraFooter() {
               <Link href="/help?t=privacy#dns">Do not sell or share my personal information</Link>
             </div>
           </div>
-          <div className="pay" aria-label="Accepted payment methods">
-            {PAYMENT_METHODS.map((m) => (
-              <span key={m}>{m}</span>
+          <div className="pay" role="list" aria-label="Accepted payment methods">
+            {PAYMENT_ICONS.map((m) => (
+              <span key={m.label} role="listitem">
+                <svg className="pm" viewBox={m.viewBox} role="img" aria-label={m.label}>
+                  <title>{m.label}</title>
+                  <path d={m.d} />
+                </svg>
+              </span>
             ))}
           </div>
         </div>
