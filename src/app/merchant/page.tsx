@@ -4,6 +4,7 @@ import { useMemo, useState, type ReactNode } from "react";
 import { documentTasks, DocumentsPanel } from "@/components/seller/DocumentsPanel";
 import { describeActivity } from "@/components/seller/SellerShell";
 import { StockDialog } from "@/components/seller/StockDialog";
+import { dateOf, shipDue, ticketHref, usd } from "@/components/seller/orders";
 import {
   Ico,
   LoadError,
@@ -51,7 +52,8 @@ export default function SellerDashboardPage() {
   const catalog = useLoad(() => sellerService.catalog());
   const activity = useLoad(() => sellerService.activity(6));
   const prices = useLoad(() => sellerService.priceChanges());
-  const earnings = useLoad(() => sellerService.earnings(1));
+  const overview = useLoad(() => sellerService.ordersOverview());
+  const payouts = useLoad(() => sellerService.payouts());
   const documents = useLoad(() => sellerService.documents());
   const [stockFor, setStockFor] = useState<{ product: SellerProduct; sku?: string } | null>(null);
 
@@ -160,6 +162,44 @@ export default function SellerDashboardPage() {
         ),
       });
     }
+    for (const o of overview.data?.toShip ?? []) {
+      const [level, text] = shipDue(o);
+      if (!level || !o.ownsAll) continue;
+      const href = `/merchant/orders/${encodeURIComponent(o.orderNumber)}`;
+      t.push({
+        id: `ship-${o.orderNumber}`,
+        level,
+        title: (
+          <>
+            Ship order <b>{o.orderNumber}</b>
+            {level === "bad" ? " (late)" : ""}
+          </>
+        ),
+        detail: `${text} · ${o.items.map((i) => `${i.productName.split(",")[0]} × ${i.quantity}`).join(", ")}`,
+        action: (
+          <Link className="sp-btn sp-btn-pri sp-btn-sm" href={href}>
+            Ship now
+          </Link>
+        ),
+      });
+    }
+    for (const o of overview.data?.returnsRequested ?? []) {
+      t.push({
+        id: `ret-${o.orderNumber}`,
+        level: "warn",
+        title: (
+          <>
+            Return requested on <b>{o.orderNumber}</b>
+          </>
+        ),
+        detail: o.returnReason ?? "",
+        action: (
+          <Link className="sp-btn sp-btn-sec sp-btn-sm" href={`/merchant/orders/${encodeURIComponent(o.orderNumber)}`}>
+            Review return
+          </Link>
+        ),
+      });
+    }
     for (const d of documentTasks(documents.data ?? [])) {
       t.push({
         id: `doc-${d.doc.id}`,
@@ -175,7 +215,7 @@ export default function SellerDashboardPage() {
     }
     const order = { bad: 0, warn: 1, info: 2 };
     return t.sort((a, b) => order[a.level] - order[b.level]);
-  }, [products, live, prices.data, documents.data]);
+  }, [products, live, prices.data, documents.data, overview.data]);
 
   const hour = new Date().getHours();
   const hi = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -183,7 +223,8 @@ export default function SellerDashboardPage() {
   const pending = (prices.data ?? []).filter((c) => OPEN_SUBMISSION_STATUSES.includes(c.status));
   const recent = (prices.data ?? []).filter((c) => c.status === "APPROVED" || c.status === "REJECTED").slice(0, 3);
   const inReview = count("SUBMITTED") + count("IN_REVIEW") + count("CHANGE_PENDING");
-  const e = earnings.data;
+  const ov = overview.data;
+  const po = payouts.data;
 
   return (
     <>
@@ -466,39 +507,58 @@ export default function SellerDashboardPage() {
             <section className="sp-card" aria-labelledby="orH">
               <div className="sp-ch">
                 <h2 id="orH">Orders and payouts</h2>
-                <Pill tone="off">Payout schedule coming soon</Pill>
+                <Link className="sp-lnk" href="/merchant/orders">
+                  All orders <Ico name="right" />
+                </Link>
               </div>
-              {e ? (
+              {ov && po ? (
                 <>
                   <p className="sp-cd">
-                    Sales of your products this month. Payout dates and statements aren&apos;t available yet.
+                    Next payout <b style={{ color: "var(--leaf-700)" }}>{usd(po.next.amount)}</b> on{" "}
+                    {dateOf(po.next.scheduledFor, { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })}.{" "}
+                    <Link className="sp-lnk" href="/merchant/orders/earnings">
+                      Earnings
+                    </Link>
                   </p>
-                  <div className="sp-earn">
-                    <div>
-                      <span>Gross sales</span>
-                      <b>{money(e.totals.gross)}</b>
-                    </div>
-                    <div>
-                      <span>Refunds</span>
-                      <b>{money(e.totals.refunds)}</b>
-                    </div>
-                    <div>
-                      <span>Net</span>
-                      <b>{money(e.totals.net)}</b>
-                    </div>
-                  </div>
-                  <p style={{ marginTop: 12, display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap", fontSize: 14 }}>
-                    <span>
-                      <b>{e.openOrders}</b> paid order{e.openOrders === 1 ? "" : "s"} not shipped yet
-                    </span>
-                    <Link className="sp-lnk" href="/merchant/orders">
-                      Orders and earnings <Ico name="right" />
+                  <ul className="sp-health">
+                    <li>
+                      <span className={`sp-hb ${ov.stats.late ? "sp-bad" : ov.counts.new ? "sp-warn" : "sp-ok"}`}>{ov.counts.new}</span>
+                      <span>
+                        <b>
+                          <Link href="/merchant/orders?tab=new" style={{ color: "inherit" }}>
+                            To ship
+                          </Link>
+                        </b>
+                        <small>
+                          {ov.stats.late ? <span style={{ color: "var(--red)", fontWeight: 700 }}>{ov.stats.late} late · ship now</span> : "Ship within 2 days of the order"}
+                        </small>
+                      </span>
+                    </li>
+                    <li>
+                      <span className="sp-hb sp-info">{ov.counts.shipped}</span>
+                      <span>
+                        <b>On the way</b>
+                        <small>Shipped, waiting for delivery</small>
+                      </span>
+                    </li>
+                    <li>
+                      <span className={`sp-hb ${ov.counts.return ? "sp-warn" : "sp-ok"}`}>{ov.counts.return}</span>
+                      <span>
+                        <b>Returns</b>
+                        <small>{ov.counts.return ? "Waiting for your answer" : "No open returns"}</small>
+                      </span>
+                    </li>
+                  </ul>
+                  <p className="sp-cd" style={{ marginTop: 12 }}>
+                    Problem with an order or payout?{" "}
+                    <Link className="sp-lnk" href={ticketHref("orders")}>
+                      Raise a ticket
                     </Link>
                   </p>
                 </>
-              ) : earnings.error ? (
+              ) : overview.error || payouts.error ? (
                 <p className="sp-muted" style={{ fontSize: 13 }}>
-                  Sales figures aren&apos;t available right now.
+                  Orders and payouts aren&apos;t available right now.
                 </p>
               ) : (
                 <Loading />
