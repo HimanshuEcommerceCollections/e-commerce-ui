@@ -69,16 +69,19 @@ const sectionTypes = (d: Department, s: Department["sections"][number]) =>
 
 interface DayloraHeaderProps {
   cartCount: number;
+  /** The departments drawer (a bottom sheet on phones). Owned by the shell so the app tab bar can open it too. */
+  drawerOpen: boolean;
+  /** Stable state setter (useState), so the listeners below can stay registered once. */
+  setDrawerOpen: (open: boolean) => void;
 }
 
 /** Sticky header, desktop nav with the "All departments" mega menu, and the mobile drawer (FR-ST-01, FR-ST-02). */
-export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
+export function DayloraHeader({ cartCount, drawerOpen, setDrawerOpen }: DayloraHeaderProps) {
   const pathname = usePathname();
   const departments = useDepartments();
   const user = useAuthStore((s) => s.user);
   // Auth and cart live in localStorage: render the signed-out state until mounted to match the server HTML.
   const [mounted, setMounted] = useState(false);
-  const [drawerOpen, setDrawerOpen] = useState(false);
   const [deptMenuOpen, setDeptMenuOpen] = useState(false);
   // The mega menu opens on the first department, as in the design.
   const [activeDept, setActiveDept] = useState<string | null>(null);
@@ -103,7 +106,7 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, []);
+  }, [setDrawerOpen]);
 
   // Close the department menu on an outside click.
   useEffect(() => {
@@ -118,7 +121,7 @@ export function DayloraHeader({ cartCount }: DayloraHeaderProps) {
   useEffect(() => {
     setDeptMenuOpen(false);
     setDrawerOpen(false);
-  }, [pathname]);
+  }, [pathname, setDrawerOpen]);
 
   // The drawer locks page scroll through a class on <html>, and takes focus.
   useEffect(() => {

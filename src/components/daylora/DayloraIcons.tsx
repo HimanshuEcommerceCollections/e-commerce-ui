@@ -32,7 +32,8 @@ export function DayloraSvgSprite() {
       <symbol id="i-sort" viewBox="0 0 24 24"><path d="M7 4v16M3.5 7.5L7 4l3.5 3.5M17 20V4M13.5 16.5L17 20l3.5-3.5" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
       <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"/></symbol>
       <symbol id="i-alert" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke="currentColor" fill="none" strokeWidth="1.75"/><path d="M12 7.5v5.5M12 16.5v.01" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinecap="round"/></symbol>
-      <symbol id="i-box" viewBox="0 0 24 24"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5L12 12l8.5-4.5M12 12v9" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinejoin="round"/></symbol>
+      <symbol id="i-home" viewBox="0 0 24 24"><path d="M3.5 10.5 12 4l8.5 6.5V20a1 1 0 0 1-1 1H15v-6H9v6H4.5a1 1 0 0 1-1-1z" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinejoin="round"/></symbol>
+      <symbol id="i-box"viewBox="0 0 24 24"><path d="M3.5 7.5L12 3l8.5 4.5v9L12 21l-8.5-4.5zM3.5 7.5L12 12l8.5-4.5M12 12v9" stroke="currentColor" fill="none" strokeWidth="1.75" strokeLinejoin="round"/></symbol>
     </svg>
   );
 }
