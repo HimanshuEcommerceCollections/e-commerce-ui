@@ -108,7 +108,7 @@ export function DayloraHomePage() {
   );
 
   return (
-    <main id="main">
+    <main id="main" className="home">
       {/* 3. HERO BANNER */}
       <DayloraHero product={rails.hero} maxDealPct={rails.maxDealPct} loading={loading} />
 
