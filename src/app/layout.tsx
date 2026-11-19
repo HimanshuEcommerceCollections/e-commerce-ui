@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import { Syne } from "next/font/google";
 import "./globals.css";
@@ -14,6 +14,7 @@ import "./daylora-cart.css";
 import "./daylora-checkout.css";
 import "./daylora-customer.css";
 import "./daylora-refine.css";
+import "./daylora-app.css";
 import Script from "next/script";
 import { Toaster } from "@/components/ui/sonner";
 
@@ -29,6 +30,17 @@ export const metadata: Metadata = {
   title: { default: "Ecommerce Collections", template: "%s | Ecommerce Collections" },
   description:
     "Over 1,000 everyday essentials — from headphones to cookware — at prices that make sense.",
+  // Added to a phone's home screen, the storefront opens like an app (design 01-homepage_1_2 v3).
+  appleWebApp: { capable: true, title: "EC Store", statusBarStyle: "default" },
+  other: { "mobile-web-app-capable": "yes" },
+};
+
+/** viewport-fit=cover lets the app-mode header and tab bar pad around the notch and home indicator. */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  themeColor: "#ffffff",
 };
 
 export default function RootLayout({
