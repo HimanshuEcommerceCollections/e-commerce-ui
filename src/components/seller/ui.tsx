@@ -106,7 +106,7 @@ type Tone = "ok" | "bad" | "warn" | "info" | "off";
 
 export const STATE: Record<ListingState, { tone: Tone; label: string; color: string }> = {
   LIVE: { tone: "ok", label: "Live", color: "#16794C" },
-  CHANGE_PENDING: { tone: "ok", label: "Live · change pending", color: "#6FBF95" },
+  CHANGE_PENDING: { tone: "ok", label: "Live · edit in review", color: "#6FBF95" },
   SUBMITTED: { tone: "info", label: "Submitted", color: "#1D5FA8" },
   IN_REVIEW: { tone: "info", label: "In review", color: "#5B8FD0" },
   CHANGES_REQUESTED: { tone: "warn", label: "Changes requested", color: "#B54708" },
