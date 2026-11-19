@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { toast } from "sonner";
 import publicCategoryService from "@/services/public/category.service";
 import sellerService from "@/services/seller/seller.service";
+import catalogImageService, { type ImageUploadConfig } from "@/services/catalogImage.service";
 import type { CategoryTreeNode } from "@/types/api/category.types";
 import type { SubmissionReport, TemplateRow } from "@/types/api/seller.types";
 import { FieldError, Ico, Loading, errorText, reviewBy } from "./ui";
@@ -164,6 +165,8 @@ export function ProductForm({ editId }: { editId: string | null }) {
   const [v, setV] = useState<Values>(BLANK);
   const [imgs, setImgs] = useState<Img[]>([]);
   const [url, setUrl] = useState("");
+  const [uploadCfg, setUploadCfg] = useState<ImageUploadConfig | null>(null);
+  const [uploading, setUploading] = useState(false);
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const [forced, setForced] = useState(false);
   const [base, setBase] = useState<TemplateRow | null>(null);
@@ -205,6 +208,13 @@ export function ProductForm({ editId }: { editId: string | null }) {
       .catch((e) => setLoadErr(errorText(e, "We couldn't load this product.")));
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per product
   }, [editId]);
+
+  useEffect(() => {
+    catalogImageService
+      .config()
+      .then(setUploadCfg)
+      .catch(() => undefined); // no upload button; links still work
+  }, []);
 
   /** Loads the image in the browser to learn its size; the server checks the link again on submit. */
   function probe(u: string) {
@@ -266,6 +276,37 @@ export function ProductForm({ editId }: { editId: string | null }) {
     setSaved("Unsaved changes");
     probe(u);
   };
+
+  /** Uploads photos one by one; we store them, so the link can't break later. */
+  async function uploadFiles(files: File[]) {
+    if (!uploadCfg || !files.length) return;
+    const room = MAX_IMAGES - imgs.length;
+    if (room <= 0) return toast.error(`Up to ${MAX_IMAGES} photos`);
+    if (files.length > room) toast.error(`Only the first ${room} photo(s) were added: up to ${MAX_IMAGES} photos`);
+    setUploading(true);
+    try {
+      for (const file of files.slice(0, room)) {
+        const problem = catalogImageService.precheck(file, uploadCfg);
+        if (problem) {
+          toast.error(problem);
+          continue;
+        }
+        try {
+          const img = await catalogImageService.upload(file);
+          const w = img.width ?? 0;
+          const h = img.height ?? 0;
+          const state: Img["state"] = Math.max(w, h) >= MIN_PX ? "ok" : "small";
+          setImgs((l) => (l.length >= MAX_IMAGES ? l : [...l, { url: img.url, state, dims: `${w} × ${h}` }]));
+          setTouched((t) => ({ ...t, img: true }));
+          setSaved("Unsaved changes");
+        } catch (e) {
+          toast.error(errorText(e, `Couldn't upload ${file.name}`));
+        }
+      }
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function send(kind: "draft" | "submit") {
     setServerErrs([]);
@@ -534,9 +575,28 @@ export function ProductForm({ editId }: { editId: string | null }) {
                 <button className="sp-btn sp-btn-sec" type="button" onClick={addUrl}>
                   Add link
                 </button>
+                {uploadCfg?.enabled ? (
+                  <label className="sp-btn sp-btn-sec" style={{ cursor: uploading ? "progress" : "pointer" }}>
+                    {uploading ? "Uploading…" : "Upload photos"}
+                    <input
+                      type="file"
+                      accept={uploadCfg.contentTypes.join(",")}
+                      multiple
+                      hidden
+                      disabled={uploading}
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files ?? []);
+                        e.target.value = "";
+                        void uploadFiles(files);
+                      }}
+                    />
+                  </label>
+                ) : null}
               </div>
               <p className="sp-help" style={{ marginTop: 8 }}>
-                Host your photos (your website, a CDN or cloud storage) and paste the public links. JPG, PNG or WebP.
+                {uploadCfg?.enabled
+                  ? `Upload photos from your device (up to ${Math.round(uploadCfg.maxFileSizeBytes / 1024 / 1024)} MB each), or paste public links to photos you host. JPG, PNG or WebP.`
+                  : "Host your photos (your website, a CDN or cloud storage) and paste the public links. JPG, PNG or WebP."}
               </p>
               {imgs.length ? (
                 <div className="sp-thumbs">

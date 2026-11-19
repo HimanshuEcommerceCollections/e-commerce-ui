@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import adminService from "@/services/admin/admin.service";
+import catalogImageService, { type ImageUploadConfig } from "@/services/catalogImage.service";
 import publicCategoryService from "@/services/public/category.service";
 import { getApiErrorMessage } from "@/lib/apiError";
 import type { CategoryTreeNode } from "@/types/api/category.types";
@@ -86,6 +87,43 @@ export default function AddProduct({ open, onClose, onCreated }: { open: boolean
   const [rowErrors, setRowErrors] = useState<Record<number, string>>({});
   const [tried, setTried] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [uploadCfg, setUploadCfg] = useState<ImageUploadConfig | null>(null);
+  const [uploadingKey, setUploadingKey] = useState<number | null>(null);
+
+  useEffect(() => {
+    if (!open || uploadCfg) return;
+    catalogImageService
+      .config()
+      .then(setUploadCfg)
+      .catch(() => undefined); // no upload button; links still work
+  }, [open, uploadCfg]);
+
+  /** Uploads picked files one by one and adds each stored URL to the variant's list. */
+  const uploadImages = async (key: number, files: File[]) => {
+    if (!uploadCfg || !files.length) return;
+    const current = urls(variants.find((v) => v.key === key)?.images ?? "");
+    const room = 5 - current.length;
+    if (room <= 0) return toast("At most 5 images per SKU.", true);
+    if (files.length > room) toast(`Only the first ${room} file(s) were added: at most 5 images per SKU.`, true);
+    setUploadingKey(key);
+    try {
+      for (const file of files.slice(0, room)) {
+        const problem = catalogImageService.precheck(file, uploadCfg);
+        if (problem) {
+          toast(problem, true);
+          continue;
+        }
+        try {
+          const img = await catalogImageService.upload(file);
+          setVariants((vs) => vs.map((v) => (v.key === key ? { ...v, images: [...urls(v.images), img.url].join("\n") } : v)));
+        } catch (e) {
+          toast(getApiErrorMessage(e, `Couldn't upload ${file.name}.`), true);
+        }
+      }
+    } finally {
+      setUploadingKey(null);
+    }
+  };
 
   useEffect(() => {
     if (!open || treeCache) return;
@@ -347,6 +385,24 @@ export default function AddProduct({ open, onClose, onCreated }: { open: boolean
                     onChange={(e) => setV(v.key, { images: e.target.value })}
                     placeholder="https://cdn.example.com/products/GS-CL-MEN-001-01.jpg"
                   />
+                  {uploadCfg?.enabled ? (
+                    <label className="btn btn-secondary btn-sm" style={{ marginTop: 6, alignSelf: "flex-start", cursor: uploadingKey === null ? "pointer" : "progress" }}>
+                      <Icon name="image" size={16} />
+                      {uploadingKey === v.key ? "Uploading…" : "Upload images"}
+                      <input
+                        type="file"
+                        accept={uploadCfg.contentTypes.join(",")}
+                        multiple
+                        hidden
+                        disabled={uploadingKey !== null}
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files ?? []);
+                          e.target.value = "";
+                          void uploadImages(v.key, files);
+                        }}
+                      />
+                    </label>
+                  ) : null}
                 </div>
                 {problem || server ? <span className="err-text" role="alert">{server ?? problem}</span> : null}
               </div>
