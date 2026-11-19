@@ -1,0 +1,89 @@
+/* Theme layer for the admin panel, from designs/seller/catalog-*.html (Nov 2026):
+   aligned with the storefront homepage. White sidebar and top chrome, the
+   full-colour logo, green pill buttons, navy pill tabs, softer surfaces.
+   Overrides only, loaded after admin.css; remove the import to compare. */
+
+.dla{--paper:#F4F7FA;--navy-50:#EAF0F7;--peach:#FFB88A;--ring:0 0 0 3px rgba(22,121,76,.18);
+  --shadow-2:0 8px 24px rgba(18,53,91,.10);background:var(--paper)}
+.dla ::selection{background:var(--mint)}
+
+/* ---------- Sidebar: white, like the storefront header ---------- */
+.dla .side{background:#fff;color:var(--ink);border-right:1px solid var(--line)}
+@media (max-width:1023px){.dla .side{border-right:0;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;background:rgba(255,255,255,.96);backdrop-filter:saturate(1.4) blur(8px);-webkit-backdrop-filter:saturate(1.4) blur(8px)}}
+@media (min-width:1024px){.dla .snav{scrollbar-color:#D5DDE6 transparent}}
+
+/* Logo (official mark, never recoloured) + an "Admin" pill; the store name is in the logo. */
+.dla .brandrow{align-items:center}
+.dla .brandrow .logo-mark.logo-mark-full{height:40px;padding:0;background:none;border-radius:0;align-self:center;margin-top:0}
+@media (max-width:1023px){.dla .brandrow .logo-mark.logo-mark-full{height:34px}}
+.dla .brandrow .brandname{justify-content:center}
+.dla .brandrow .brandname b{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.dla .brandrow .brandname span{background:var(--mint-50);color:var(--leaf-700);padding:4px 8px;line-height:1}
+
+.dla .snav button,.dla .snav a{color:var(--ink);position:relative;transition:background .15s,color .15s}
+.dla .snav a .icon{color:#7A8698}
+.dla .snav button:hover,.dla .snav a:hover{background:var(--surface);color:var(--navy)}
+.dla .snav a:hover .icon{color:var(--navy)}
+.dla .snav [aria-current="page"]{background:var(--mint-50);color:var(--leaf-700)}
+.dla .snav [aria-current="page"] .icon{color:var(--leaf)}
+@media (min-width:1024px){
+  .dla .snav [aria-current="page"]::before{content:"";position:absolute;left:-12px;top:8px;bottom:8px;width:3px;border-radius:0 3px 3px 0;background:var(--leaf)}
+}
+@media (max-width:1023px){
+  /* Phones: the section links are a row of pills under the logo. */
+  .dla .snav a{border-radius:var(--r-pill);background:var(--surface);font-weight:600;min-height:36px}
+  .dla .snav a .icon{display:none}
+  .dla .snav [aria-current="page"]{background:var(--leaf);color:#fff}
+  .dla .snav [aria-current="page"] .n{background:rgba(255,255,255,.22);color:#fff}
+}
+.dla .snav .n{background:var(--peach);color:#3A1A04}
+.dla .snav .soon:hover{color:var(--muted)}
+.dla .snav-h{color:#98A2B3;letter-spacing:.08em}
+.dla .store-link{color:var(--leaf)}
+@media (min-width:1024px){.dla .side-foot{border-top:1px solid var(--line)}}
+.dla .side-foot strong,.dla .umenu .who strong{color:var(--ink)}
+.dla .umenu .who span{color:var(--muted)}
+.dla .umenu.foot summary:hover,.dla .umenu[open].foot summary{background:var(--surface)}
+.dla .logout{color:var(--muted)}
+.dla .logout:hover{background:var(--surface);color:var(--navy)}
+.dla .avatar{background:var(--navy-50);color:var(--navy)}
+
+/* ---------- Type ---------- */
+.dla .page-head h1{letter-spacing:-.025em}
+.dla .page-head p{line-height:1.55}
+
+/* ---------- Buttons: pills, green primary like the storefront CTA ---------- */
+.dla .btn{border-radius:var(--r-pill);transition:background .15s,border-color .15s,box-shadow .15s,color .15s,transform .1s}
+.dla .btn:active:not([disabled]){transform:translateY(1px)}
+.dla .btn-primary:hover{box-shadow:0 6px 16px rgba(22,121,76,.22)}
+.dla .btn-secondary{border-color:#C9D3DE;color:var(--navy)}
+.dla .btn-secondary:hover{border-color:var(--navy);color:var(--navy)}
+
+/* ---------- Fields ---------- */
+.dla .inp{border-color:#CDD6E0;transition:border-color .15s,box-shadow .15s}
+.dla .inp:hover{border-color:#B3BFCC}
+.dla .inp:focus{outline:none;border-color:var(--leaf);box-shadow:var(--ring)}
+.dla .search{border-radius:var(--r-pill);background:var(--surface);border-color:transparent;transition:background .15s,border-color .15s,box-shadow .15s}
+.dla .search:hover{border-color:#CDD6E0}
+.dla .search:focus-within{background:#fff;border-color:var(--leaf);box-shadow:var(--ring)}
+.dla input[type=checkbox],.dla input[type=radio]{accent-color:var(--leaf)}
+
+/* ---------- Surfaces ---------- */
+.dla .card{border-radius:var(--r-lg)}
+.dla .stat{border-radius:14px;transition:border-color .15s,box-shadow .15s}
+.dla button.stat:hover,.dla a.stat:hover{border-color:#C9D6E3;box-shadow:var(--shadow-2)}
+.dla .stat b{letter-spacing:-.02em}
+
+/* ---------- Tabs: navy pills ---------- */
+.dla .tabs{gap:6px;padding:10px var(--s-4);border-bottom:1px solid var(--line)}
+.dla .tabs button{min-height:36px;border-bottom:0;border-radius:var(--r-pill);transition:background .15s,color .15s}
+.dla .tabs button:hover{color:var(--navy);background:var(--surface)}
+.dla .tabs button[aria-selected="true"]{background:var(--navy);color:#fff;border-bottom-color:transparent}
+.dla .tabs button[aria-selected="true"] .c{background:rgba(255,255,255,.18);color:#fff}
+
+/* ---------- Tables ---------- */
+.dla th{background:#F8FAFC;color:#667085;font-weight:600;letter-spacing:.05em}
+
+/* ---------- Feedback ---------- */
+.dla .toast{border-radius:var(--r-pill);box-shadow:var(--shadow-2)}
+.dla dialog::backdrop{background:rgba(18,53,91,.45)}
