@@ -165,7 +165,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       <div className="app">
         <aside className="side" aria-label="Admin navigation">
           <div className="brandrow">
-            <BrandMark />
+            <BrandMark full />
             <div className="brandname">
               <b>Ecommerce Collections</b>
               <span>Admin</span>

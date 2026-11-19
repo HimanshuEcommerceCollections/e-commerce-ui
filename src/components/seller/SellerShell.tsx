@@ -11,7 +11,7 @@ import { Ico, initials, rel, type IconName } from "./ui";
 export function Brand({ href = "/merchant", tag = true }: { href?: string; tag?: boolean }) {
   return (
     <Link className="sp-brand" href={href} aria-label="Ecommerce Collections Seller Portal">
-      <BrandMark />
+      <BrandMark full />
       <span>Ecommerce Collections</span>
       {tag ? <span className="sp-tag">Seller</span> : null}
     </Link>

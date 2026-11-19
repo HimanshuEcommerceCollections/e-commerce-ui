@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, type FormEvent, type ReactNode } 
 import { toast } from "sonner";
 import publicCategoryService from "@/services/public/category.service";
 import sellerService from "@/services/seller/seller.service";
-import catalogImageService, { type ImageUploadConfig } from "@/services/catalogImage.service";
+import { EMPTY_GALLERY, MAX_PHOTOS, PhotoSlots, galleryFromUrls, galleryProblem, galleryUrls, type Gallery } from "./PhotoSlots";
 import type { CategoryTreeNode } from "@/types/api/category.types";
 import type { SubmissionReport, TemplateRow } from "@/types/api/seller.types";
 import { FieldError, Ico, Loading, errorText, reviewBy } from "./ui";
@@ -15,8 +15,6 @@ const COUNTRIES = ["United States", "China", "India", "Vietnam", "Mexico", "Bang
 const PROMO = /\b(free shipping|sale|best price|discount|cheap|buy now|limited offer|\d+%\s*off)\b/i;
 const SKU_RE = /^[A-Za-z0-9._-]+$/;
 const ORIGIN_LINE = /^Country of origin:\s*(.*)$/im;
-const MAX_IMAGES = 5;
-const MIN_PX = 1000;
 
 export function checkTitle(raw: string) {
   const t = raw.trim();
@@ -30,12 +28,6 @@ export function checkTitle(raw: string) {
 }
 
 const num = (v: string) => (v.trim() === "" ? NaN : Number(v.replace(/[$,\s]/g, "")));
-
-interface Img {
-  url: string;
-  state: "checking" | "ok" | "small" | "bad";
-  dims?: string;
-}
 
 interface Values {
   title: string;
@@ -75,7 +67,7 @@ const LABELS: Record<string, string> = {
 /** Clothing needs fiber content (US labelling). */
 const isApparel = (dept: CategoryTreeNode | undefined) => !!dept && /cloth|apparel|fashion/i.test(`${dept.slug} ${dept.name}`);
 
-function validate(v: Values, imgs: Img[], dept: CategoryTreeNode | undefined, editing: boolean) {
+function validate(v: Values, gallery: Gallery, dept: CategoryTreeNode | undefined, editing: boolean) {
   const e: Partial<Record<Key, string>> = {};
   const t = checkTitle(v.title);
   if (t) e.title = t;
@@ -85,9 +77,8 @@ function validate(v: Values, imgs: Img[], dept: CategoryTreeNode | undefined, ed
     else if (!SKU_RE.test(v.sku.trim())) e.sku = "Use only letters, digits, '.', '_' and '-'";
   }
   if (!v.cat) e.cat = "Choose a category";
-  if (!imgs.length) e.img = "Add at least one photo";
-  else if (imgs.some((i) => i.state === "small")) e.img = `Remove or replace photos smaller than ${MIN_PX} px`;
-  else if (imgs.some((i) => i.state === "bad")) e.img = "One image link couldn't be opened. Remove it or check the link.";
+  const img = galleryProblem(gallery);
+  if (img) e.img = img;
   const pr = num(v.price);
   const mr = num(v.mrp);
   if (isNaN(pr) || pr <= 0) e.price = "Enter your price, like 28.50";
@@ -122,12 +113,12 @@ function fromRow(r: TemplateRow): { values: Values; imgs: string[] } {
       origin: COUNTRIES.includes(origin) ? origin : origin ? "Other" : "",
       fiber: r.Material ?? "",
     },
-    imgs: [1, 2, 3, 4, 5].map((i) => r[`Image_${i}_URL`] ?? "").filter(Boolean),
+    imgs: Array.from({ length: MAX_PHOTOS }, (_, i) => r[`Image_${i + 1}_URL`] ?? "").filter(Boolean),
   };
 }
 
 /** Form values → one template row; an edit keeps every other column of the live row. */
-function toRow(v: Values, imgs: Img[], base: TemplateRow | null, status: string): Record<string, string> {
+function toRow(v: Values, gallery: Gallery, base: TemplateRow | null, status: string): Record<string, string> {
   const [dept, sub] = v.cat.split("|");
   const specs = (base?.Specifications ?? "").replace(ORIGIN_LINE, "").trim();
   const row: Record<string, string> = {
@@ -149,7 +140,8 @@ function toRow(v: Values, imgs: Img[], base: TemplateRow | null, status: string)
     Specifications: [`Country of origin: ${v.origin}`, specs].filter(Boolean).join("\n"),
     Material: v.fiber.trim() || base?.Material || "",
   };
-  for (let i = 0; i < MAX_IMAGES; i++) row[`Image_${i + 1}_URL`] = imgs[i]?.url ?? "";
+  const urls = galleryUrls(gallery);
+  for (let i = 0; i < MAX_PHOTOS; i++) row[`Image_${i + 1}_URL`] = urls[i] ?? "";
   return row;
 }
 
@@ -163,10 +155,7 @@ type Done = { kind: "submitted"; reference: string; title: string; sku: string }
 export function ProductForm({ editId }: { editId: string | null }) {
   const [tree, setTree] = useState<CategoryTreeNode[] | null>(null);
   const [v, setV] = useState<Values>(BLANK);
-  const [imgs, setImgs] = useState<Img[]>([]);
-  const [url, setUrl] = useState("");
-  const [uploadCfg, setUploadCfg] = useState<ImageUploadConfig | null>(null);
-  const [uploading, setUploading] = useState(false);
+  const [gallery, setGallery] = useState<Gallery>(EMPTY_GALLERY);
   const [touched, setTouched] = useState<Partial<Record<Key, boolean>>>({});
   const [forced, setForced] = useState(false);
   const [base, setBase] = useState<TemplateRow | null>(null);
@@ -189,8 +178,7 @@ export function ProductForm({ editId }: { editId: string | null }) {
     const f = fromRow(r);
     setBase(r);
     setV(f.values);
-    setImgs(f.imgs.map((u) => ({ url: u, state: "checking" })));
-    f.imgs.forEach(probe);
+    setGallery(galleryFromUrls(f.imgs));
   };
 
   useEffect(() => {
@@ -209,24 +197,6 @@ export function ProductForm({ editId }: { editId: string | null }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps -- load once per product
   }, [editId]);
 
-  useEffect(() => {
-    catalogImageService
-      .config()
-      .then(setUploadCfg)
-      .catch(() => undefined); // no upload button; links still work
-  }, []);
-
-  /** Loads the image in the browser to learn its size; the server checks the link again on submit. */
-  function probe(u: string) {
-    const im = new Image();
-    im.onload = () => {
-      const big = Math.max(im.naturalWidth, im.naturalHeight) >= MIN_PX;
-      setImgs((list) => list.map((i) => (i.url === u ? { ...i, state: big ? "ok" : "small", dims: `${im.naturalWidth} × ${im.naturalHeight}` } : i)));
-    };
-    im.onerror = () => setImgs((list) => list.map((i) => (i.url === u ? { ...i, state: "bad" } : i)));
-    im.src = u;
-  }
-
   const options = useMemo(
     () =>
       (tree ?? []).flatMap((d) =>
@@ -241,7 +211,7 @@ export function ProductForm({ editId }: { editId: string | null }) {
   const editing = !!editId;
   const status = (base?.Product_Status ?? "").toUpperCase();
   const isLive = status === "ACTIVE" || status === "INACTIVE";
-  const errs = validate(v, imgs, dept, editing);
+  const errs = validate(v, gallery, dept, editing);
   const show = (k: Key) => ((forced || touched[k]) && errs[k] ? errs[k] : undefined);
   const set = (k: keyof Values) => (val: string) => {
     setV((s) => ({ ...s, [k]: val }));
@@ -251,7 +221,7 @@ export function ProductForm({ editId }: { editId: string | null }) {
 
   const SECS: { name: string; keys: Key[]; anchor: string }[] = [
     { name: "Basic details", keys: ["title", "brand", "sku", "cat"], anchor: "sp-title" },
-    { name: "Photos", keys: ["img"], anchor: "sp-iurl" },
+    { name: "Photos", keys: ["img"], anchor: "sp-photos" },
     { name: "Price and stock", keys: ["price", "mrp", "stock"], anchor: "sp-price" },
     { name: "Weight and size", keys: ["weight", "dim"], anchor: "sp-weight" },
     { name: "Country of origin", keys: ["origin"], anchor: "sp-origin" },
@@ -265,49 +235,6 @@ export function ProductForm({ editId }: { editId: string | null }) {
     (el as HTMLInputElement | null)?.focus({ preventScroll: true });
   };
 
-  const addUrl = () => {
-    const u = url.trim();
-    if (!/^https?:\/\/\S+\.\S+/.test(u)) return toast.error("Paste a full image link starting with https://");
-    if (imgs.some((i) => i.url === u)) return toast.error("That link is already added");
-    if (imgs.length >= MAX_IMAGES) return toast.error(`Up to ${MAX_IMAGES} photos`);
-    setImgs((l) => [...l, { url: u, state: "checking" }]);
-    setTouched((t) => ({ ...t, img: true }));
-    setUrl("");
-    setSaved("Unsaved changes");
-    probe(u);
-  };
-
-  /** Uploads photos one by one; we store them, so the link can't break later. */
-  async function uploadFiles(files: File[]) {
-    if (!uploadCfg || !files.length) return;
-    const room = MAX_IMAGES - imgs.length;
-    if (room <= 0) return toast.error(`Up to ${MAX_IMAGES} photos`);
-    if (files.length > room) toast.error(`Only the first ${room} photo(s) were added: up to ${MAX_IMAGES} photos`);
-    setUploading(true);
-    try {
-      for (const file of files.slice(0, room)) {
-        const problem = catalogImageService.precheck(file, uploadCfg);
-        if (problem) {
-          toast.error(problem);
-          continue;
-        }
-        try {
-          const img = await catalogImageService.upload(file);
-          const w = img.width ?? 0;
-          const h = img.height ?? 0;
-          const state: Img["state"] = Math.max(w, h) >= MIN_PX ? "ok" : "small";
-          setImgs((l) => (l.length >= MAX_IMAGES ? l : [...l, { url: img.url, state, dims: `${w} × ${h}` }]));
-          setTouched((t) => ({ ...t, img: true }));
-          setSaved("Unsaved changes");
-        } catch (e) {
-          toast.error(errorText(e, `Couldn't upload ${file.name}`));
-        }
-      }
-    } finally {
-      setUploading(false);
-    }
-  }
-
   async function send(kind: "draft" | "submit") {
     setServerErrs([]);
     if (kind === "submit") {
@@ -320,12 +247,12 @@ export function ProductForm({ editId }: { editId: string | null }) {
       toast.error("Add at least a title and your SKU to save a draft");
       return;
     }
-    if (imgs.some((i) => i.state === "checking")) return toast.error("Wait for the photo checks to finish");
+    if (gallery.photos.some((p) => p.state === "checking" || p.state === "uploading")) return toast.error("Wait for the photos to finish uploading");
     setBusy(kind);
     try {
       // A suspended (INACTIVE) product asks to go back on sale; the reviewer sees the status change.
       const reqStatus = kind === "draft" ? "DRAFT" : "ACTIVE";
-      const res = (await sellerService.submitRows([toRow(v, imgs, base, reqStatus)])).data.data!;
+      const res = (await sellerService.submitRows([toRow(v, gallery, base, reqStatus)])).data.data!;
       handleReport(res, kind);
     } catch (e) {
       setServerErrs([errorText(e, "We couldn't send this product. Try again.")]);
@@ -551,86 +478,20 @@ export function ProductForm({ editId }: { editId: string | null }) {
                     Photos {req}
                   </h2>
                   <p className="sp-cd">
-                    At least one, up to {MAX_IMAGES}. {MIN_PX} px or more on the longest side. The first photo is the main one.
+                    Upload a photo for each angle. Only the main photo is required, but listings with all five sell better. Each photo must be at
+                    least 1000 px on the longest side; square photos (1000 × 1000 px or larger) look best.
                   </p>
                 </div>
               </div>
-              <div className="sp-urlrow" style={{ marginTop: 0 }}>
-                <label className="sp-sr" htmlFor="sp-iurl">
-                  Image link
-                </label>
-                <input
-                  id="sp-iurl"
-                  className="sp-inp"
-                  value={url}
-                  onChange={(e) => setUrl(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      addUrl();
-                    }
-                  }}
-                  placeholder="Paste an image link (https://…)"
-                />
-                <button className="sp-btn sp-btn-sec" type="button" onClick={addUrl}>
-                  Add link
-                </button>
-                {uploadCfg?.enabled ? (
-                  <label className="sp-btn sp-btn-sec" style={{ cursor: uploading ? "progress" : "pointer" }}>
-                    {uploading ? "Uploading…" : "Upload photos"}
-                    <input
-                      type="file"
-                      accept={uploadCfg.contentTypes.join(",")}
-                      multiple
-                      hidden
-                      disabled={uploading}
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files ?? []);
-                        e.target.value = "";
-                        void uploadFiles(files);
-                      }}
-                    />
-                  </label>
-                ) : null}
-              </div>
-              <p className="sp-help" style={{ marginTop: 8 }}>
-                {uploadCfg?.enabled
-                  ? `Upload photos from your device (up to ${Math.round(uploadCfg.maxFileSizeBytes / 1024 / 1024)} MB each), or paste public links to photos you host. JPG, PNG or WebP.`
-                  : "Host your photos (your website, a CDN or cloud storage) and paste the public links. JPG, PNG or WebP."}
-              </p>
-              {imgs.length ? (
-                <div className="sp-thumbs">
-                  {imgs.map((it, i) => (
-                    <div className="sp-thumb" key={it.url}>
-                      {/* eslint-disable-next-line @next/next/no-img-element -- seller-supplied URLs from any host */}
-                      {it.state === "bad" ? <div className="sp-ph-img" role="img" aria-label={it.url} /> : <img src={it.url} alt={`Photo ${i + 1}`} />}
-                      {i === 0 ? <span className="sp-main-tag">Main</span> : null}
-                      <button
-                        type="button"
-                        className="sp-rm"
-                        aria-label={`Remove photo ${i + 1}`}
-                        onClick={() => {
-                          setImgs((l) => l.filter((x) => x.url !== it.url));
-                          setSaved("Unsaved changes");
-                        }}
-                      >
-                        <Ico name="x" />
-                      </button>
-                      <div className="sp-meta">
-                        {it.state === "checking" ? (
-                          <span>Checking…</span>
-                        ) : it.state === "ok" ? (
-                          <span className="sp-good">✓ {it.dims}</span>
-                        ) : it.state === "small" ? (
-                          <span className="sp-bad">Too small · {it.dims}</span>
-                        ) : (
-                          <span className="sp-bad">Link not found</span>
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              <PhotoSlots
+                gallery={gallery}
+                setGallery={(next) => {
+                  setGallery(next);
+                  setSaved("Unsaved changes");
+                }}
+                onTouched={() => setTouched((t) => ({ ...t, img: true }))}
+                invalid={!!show("img")}
+              />
               {show("img") ? (
                 <span style={{ display: "block", marginTop: 10 }}>
                   <FieldError id="sp-img-e">{show("img")}</FieldError>

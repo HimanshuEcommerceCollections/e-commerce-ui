@@ -23,6 +23,9 @@ type VariantDraft = {
   images: string;
 };
 
+/** Image_1_URL … Image_10_URL in the catalog template. */
+const MAX_IMAGES = 10;
+
 let nextKey = 1;
 const blankVariant = (): VariantDraft => ({
   key: nextKey++,
@@ -60,7 +63,7 @@ function variantProblem(v: VariantDraft): string | null {
   const list = urls(v.images);
   if (!list.length) return "Add at least one image URL (FR-IM-03).";
   if (list.some((u) => !/^https?:\/\//i.test(u))) return "Image URLs must start with http:// or https://.";
-  if (list.length > 5) return "At most 5 image URLs per SKU.";
+  if (list.length > MAX_IMAGES) return `At most ${MAX_IMAGES} images per SKU.`;
   return null;
 }
 
@@ -102,9 +105,9 @@ export default function AddProduct({ open, onClose, onCreated }: { open: boolean
   const uploadImages = async (key: number, files: File[]) => {
     if (!uploadCfg || !files.length) return;
     const current = urls(variants.find((v) => v.key === key)?.images ?? "");
-    const room = 5 - current.length;
-    if (room <= 0) return toast("At most 5 images per SKU.", true);
-    if (files.length > room) toast(`Only the first ${room} file(s) were added: at most 5 images per SKU.`, true);
+    const room = MAX_IMAGES - current.length;
+    if (room <= 0) return toast(`At most ${MAX_IMAGES} images per SKU.`, true);
+    if (files.length > room) toast(`Only the first ${room} file(s) were added: at most ${MAX_IMAGES} images per SKU.`, true);
     setUploadingKey(key);
     try {
       for (const file of files.slice(0, room)) {
@@ -114,7 +117,7 @@ export default function AddProduct({ open, onClose, onCreated }: { open: boolean
           continue;
         }
         try {
-          const img = await catalogImageService.upload(file);
+          const img = await catalogImageService.uploadPhoto(file, uploadCfg);
           setVariants((vs) => vs.map((v) => (v.key === key ? { ...v, images: [...urls(v.images), img.url].join("\n") } : v)));
         } catch (e) {
           toast(getApiErrorMessage(e, `Couldn't upload ${file.name}.`), true);
@@ -377,7 +380,7 @@ export default function AddProduct({ open, onClose, onCreated }: { open: boolean
                   </div>
                 </div>
                 <div className="fld">
-                  <label htmlFor={`img-${v.key}`}>Image URLs * <span className="hint">(one per line, up to 5)</span></label>
+                  <label htmlFor={`img-${v.key}`}>Image URLs * <span className="hint">(one per line, up to 10)</span></label>
                   <textarea
                     className="inp"
                     id={`img-${v.key}`}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import "./_styles/admin.css";
+import "./_styles/admin-theme.css";
 
 export const metadata: Metadata = {
   title: { absolute: "Admin · Ecommerce Collections", template: "%s · Admin · Ecommerce Collections" },
