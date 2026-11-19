@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { DayloraIcon } from "./DayloraIcons";
 import { usd } from "./shop/catalog";
@@ -9,6 +9,9 @@ import type { CardModel } from "./shop/storefrontCards";
 
 /** Name on the price tag, without the pack or size suffix: "Cookware Set, 10-Piece" → "Cookware Set". */
 const tagName = (name: string) => name.replace(/,.*$/, "");
+
+/** Tiles in the bento: the shoppable product, deals, new arrivals. */
+const TILES = 3;
 
 interface DayloraHeroProps {
   /** The shoppable product on the main tile; null while loading or when the catalog has none. */
@@ -21,6 +24,28 @@ interface DayloraHeroProps {
 /** Hero (FR-ST-01): one message, one primary CTA, shoppable photo bento. */
 export function DayloraHero({ product, maxDealPct, loading }: DayloraHeroProps) {
   const [imgFailed, setImgFailed] = useState(false);
+  // Phones swipe the bento as banners (CSS); the dots follow the visible one.
+  const bentoRef = useRef<HTMLDivElement>(null);
+  const [slide, setSlide] = useState(0);
+  useEffect(() => {
+    const el = bentoRef.current;
+    if (!el) return;
+    let frame = 0;
+    const paint = () => {
+      const first = el.firstElementChild as HTMLElement | null;
+      const step = (first?.offsetWidth || el.clientWidth) + 12;
+      setSlide(Math.min(Math.round(el.scrollLeft / step), TILES - 1));
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(paint);
+    };
+    el.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      el.removeEventListener("scroll", onScroll);
+    };
+  }, []);
   // The house photo stands in only when the catalog has no featured photo to show.
   const mainImage = loading ? null : product?.image && !imgFailed ? product.image : "/daylora/hero.jpg";
 
@@ -41,7 +66,7 @@ export function DayloraHero({ product, maxDealPct, loading }: DayloraHeroProps) 
             </div>
           </div>
 
-          <div className="bento">
+          <div className="bento" ref={bentoRef}>
             <Link
               href={product?.href ?? "/catalog"}
               className="tile tile-main"
@@ -93,6 +118,11 @@ export function DayloraHero({ product, maxDealPct, loading }: DayloraHeroProps) 
                 </span>
               </span>
             </Link>
+          </div>
+          <div className="hero-dots" aria-hidden="true">
+            {Array.from({ length: TILES }, (_, i) => (
+              <i key={i} className={i === slide ? "on" : undefined} />
+            ))}
           </div>
         </div>
       </div>
