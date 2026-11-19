@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import Link from "next/link";
 import { BRAND_NAME } from "./dayloraData";
 import { BrandMark } from "./BrandMark";
@@ -28,11 +30,18 @@ const COMPANY = [
 ];
 
 
+/** A link column; on phones the heading is an accordion toggle (CSS keeps tablet and desktop always open). */
 function Column({ title, links }: { title: string; links: { t: string; href: string }[] }) {
+  const [open, setOpen] = useState(false);
+  const id = `fc-${title.toLowerCase()}`;
   return (
-    <div className="foot-col">
-      <h2>{title}</h2>
-      <ul>
+    <div className={`foot-col${open ? " open" : ""}`}>
+      <h2>
+        <button type="button" aria-controls={id} aria-expanded={open} onClick={() => setOpen(!open)}>
+          {title}
+        </button>
+      </h2>
+      <ul id={id}>
         {links.map((l) => (
           <li key={l.t}>
             <Link href={l.href}>{l.t}</Link>
