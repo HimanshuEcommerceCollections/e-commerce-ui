@@ -46,7 +46,7 @@ export default function AddProductsPage() {
             </li>
             <li>
               <Ico name="check" />
-              Paste image links and see them checked
+              Upload a photo for each angle
             </li>
             <li>
               <Ico name="check" />
