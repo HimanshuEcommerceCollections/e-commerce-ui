@@ -7,7 +7,12 @@ import type {
   SellerDocument,
   SellerEarnings,
   SellerOrder,
+  SellerOrderDetail,
   SellerOrderFilter,
+  SellerOrderList,
+  SellerOrderTab,
+  SellerOrdersOverview,
+  SellerPayouts,
   SellerProduct,
   StockMove,
   StockUpdateResult,
@@ -67,6 +72,19 @@ const sellerService = {
   orders: (params: { page?: number; size?: number; status?: SellerOrderFilter }) =>
     api.get<ApiResponse<PageResponse<SellerOrder>>>(`${BASE}/orders`, { params }),
   earnings: (months = 6) => api.get<ApiResponse<SellerEarnings>>(`${BASE}/earnings`, { params: { months } }),
+  orderList: (params: { tab: SellerOrderTab; q?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<SellerOrderList>>(`${BASE}/orders/list`, { params }),
+  ordersOverview: () => api.get<ApiResponse<SellerOrdersOverview>>(`${BASE}/orders/overview`),
+  ordersCsv: (tab: SellerOrderTab) => api.get<Blob>(`${BASE}/orders/export`, { params: { tab }, responseType: "blob" }),
+  order: (orderNumber: string) => api.get<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}`),
+  shipOrder: (orderNumber: string, body: { carrier: string; trackingNumber: string }) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/ship`, body),
+  cancelOrder: (orderNumber: string, body: { reason: string; note?: string }) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/cancel`, body),
+  approveReturn: (orderNumber: string) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/return/approve`, {}),
+  payouts: () => api.get<ApiResponse<SellerPayouts>>(`${BASE}/payouts`),
+  payoutStatement: (reference: string) => api.get<Blob>(`${BASE}/payouts/${reference}/statement`, { responseType: "blob" }),
 
   // Documents
   documents: () => api.get<ApiResponse<SellerDocument[]>>(`${BASE}/documents`),

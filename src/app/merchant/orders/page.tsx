@@ -1,247 +1,299 @@
 "use client";
-import { useState } from "react";
-import { Ico, LoadError, Loading, Pill, Thumb, fmtDate, money, useLoad } from "@/components/seller/ui";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
+import { OrderStatePill, OrdersTabs, ShipDialog, dateOf, dueClass, saveBlob, shipDue, ticketHref, usd } from "@/components/seller/orders";
+import { Ico, LoadError, Loading, Thumb, errorText, rel, useLoad } from "@/components/seller/ui";
 import { useTitle } from "@/components/seller/useSellerSession";
 import sellerService from "@/services/seller/seller.service";
-import type { SellerOrder, SellerOrderFilter } from "@/types/api/seller.types";
+import type { SellerOrderRow, SellerOrderTab } from "@/types/api/seller.types";
 
-const TABS: [SellerOrderFilter | "", string][] = [
-  ["", "All"],
-  ["TO_SHIP", "To ship"],
-  ["SHIPPED", "Shipped"],
-  ["DELIVERED", "Delivered"],
-  ["CANCELLED", "Cancelled or refunded"],
+const SIZE = 25;
+const TABS: [SellerOrderTab, string][] = [
+  ["new", "To ship"],
+  ["shipped", "Shipped"],
+  ["delivered", "Delivered"],
+  ["return", "Returns"],
+  ["cancelled", "Cancelled"],
+  ["all", "All"],
 ];
-const SIZE = 20;
 
-function OrderStatus({ o }: { o: SellerOrder }) {
-  switch (o.status) {
-    case "PAID":
-    case "CONFIRMED":
-      return <Pill tone="warn">To ship{o.fulfilmentStatus && o.fulfilmentStatus !== "UNFULFILLED" ? ` · ${o.fulfilmentStatus.toLowerCase()}` : ""}</Pill>;
-    case "SHIPPED":
-      return <Pill tone="info">Shipped{o.shippedAt ? ` ${fmtDate(o.shippedAt)}` : ""}</Pill>;
-    case "DELIVERED":
-      return <Pill tone="ok">Delivered{o.deliveredAt ? ` ${fmtDate(o.deliveredAt)}` : ""}</Pill>;
-    case "CANCELLED":
-      return <Pill tone="off">Cancelled</Pill>;
-    case "REFUNDED":
-      return <Pill tone="off">Refunded</Pill>;
+/** What the status column says beyond the pill. */
+function detailOf(o: SellerOrderRow) {
+  switch (o.state) {
+    case "new": {
+      const [level, text] = shipDue(o);
+      return <span className={dueClass(level)}>{text}</span>;
+    }
+    case "shipped":
+      return `${o.carrier ?? "Shipped"}${o.shippedAt ? ` · shipped ${rel(o.shippedAt)}` : ""}`;
+    case "delivered":
+      return `Delivered ${o.deliveredAt ? dateOf(o.deliveredAt) : ""}${o.payout.status === "PAID" ? " · paid" : ""}`;
+    case "return":
+      return o.returnReason ?? "Return requested";
+    case "returned":
+      return "Return approved · refunded";
     default:
-      return <Pill tone="off">{o.status}</Pill>;
+      return o.cancellationReason ?? "Cancelled";
   }
 }
 
-const monthLabel = (period: string) => {
-  const [y, m] = period.split("-").map(Number);
-  return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" });
-};
+function ItemsCell({ o }: { o: SellerOrderRow }) {
+  const first = o.items[0];
+  const more = o.items.length - 1;
+  return (
+    <span className="sp-oitems">
+      <Thumb src={first?.imageUrl ?? null} size={40} />
+      <span style={{ minWidth: 0 }}>
+        <b>{first?.productName ?? "Item"}</b>
+        <span className="sp-osub">
+          Qty {first?.quantity ?? 0}
+          {more ? ` · +${more} more item${more > 1 ? "s" : ""}` : ""}
+        </span>
+      </span>
+    </span>
+  );
+}
 
+/** Orders & earnings › Orders (designs/seller/seller-orders.html). */
 export default function SellerOrdersPage() {
-  useTitle("Orders and earnings");
-  const [status, setStatus] = useState<SellerOrderFilter | "">("");
+  useTitle("Orders & earnings");
+  const router = useRouter();
+  const [tab, setTab] = useState<SellerOrderTab>("new");
+  const [q, setQ] = useState("");
+  const [query, setQuery] = useState("");
   const [page, setPage] = useState(0);
-  const [months, setMonths] = useState(6);
-  const orders = useLoad(() => sellerService.orders({ page, size: SIZE, status: status || undefined }), [status, page]);
-  const earnings = useLoad(() => sellerService.earnings(months), [months]);
-  const e = earnings.data;
+  const [shipping, setShipping] = useState<SellerOrderRow | null>(null);
+  const list = useLoad(() => sellerService.orderList({ tab, q: query || undefined, page, size: SIZE }), [tab, query, page]);
+
+  useEffect(() => {
+    const t = new URLSearchParams(window.location.search).get("tab");
+    if (t && TABS.some(([k]) => k === t)) setTab(t as SellerOrderTab);
+  }, []);
+  useEffect(() => {
+    const id = setTimeout(() => {
+      setQuery(q.trim());
+      setPage(0);
+    }, 300);
+    return () => clearTimeout(id);
+  }, [q]);
+
+  const d = list.data;
+  const c = d?.counts;
+  const s = d?.stats;
+  const pick = (t: SellerOrderTab) => {
+    setTab(t);
+    setPage(0);
+  };
+  const download = async () => {
+    try {
+      saveBlob((await sellerService.ordersCsv(tab)).data, "orders.csv");
+      toast.success("Orders downloaded (CSV)");
+    } catch (e) {
+      toast.error(errorText(e, "We couldn't download your orders."));
+    }
+  };
 
   return (
     <>
       <div className="sp-ph">
         <div>
-          <h1>Orders and earnings</h1>
-          <p>Paid orders that include your products, and what they add up to. We pack, ship and handle customers; you see your lines only.</p>
+          <h1>Orders &amp; earnings</h1>
+          <p>Orders for your products, what to ship next, and what you&apos;ll be paid.</p>
+        </div>
+        <div className="sp-ph-a">
+          <Link className="sp-btn sp-btn-sec" href={ticketHref("orders")}>
+            <Ico name="mail" />
+            Problem with an order?
+          </Link>
+          <button type="button" className="sp-btn sp-btn-sec" onClick={download}>
+            <Ico name="download" />
+            Download orders
+          </button>
         </div>
       </div>
+      <OrdersTabs active="orders" />
 
-      <section className="sp-card" aria-labelledby="erH" style={{ marginBottom: 16 }}>
-        <div className="sp-ch">
-          <h2 id="erH">Earnings by month</h2>
-          <span style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
-            <Pill tone="off">Payout schedule coming soon</Pill>
-            <label className="sp-sr" htmlFor="sp-months">
-              Period
-            </label>
-            <select id="sp-months" className="sp-inp sp-sm-inp" value={months} onChange={(ev) => setMonths(Number(ev.target.value))}>
-              <option value={3}>Last 3 months</option>
-              <option value={6}>Last 6 months</option>
-              <option value={12}>Last 12 months</option>
-            </select>
+      {c && s ? (
+        <div className="sp-dstats">
+          <button type="button" className={`sp-dstat ${s.late ? "sp-bad" : s.dueToday ? "sp-warn" : ""}`} onClick={() => pick("new")}>
+            <span className="sp-k">
+              <i style={{ background: "var(--amber)" }} />
+              To ship
+            </span>
+            <b>{c.new}</b>
+            <small>
+              {s.late ? (
+                <>
+                  <span className="sp-due-bad">{s.late} late</span>
+                  {s.dueToday ? ` · ${s.dueToday} due today` : ""}
+                </>
+              ) : s.dueToday ? (
+                `${s.dueToday} due today`
+              ) : (
+                "Nothing due today"
+              )}
+            </small>
+          </button>
+          <button type="button" className="sp-dstat" onClick={() => pick("shipped")}>
+            <span className="sp-k">
+              <i style={{ background: "var(--blue)" }} />
+              On the way
+            </span>
+            <b>{c.shipped}</b>
+            <small>Shipped, not delivered yet</small>
+          </button>
+          <button type="button" className="sp-dstat" onClick={() => pick("delivered")}>
+            <span className="sp-k">
+              <i style={{ background: "var(--leaf)" }} />
+              Delivered · 30 days
+            </span>
+            <b>{s.delivered30Days}</b>
+            <small>{usd(s.delivered30DaysSales)} in sales</small>
+          </button>
+          <button type="button" className={`sp-dstat ${c.return ? "sp-warn" : ""}`} onClick={() => pick("return")}>
+            <span className="sp-k">
+              <i style={{ background: "var(--red)" }} />
+              Returns
+            </span>
+            <b>{c.return}</b>
+            <small>{c.return ? "Needs your answer" : "No open returns"}</small>
+          </button>
+        </div>
+      ) : null}
+
+      {s?.late ? (
+        <div className="sp-alert sp-alert-bad" style={{ marginBottom: 16 }}>
+          <Ico name="alert" />
+          <span>
+            <b>
+              {s.late} order{s.late > 1 ? "s are" : " is"} past the ship-by time.
+            </b>{" "}
+            Ship {s.late > 1 ? "them" : "it"} now, or <Link href={ticketHref("orders")}>tell us</Link> if you can&apos;t. Late shipments count against your seller rating.
           </span>
         </div>
-        <p className="sp-cd">
-          Gross sales are your lines in orders paid that month; refunds are money returned to customers that month. Payout dates, fees
-          and statements will show here once payouts are set up.
-        </p>
-        {earnings.error ? (
-          <LoadError error={earnings.error} onRetry={earnings.reload} what="your earnings" />
-        ) : !e ? (
-          <Loading />
-        ) : (
-          <>
-            <div className="sp-earn">
-              <div>
-                <span>Gross sales</span>
-                <b>{money(e.totals.gross)}</b>
-              </div>
-              <div>
-                <span>Refunds</span>
-                <b>{money(e.totals.refunds)}</b>
-              </div>
-              <div>
-                <span>Net</span>
-                <b>{money(e.totals.net)}</b>
-              </div>
-            </div>
-            <div className="sp-tw sp-panel" style={{ marginTop: 14 }}>
-              <table>
-                <thead>
-                  <tr>
-                    <th>Month</th>
-                    <th>Orders</th>
-                    <th>Units</th>
-                    <th>Gross</th>
-                    <th>Refunds</th>
-                    <th>Net</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {e.periods.map((p) => (
-                    <tr key={p.period}>
-                      <td>{monthLabel(p.period)}</td>
-                      <td className="sp-num">{p.orders}</td>
-                      <td className="sp-num">{p.units}</td>
-                      <td className="sp-num">{money(p.gross)}</td>
-                      <td className="sp-num">{p.refunds ? `−${money(p.refunds)}` : money(0)}</td>
-                      <td className="sp-num">
-                        <b>{money(p.net)}</b>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-            <p className="sp-help" style={{ marginTop: 8 }}>
-              Amounts in {e.currency}, before tax and shipping. Months are calendar months (UTC).
-            </p>
-          </>
-        )}
-      </section>
+      ) : null}
 
-      <div className="sp-panel">
-        <div className="sp-ptools">
-          <div className="sp-tabs" role="tablist" aria-label="Filter orders">
+      <section className="sp-ocard" aria-label="Orders">
+        <div className="sp-otools">
+          <div className="sp-tabs" role="tablist" aria-label="Order status">
             {TABS.map(([k, label]) => (
-              <button
-                key={k || "all"}
-                type="button"
-                role="tab"
-                aria-selected={status === k}
-                onClick={() => {
-                  setStatus(k);
-                  setPage(0);
-                }}
-              >
+              <button key={k} type="button" role="tab" aria-selected={tab === k} onClick={() => pick(k)}>
                 {label}
-                {k === "TO_SHIP" && e?.openOrders ? <span className="sp-n">{e.openOrders}</span> : null}
+                {c ? <span className="sp-n">{c[k]}</span> : null}
               </button>
             ))}
           </div>
+          <label className="sp-srch">
+            <Ico name="search" />
+            <span className="sp-sr">Search orders</span>
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Order number, product or city" />
+          </label>
         </div>
-        {orders.error ? (
+        {list.error && !d ? (
           <div style={{ padding: 16 }}>
-            <LoadError error={orders.error} onRetry={orders.reload} what="your orders" />
+            <LoadError error={list.error} onRetry={list.reload} what="your orders" />
           </div>
-        ) : orders.loading && !orders.data ? (
+        ) : !d ? (
           <Loading />
-        ) : (
-          <div className="sp-tw">
-            <table className="sp-resp">
+        ) : d.content.length ? (
+          <div className="sp-otw">
+            <table className="sp-otable">
               <thead>
                 <tr>
                   <th>Order</th>
-                  <th>Your items</th>
-                  <th>Ships to</th>
+                  <th>Items</th>
+                  <th className="sp-hide-l">Ship to</th>
+                  <th>{tab === "new" ? "Ship by" : "Status detail"}</th>
+                  <th className="sp-r">Total</th>
                   <th>Status</th>
-                  <th>Your total</th>
+                  <th>
+                    <span className="sp-sr">Action</span>
+                  </th>
                 </tr>
               </thead>
               <tbody>
-                {orders.data?.content.length ? (
-                  orders.data.content.map((o) => (
-                    <tr key={o.orderNumber}>
-                      <td>
-                        <b className="sp-mono">{o.orderNumber}</b>
-                        <small className="sp-muted" style={{ display: "block" }}>
-                          Paid {fmtDate(o.paidAt)}
-                        </small>
-                      </td>
-                      <td className="sp-c-wide">
-                        <ul style={{ listStyle: "none", display: "grid", gap: 6 }}>
-                          {o.items.map((i) => (
-                            <li key={i.sku} style={{ display: "flex", gap: 10, alignItems: "center" }}>
-                              <Thumb src={i.imageUrl} size={36} />
-                              <span style={{ minWidth: 0 }}>
-                                <b style={{ fontSize: 13 }}>
-                                  {i.quantity} × {i.productName}
-                                </b>
-                                <small className="sp-muted" style={{ display: "block", fontSize: 12 }}>
-                                  <span className="sp-mono">{i.sku}</span> · {money(i.unitPrice)} each
-                                  {i.returnedQuantity ? ` · ${i.returnedQuantity} returned` : ""}
-                                </small>
-                              </span>
-                            </li>
-                          ))}
-                        </ul>
-                      </td>
-                      <td>{o.shipTo}</td>
-                      <td>
-                        <OrderStatus o={o} />
-                      </td>
-                      <td className="sp-num">
-                        <b>{money(o.subtotal)}</b>
-                        {o.refunded ? (
-                          <small className="sp-zero-t">−{money(o.refunded)} refunded</small>
-                        ) : null}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5}>
-                      <div className="sp-empty">
-                        <Ico name="cart" />
-                        <p>{status ? "No orders here." : "No orders yet. When shoppers buy your products, they show up here."}</p>
-                      </div>
+                {d.content.map((o) => (
+                  <tr
+                    key={o.orderNumber}
+                    className="sp-go"
+                    onClick={(e) => {
+                      if (!(e.target as HTMLElement).closest("a,button")) router.push(`/merchant/orders/${encodeURIComponent(o.orderNumber)}`);
+                    }}
+                  >
+                    <td className="sp-c-id">
+                      <Link className="sp-oid" href={`/merchant/orders/${encodeURIComponent(o.orderNumber)}`}>
+                        {o.orderNumber}
+                      </Link>
+                      <span className="sp-osub">{rel(o.paidAt)}</span>
+                    </td>
+                    <td className="sp-c-it">
+                      <ItemsCell o={o} />
+                    </td>
+                    <td className="sp-c-to sp-hide-l">
+                      {o.shipToCity}, {o.shipToState}
+                    </td>
+                    <td className="sp-c-due">{detailOf(o)}</td>
+                    <td className="sp-c-tot sp-r sp-num">
+                      <b>{usd(o.sales)}</b>
+                      <span className="sp-osub">You earn {usd(o.net)}</span>
+                    </td>
+                    <td className="sp-c-st">
+                      <OrderStatePill state={o.state} />
+                    </td>
+                    <td className="sp-c-act">
+                      {o.state === "new" && o.ownsAll ? (
+                        <button type="button" className="sp-btn sp-btn-pri sp-btn-sm" onClick={() => setShipping(o)}>
+                          <Ico name="box" />
+                          Mark as shipped
+                        </button>
+                      ) : o.state === "return" ? (
+                        <Link className="sp-btn sp-btn-sec sp-btn-sm" href={`/merchant/orders/${encodeURIComponent(o.orderNumber)}`}>
+                          Review return
+                        </Link>
+                      ) : (
+                        <Link className="sp-btn sp-btn-ghost sp-btn-sm" href={`/merchant/orders/${encodeURIComponent(o.orderNumber)}`}>
+                          View
+                        </Link>
+                      )}
                     </td>
                   </tr>
-                )}
+                ))}
               </tbody>
             </table>
           </div>
+        ) : (
+          <p className="sp-oempty">{tab === "new" && !query ? "Nothing to ship right now. New orders show up here first." : "No orders here."}</p>
         )}
-        {orders.data && orders.data.totalPages > 1 ? (
+        {d && d.totalPages > 1 ? (
           <div className="sp-pager">
-            <span>
-              Page {orders.data.number + 1} of {orders.data.totalPages} · {orders.data.totalElements} orders
+            <button type="button" className="sp-btn sp-btn-sec sp-btn-sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
+              Previous
+            </button>
+            <span className="sp-muted">
+              Page {page + 1} of {d.totalPages}
             </span>
-            <span style={{ display: "flex", gap: 6 }}>
-              <button type="button" className="sp-btn sp-btn-sec sp-btn-sm" disabled={page === 0} onClick={() => setPage((p) => p - 1)}>
-                Previous
-              </button>
-              <button
-                type="button"
-                className="sp-btn sp-btn-sec sp-btn-sm"
-                disabled={page + 1 >= orders.data.totalPages}
-                onClick={() => setPage((p) => p + 1)}
-              >
-                Next
-              </button>
-            </span>
+            <button type="button" className="sp-btn sp-btn-sec sp-btn-sm" disabled={page + 1 >= d.totalPages} onClick={() => setPage((p) => p + 1)}>
+              Next
+            </button>
           </div>
         ) : null}
-      </div>
+      </section>
+      {d ? (
+        <p className="sp-help" style={{ marginTop: 12 }}>
+          You earn the item total less our {Math.round(d.commissionRate * 100)}% commission. Ship within 2 days of the order.
+        </p>
+      ) : null}
+
+      <ShipDialog
+        order={shipping}
+        onClose={() => setShipping(null)}
+        onDone={() => {
+          setShipping(null);
+          void list.reload();
+        }}
+      />
     </>
   );
 }

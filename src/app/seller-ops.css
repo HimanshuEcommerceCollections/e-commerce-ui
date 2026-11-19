@@ -1,0 +1,104 @@
+/* Seller portal: Orders & earnings and Help & support, from
+   designs/seller/seller-orders.html and seller-support.html (Nov 2026).
+   Same "sp-" prefix and scope as seller-portal.css. */
+
+/* ---------- Section tabs (Orders | Earnings & payouts) ---------- */
+.sp-vtabs{display:flex;gap:6px;margin:-4px 0 18px;border-bottom:1px solid var(--line);overflow-x:auto;scrollbar-width:none}
+.sp-vtabs a{padding:10px 4px 12px;margin-right:18px;font-weight:600;color:var(--muted);text-decoration:none!important;border-bottom:2px solid transparent;white-space:nowrap}
+.sp-vtabs a:hover{color:var(--navy)}
+.sp-vtabs a[aria-current=page]{color:var(--navy);border-bottom-color:var(--leaf)}
+button.sp-dstat{font:inherit;text-align:left;cursor:pointer}
+
+/* ---------- Orders table ---------- */
+.sp-ocard{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.sp-otools{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1px solid var(--line)}
+.sp-otools .sp-srch{max-width:300px;flex:1;min-width:200px}
+.sp-otw{overflow-x:auto;max-width:100%}
+.sp-otable{width:100%;border-collapse:collapse}
+.sp-otable th{font-size:12px;text-transform:uppercase;letter-spacing:.05em;color:#667085;font-weight:600;text-align:left;padding:10px 12px;background:#F8FAFC;border-bottom:1px solid var(--line);white-space:nowrap}
+.sp-otable td{padding:14px 12px;border-bottom:1px solid var(--line);vertical-align:middle;font-size:14px}
+.sp-otable th:first-child,.sp-otable td:first-child{padding-left:16px}
+.sp-otable th:last-child,.sp-otable td:last-child{padding-right:16px}
+.sp-otable tbody tr:last-child td{border-bottom:0}
+.sp-otable tbody tr.sp-go{cursor:pointer}.sp-otable tbody tr.sp-go:hover td{background:#FAFCFD}
+.sp-otable .sp-r,.sp-r{text-align:right}
+.sp-oid,.sp-otable td.sp-c-act,.sp-otable td.sp-c-tot{white-space:nowrap}
+.sp-otable td.sp-c-act{text-align:right}
+.sp-oid{font-weight:700;color:var(--navy)!important;text-decoration:none;font-variant-numeric:tabular-nums}.sp-oid:hover{text-decoration:underline}
+.sp-osub{display:block;font-size:12.5px;color:var(--muted);font-weight:400}
+.sp-oitems{display:flex;gap:10px;align-items:center;min-width:0}
+.sp-oitems b{font-weight:600;display:block;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sp-due-bad{color:var(--red);font-weight:700}.sp-due-warn{color:var(--amber);font-weight:600}
+.sp-oempty{padding:48px 16px;text-align:center;color:var(--muted)}
+@media(min-width:1200px) and (max-width:1359px){.sp-otable .sp-hide-l{display:none}}
+@media(max-width:1199px){
+  .sp-otable thead{display:none}
+  .sp-otable tr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;padding:14px 16px;border-bottom:1px solid var(--line)}
+  .sp-otable tbody tr:last-child{border-bottom:0}
+  .sp-otable td{padding:0!important;border:0!important;background:none!important}
+  .sp-otable td.sp-c-it{grid-column:1/-1;order:2}
+  .sp-otable td.sp-c-id{order:0}.sp-otable td.sp-c-st{order:1;justify-self:end}
+  .sp-otable td.sp-c-to{order:3;font-size:13px}.sp-otable td.sp-c-tot{order:4;justify-self:end}
+  .sp-otable td.sp-c-due{order:5;grid-column:1/-1;font-size:13px}
+  .sp-otable td.sp-c-act{order:6;grid-column:1/-1;text-align:left}.sp-otable td.sp-c-act .sp-btn{width:100%}
+  .sp-otable td.sp-hide-m{display:none}
+}
+
+/* ---------- Order detail ---------- */
+.sp-od{display:grid;gap:18px;grid-template-columns:minmax(0,1fr)}
+@media(min-width:1100px){.sp-od{grid-template-columns:minmax(0,1fr) 340px;align-items:start}}
+.sp-stack2,.sp-side2{display:grid;gap:18px;min-width:0}
+@media(min-width:1100px){.sp-side2{position:sticky;top:84px}}
+.sp-ohead{display:flex;gap:14px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}
+.sp-ohead h1{font-size:clamp(22px,3vw,28px);color:var(--navy);letter-spacing:-.025em;font-weight:700}
+.sp-meta2{display:flex;flex-wrap:wrap;gap:6px 14px;color:var(--muted);font-size:13.5px;margin-top:6px;align-items:center}
+.sp-lines{list-style:none;display:grid}
+.sp-lines li{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:12px;align-items:center;padding:12px 0;border-top:1px solid var(--line)}
+.sp-lines li:first-child{border-top:0;padding-top:0}
+.sp-lines li.sp-li2{grid-template-columns:auto 1fr;align-items:start}
+.sp-lines li.sp-li2 svg.sp-i{color:var(--leaf);margin-top:2px}
+.sp-lines b{font-weight:600;display:block}.sp-lines small{color:var(--muted);font-size:12.5px}
+.sp-money{display:grid;grid-template-columns:1fr auto;gap:8px 16px;font-size:14px;margin:0}
+.sp-money dt{color:var(--muted)}.sp-money dd{margin:0;text-align:right;font-variant-numeric:tabular-nums;font-weight:600}
+.sp-money .sp-tot{border-top:1px solid var(--line);padding-top:10px;color:var(--ink);font-weight:700}
+.sp-money .sp-tot+dd{border-top:1px solid var(--line);padding-top:10px;color:var(--leaf-700);font-size:18px;font-weight:800}
+.sp-tline{list-style:none;display:grid;gap:0}
+.sp-tline li{display:grid;grid-template-columns:22px minmax(0,1fr);gap:12px;padding-bottom:16px;position:relative;font-size:14px}
+.sp-tline li:not(:last-child)::before{content:"";position:absolute;left:10px;top:22px;bottom:2px;width:2px;background:var(--line)}
+.sp-tline li i{width:22px;height:22px;border-radius:50%;background:var(--line);display:grid;place-items:center}
+.sp-tline li.sp-done i{background:var(--leaf)}
+.sp-tline li.sp-done i::after{content:"";width:8px;height:4px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:rotate(-45deg) translate(1px,-1px)}
+.sp-tline li.sp-now i{background:#fff;border:2px solid var(--leaf)}
+.sp-tline li.sp-bad i{background:var(--red)}
+.sp-tline b{display:block}.sp-tline small{display:block;color:var(--muted);font-size:12.5px}
+.sp-addr{font-size:14px;line-height:1.55}
+.sp-trk-box{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--surface);border-radius:12px;padding:12px 14px;margin-top:12px;font-size:14px}
+.sp-actlist{display:grid;gap:8px}
+.sp-actlist .sp-btn{width:100%}
+.sp-note-s{font-size:12.5px;color:var(--muted);margin-top:8px}
+.sp-btn-danger-solid{background:var(--red);color:#fff!important;border-color:var(--red)}
+.sp-btn-danger-solid:hover{background:#912018;border-color:#912018}
+
+/* ---------- Payouts ---------- */
+.sp-po-next{display:flex;gap:16px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.sp-big{font-size:30px;color:var(--navy);letter-spacing:-.02em;font-weight:800;display:block}
+.sp-bank{display:flex;gap:10px;align-items:center;background:var(--surface);border-radius:12px;padding:10px 14px;font-size:14px}
+
+/* ---------- Packing slip (printed) ---------- */
+.sp-slip{max-width:760px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:32px}
+.sp-slip-h{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;border-bottom:2px solid var(--ink);padding-bottom:14px;margin-bottom:18px}
+.sp-slip-h h1{font-size:26px;color:var(--ink)}
+.sp-slip-brand{font-weight:800;color:var(--navy)}
+.sp-slip-to h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:6px}
+.sp-slip-to p{font-size:15px;line-height:1.6;margin-bottom:22px}
+.sp-slip-t{width:100%;border-collapse:collapse;font-size:14px}
+.sp-slip-t th{text-align:left;border-bottom:1px solid var(--ink);padding:8px 6px;font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+.sp-slip-t td{border-bottom:1px solid var(--line);padding:10px 6px}
+.sp-slip-f{margin-top:24px;font-size:13px;color:var(--muted)}
+@media print{
+  .sp-side,.sp-top,.sp-mnav,.sp-noprint{display:none!important}
+  .sp-app{display:block}
+  .sp-main{padding:0;max-width:none}
+  .sp-slip{border:0;padding:0}
+  .sp{background:#fff}
+}

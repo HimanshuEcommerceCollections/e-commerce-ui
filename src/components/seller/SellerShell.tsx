@@ -33,7 +33,7 @@ const NAV: { group?: string; items: NavItem[] }[] = [
   {
     group: "Business",
     items: [
-      { href: "/merchant/orders", icon: "cart", label: "Orders and earnings" },
+      { href: "/merchant/orders", icon: "cart", label: "Orders & earnings" },
       { href: "/merchant/documents", icon: "shield", label: "Documents" },
     ],
   },

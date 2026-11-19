@@ -1,4 +1,4 @@
-import type { ProductStatus } from "./common.types";
+import type { PageResponse, ProductStatus } from "./common.types";
 
 // ─── Shared enums (backend common/enums.ts) ──────────────────────────────────
 
@@ -263,4 +263,106 @@ export interface SellerDocument {
   expiresAt: string | null;
   uploadedAt: string;
   note: string | null;
+}
+
+// ─── Orders & earnings (GET /api/seller/orders/*, /api/seller/payouts) ──────
+
+export type SellerOrderTab = "new" | "shipped" | "delivered" | "return" | "cancelled" | "all";
+export type SellerOrderState = "new" | "shipped" | "delivered" | "return" | "returned" | "cancelled";
+
+export interface SellerOrderPayout {
+  reference: string | null;
+  /** NEXT: in the coming Friday's payout; AFTER_DELIVERY: paid once delivered; NONE: cancelled or returned. */
+  status: "SCHEDULED" | "PAID" | "NEXT" | "AFTER_DELIVERY" | "NONE";
+  scheduledFor: string | null;
+  paidAt: string | null;
+}
+
+export interface SellerOrderRow {
+  orderNumber: string;
+  paidAt: string;
+  state: SellerOrderState;
+  statusLabel: string;
+  status: string;
+  /** Only while the order is to ship. */
+  shipBy: string | null;
+  shippedAt: string | null;
+  deliveredAt: string | null;
+  carrier: string | null;
+  shipToCity: string;
+  shipToState: string;
+  returnReason: string | null;
+  cancellationReason: string | null;
+  items: { sku: string; productName: string; variantName: string | null; imageUrl: string | null; quantity: number }[];
+  units: number;
+  sales: number;
+  refunds: number;
+  commission: number;
+  net: number;
+  /** Every line is this seller's: only then can they ship, cancel or approve a return. */
+  ownsAll: boolean;
+  payout: SellerOrderPayout;
+}
+
+export interface SellerOrderCounts {
+  new: number;
+  shipped: number;
+  delivered: number;
+  return: number;
+  cancelled: number;
+  all: number;
+}
+
+export interface SellerOrderStats {
+  late: number;
+  dueToday: number;
+  delivered30Days: number;
+  delivered30DaysSales: number;
+}
+
+export interface SellerOrderList extends PageResponse<SellerOrderRow> {
+  counts: SellerOrderCounts;
+  stats: SellerOrderStats;
+  commissionRate: number;
+}
+
+export interface SellerOrderDetail extends SellerOrderRow {
+  shipTo: { name: string; city: string; state: string; postalCode: string; addressLine1?: string; addressLine2?: string | null; country?: string; phone?: string | null };
+  lines: { sku: string; productName: string; variantName: string | null; imageUrl: string | null; quantity: number; returnedQuantity: number; unitPrice: number; lineTotal: number }[];
+  otherSellersLines: number;
+  shipment: { carrier: string | null; trackingNumber: string | null; trackingUrl: string | null; status: string } | null;
+  return: { rmaNumber: string; status: string; reason: string; requestedAt: string; refundedAt: string | null } | null;
+  cancellation: { reason: string; by: string | null; at: string } | null;
+  actions: { ship: boolean; cancel: boolean; approveReturn: boolean };
+}
+
+export interface SellerOrdersOverview {
+  counts: SellerOrderCounts;
+  stats: SellerOrderStats;
+  toShip: SellerOrderRow[];
+  returnsRequested: SellerOrderRow[];
+}
+
+export interface SellerPayoutRow {
+  reference: string;
+  status: "SCHEDULED" | "PAID";
+  scheduledFor: string;
+  paidAt: string | null;
+  periodFrom: string;
+  periodTo: string;
+  orders: number;
+  sales: number;
+  commission: number;
+  refunds: number;
+  net: number;
+}
+
+export interface SellerPayouts {
+  commissionRate: number;
+  schedule: { payoutDay: string; cutoffDay: string };
+  next: { scheduledFor: string; amount: number; orders: { orderNumber: string; deliveredAt: string; sales: number; commission: number; refunds: number; net: number }[] };
+  waiting: { amount: number; orders: number };
+  month: { sales: number; orders: number };
+  paidLastFourWeeks: { amount: number; payouts: number };
+  history: SellerPayoutRow[];
 }
