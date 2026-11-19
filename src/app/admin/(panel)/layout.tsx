@@ -31,6 +31,7 @@ const COUNT_LABEL: Record<Count, string> = {
 const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adminOnly?: boolean; also?: string[]; group?: string }> = [
   { href: "/admin/products", label: "Products", icon: "box" },
   { href: "/admin/orders", label: "Orders", icon: "orders", count: "orders", adminOnly: true, also: ["/admin/returns"] },
+  { href: "/admin/payouts", label: "Seller payouts", icon: "tag", adminOnly: true },
   { href: "/admin/inventory", label: "Inventory", icon: "stack", count: "stock" },
   { href: "/admin/customers", label: "Customers", icon: "users", adminOnly: true },
   { href: "/admin/reports", label: "Reports", icon: "chart", adminOnly: true, also: ["/admin/analytics"] },
