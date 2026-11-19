@@ -407,7 +407,10 @@ export default function MyProductsPage() {
                     <th>Status</th>
                     <th>Live price</th>
                     <th>Price change</th>
-                    <th>Stock</th>
+                    <th>
+                      Stock
+                      <span className="sp-th-note">No approval needed</span>
+                    </th>
                     <th>
                       <span className="sp-sr">Actions</span>
                     </th>
@@ -466,6 +469,7 @@ export default function MyProductsPage() {
                           </td>
                           <td>
                             <InlineStock p={p} onDone={reload} onOpen={() => openProduct(p.id, "stock")} />
+                            <span className="sp-stk-note">Saves instantly · no approval</span>
                           </td>
                           <td style={{ textAlign: "right" }}>
                             <button type="button" className="sp-btn sp-btn-ghost sp-btn-sm" onClick={() => openProduct(p.id)}>

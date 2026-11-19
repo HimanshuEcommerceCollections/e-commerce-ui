@@ -7,7 +7,12 @@ import type {
   SellerDocument,
   SellerEarnings,
   SellerOrder,
+  SellerOrderDetail,
   SellerOrderFilter,
+  SellerOrderList,
+  SellerOrderTab,
+  SellerOrdersOverview,
+  SellerPayouts,
   SellerProduct,
   StockMove,
   StockUpdateResult,
@@ -16,6 +21,10 @@ import type {
   SubmissionReport,
   SubmissionStatus,
   SubmissionSummary,
+  TicketDetail,
+  TicketList,
+  TicketTab,
+  TicketTopic,
   TemplateRow,
   UploadCheck,
 } from "@/types/api/seller.types";
@@ -29,6 +38,14 @@ const fileForm = (file: File, fields: Record<string, string | undefined> = {}) =
   const form = new FormData();
   form.append("file", file);
   for (const [k, v] of Object.entries(fields)) if (v) form.append(k, v);
+  return form;
+};
+
+/** Ticket fields and up to 5 files as multipart (part name 'files'). */
+const ticketForm = (fields: Record<string, string | boolean | undefined>, files: File[]) => {
+  const form = new FormData();
+  for (const [k, v] of Object.entries(fields)) if (v !== undefined && v !== "") form.append(k, String(v));
+  for (const f of files) form.append("files", f);
   return form;
 };
 
@@ -67,6 +84,34 @@ const sellerService = {
   orders: (params: { page?: number; size?: number; status?: SellerOrderFilter }) =>
     api.get<ApiResponse<PageResponse<SellerOrder>>>(`${BASE}/orders`, { params }),
   earnings: (months = 6) => api.get<ApiResponse<SellerEarnings>>(`${BASE}/earnings`, { params: { months } }),
+  orderList: (params: { tab: SellerOrderTab; q?: string; page?: number; size?: number }) =>
+    api.get<ApiResponse<SellerOrderList>>(`${BASE}/orders/list`, { params }),
+  ordersOverview: () => api.get<ApiResponse<SellerOrdersOverview>>(`${BASE}/orders/overview`),
+  ordersCsv: (tab: SellerOrderTab) => api.get<Blob>(`${BASE}/orders/export`, { params: { tab }, responseType: "blob" }),
+  order: (orderNumber: string) => api.get<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}`),
+  shipOrder: (orderNumber: string, body: { carrier: string; trackingNumber: string }) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/ship`, body),
+  cancelOrder: (orderNumber: string, body: { reason: string; note?: string }) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/cancel`, body),
+  approveReturn: (orderNumber: string) =>
+    api.post<ApiResponse<SellerOrderDetail>>(`${BASE}/orders/${encodeURIComponent(orderNumber)}/return/approve`, {}),
+  payouts: () => api.get<ApiResponse<SellerPayouts>>(`${BASE}/payouts`),
+  payoutStatement: (reference: string) => api.get<Blob>(`${BASE}/payouts/${reference}/statement`, { responseType: "blob" }),
+
+  // Help & support
+  tickets: (tab: TicketTab) => api.get<ApiResponse<TicketList>>(`${BASE}/tickets`, { params: { tab } }),
+  ticketsWaiting: () => api.get<ApiResponse<{ waiting: number }>>(`${BASE}/tickets/waiting-count`),
+  ticket: (reference: string) => api.get<ApiResponse<TicketDetail>>(`${BASE}/tickets/${reference}`),
+  raiseTicket: (
+    t: { topic: TicketTopic; subject: string; body: string; urgent: boolean; relatedType?: string; relatedRef?: string },
+    files: File[]
+  ) => api.post<ApiResponse<TicketDetail>>(`${BASE}/tickets`, ticketForm(t, files), multipart),
+  replyTicket: (reference: string, body: string, files: File[]) =>
+    api.post<ApiResponse<TicketDetail>>(`${BASE}/tickets/${reference}/messages`, ticketForm({ body }, files), multipart),
+  resolveTicket: (reference: string) => api.post<ApiResponse<TicketDetail>>(`${BASE}/tickets/${reference}/resolve`),
+  reopenTicket: (reference: string) => api.post<ApiResponse<TicketDetail>>(`${BASE}/tickets/${reference}/reopen`),
+  ticketAttachment: (reference: string, id: string) =>
+    api.get<Blob>(`${BASE}/tickets/${reference}/attachments/${id}`, { responseType: "blob" }),
 
   // Documents
   documents: () => api.get<ApiResponse<SellerDocument[]>>(`${BASE}/documents`),
