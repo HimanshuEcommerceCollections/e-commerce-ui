@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import adminService from "@/services/admin/admin.service";
 import integrationService from "@/services/admin/integration.service";
+import sellerTicketsService from "@/services/admin/sellerTickets.service";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
@@ -11,7 +12,7 @@ import { BrandMark } from "@/components/daylora/BrandMark";
 import { ADMIN_INTEGRATIONS_EVENT, ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
 import type { IntegrationNavItem } from "@/types/api/integration.types";
 
-type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications";
+type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications" | "sellerTickets";
 const COUNT_LABEL: Record<Count, string> = {
   orders: "to fulfil",
   stock: "low or out of stock",
@@ -19,6 +20,7 @@ const COUNT_LABEL: Record<Count, string> = {
   reviews: "pending",
   support: "open",
   applications: "undecided",
+  sellerTickets: "waiting for our team",
 };
 
 /**
@@ -31,7 +33,7 @@ const COUNT_LABEL: Record<Count, string> = {
 const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adminOnly?: boolean; also?: string[]; group?: string }> = [
   { href: "/admin/products", label: "Products", icon: "box" },
   { href: "/admin/orders", label: "Orders", icon: "orders", count: "orders", adminOnly: true, also: ["/admin/returns"] },
-  { href: "/admin/payouts", label: "Seller payouts", icon: "tag", adminOnly: true },
+  { href: "/admin/payouts", label: "Seller payouts", icon: "cash", adminOnly: true },
   { href: "/admin/inventory", label: "Inventory", icon: "stack", count: "stock" },
   { href: "/admin/customers", label: "Customers", icon: "users", adminOnly: true },
   { href: "/admin/reports", label: "Reports", icon: "chart", adminOnly: true, also: ["/admin/analytics"] },
@@ -40,10 +42,11 @@ const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adm
   { href: "/admin/audit-log", label: "Audit log", icon: "file" },
   { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
   { href: "/admin/seller-applications", label: "Supplier approvals", icon: "store", count: "applications", adminOnly: true },
+  { href: "/admin/seller-tickets", label: "Seller tickets", icon: "inbox", count: "sellerTickets" },
   { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
   { href: "/admin/integrations", label: "API integrations", icon: "gear", adminOnly: true, group: "Integrations" },
 ];
-const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0 };
+const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0, sellerTickets: 0 };
 const ADMIN_ONLY = [...NAV.filter((n) => n.adminOnly).flatMap((n) => [n.href, ...(n.also ?? [])]), "/admin/settings"];
 
 const inSection = (path: string, n: (typeof NAV)[number]) => [n.href, ...(n.also ?? [])].some((h) => path.startsWith(h));
@@ -97,7 +100,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   // Counts are a convenience; the pages report their own errors, so each
   // request fails on its own without hiding the other badges.
   const loadCounts = useCallback(async () => {
-    const [stock, submissions, reviews, orders, inbox] = await Promise.allSettled([
+    const [stock, submissions, reviews, orders, inbox, tickets] = await Promise.allSettled([
       adminService.inventoryStats(),
       adminService.submissionCounts(),
       // Catalog staff can't read the inbox counts, so they count the pending reviews directly.
@@ -105,6 +108,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       // Order stats and the inbox are admin only; catalog staff would get a 403.
       isAdmin ? adminService.orderStats() : Promise.reject(),
       isAdmin ? adminService.inboxCounts() : Promise.reject(),
+      sellerTicketsService.list({ tab: "open", size: 1 }),
     ]);
     const data = <T,>(r: PromiseSettledResult<{ data: { data: T | null } }>) => (r.status === "fulfilled" ? r.value.data.data : null);
     const s = data(stock);
@@ -117,6 +121,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       reviews: box?.reviewsPending ?? data(reviews)?.totalElements ?? 0,
       support: box?.supportOpen ?? 0,
       applications: box?.sellerApplicationsNew ?? 0,
+      sellerTickets: data(tickets)?.counts.open ?? 0,
     });
   }, [isAdmin]);
 
