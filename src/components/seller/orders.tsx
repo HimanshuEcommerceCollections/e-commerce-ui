@@ -41,7 +41,7 @@ export const dueClass = (level: string) => (level === "bad" ? "sp-due-bad" : lev
 
 /** Help & support, opening a new ticket about an order or a payout. */
 export const ticketHref = (topic: "orders" | "payments", ref?: string) =>
-  `/merchant/support?new=1&topic=${topic}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`;
+  `/merchant/support/new?topic=${topic}${ref ? `&ref=${encodeURIComponent(ref)}` : ""}`;
 
 /** Orders | Earnings & payouts */
 export function OrdersTabs({ active }: { active: "orders" | "earnings" }) {

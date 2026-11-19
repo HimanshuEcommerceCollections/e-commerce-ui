@@ -366,3 +366,44 @@ export interface SellerPayouts {
   paidLastFourWeeks: { amount: number; payouts: number };
   history: SellerPayoutRow[];
 }
+
+// ─── Help & support (GET/POST /api/seller/tickets) ───────────────────────────
+
+export type TicketTopic = "products" | "orders" | "payments" | "account" | "other";
+export type TicketStatus = "OPEN" | "WAITING" | "RESOLVED";
+export type TicketTab = "open" | "waiting" | "resolved" | "all";
+
+export interface TicketSummary {
+  reference: string;
+  subject: string;
+  topic: TicketTopic;
+  topicLabel: string;
+  status: TicketStatus;
+  urgent: boolean;
+  team: string;
+  assignee: string | null;
+  related: { type: "order" | "product" | "payout"; ref: string } | null;
+  createdAt: string;
+  lastMessageAt: string;
+  lastMessage: { role: "SELLER" | "STAFF" | "SYSTEM"; name: string } | null;
+  resolvedAt: string | null;
+  messageCount: number;
+}
+
+export interface TicketMessage {
+  id: string;
+  role: "SELLER" | "STAFF" | "SYSTEM";
+  name: string;
+  body: string;
+  createdAt: string;
+  attachments: { id: string; fileName: string; contentType: string; sizeBytes: number }[];
+}
+
+export interface TicketDetail extends TicketSummary {
+  messages: TicketMessage[];
+}
+
+export interface TicketList {
+  content: TicketSummary[];
+  counts: Record<TicketTab, number>;
+}

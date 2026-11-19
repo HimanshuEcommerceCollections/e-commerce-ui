@@ -35,6 +35,7 @@ const NAV: { group?: string; items: NavItem[] }[] = [
     items: [
       { href: "/merchant/orders", icon: "cart", label: "Orders & earnings" },
       { href: "/merchant/documents", icon: "shield", label: "Documents" },
+      { href: "/merchant/support", icon: "mail", label: "Help & support" },
     ],
   },
 ];
@@ -183,6 +184,14 @@ export function SellerShell({ children }: { children: ReactNode }) {
   const signOut = useAuthStore((s) => s.signOut);
   const name = user?.fullName || user?.email || "Seller";
   const ini = initials(name);
+  // Tickets waiting for the seller's answer: a badge on Help & support.
+  const [waiting, setWaiting] = useState(0);
+  useEffect(() => {
+    sellerService
+      .ticketsWaiting()
+      .then((r) => setWaiting(r.data.data?.waiting ?? 0))
+      .catch(() => undefined);
+  }, [path]);
 
   const out = async () => {
     await signOut();
@@ -201,6 +210,11 @@ export function SellerShell({ children }: { children: ReactNode }) {
                 <Link key={item.href} href={item.href} aria-current={isCurrent(path, item) ? "page" : undefined}>
                   <Ico name={item.icon} />
                   {item.label}
+                  {item.href === "/merchant/support" && waiting ? (
+                    <span className="sp-count" aria-label={`${waiting} waiting for you`}>
+                      {waiting}
+                    </span>
+                  ) : null}
                 </Link>
               ))}
             </div>

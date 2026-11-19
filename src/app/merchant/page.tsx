@@ -23,6 +23,7 @@ import {
   rel,
   sellable,
   useLoad,
+  type IconName,
 } from "@/components/seller/ui";
 import { useTitle } from "@/components/seller/useSellerSession";
 import sellerService from "@/services/seller/seller.service";
@@ -44,7 +45,7 @@ const TAB: Record<ListingState, string> = {
   ARCHIVED: "archived",
 };
 
-type Task = { id: string; level: "bad" | "warn" | "info"; product?: SellerProduct; title: ReactNode; detail: ReactNode; action: ReactNode };
+type Task = { id: string; level: "bad" | "warn" | "info"; product?: SellerProduct; icon?: IconName; title: ReactNode; detail: ReactNode; action: ReactNode };
 
 export default function SellerDashboardPage() {
   useTitle("Dashboard");
@@ -54,6 +55,7 @@ export default function SellerDashboardPage() {
   const prices = useLoad(() => sellerService.priceChanges());
   const overview = useLoad(() => sellerService.ordersOverview());
   const payouts = useLoad(() => sellerService.payouts());
+  const tickets = useLoad(() => sellerService.tickets("open"));
   const documents = useLoad(() => sellerService.documents());
   const [stockFor, setStockFor] = useState<{ product: SellerProduct; sku?: string } | null>(null);
 
@@ -169,6 +171,7 @@ export default function SellerDashboardPage() {
       t.push({
         id: `ship-${o.orderNumber}`,
         level,
+        icon: "cart",
         title: (
           <>
             Ship order <b>{o.orderNumber}</b>
@@ -187,6 +190,7 @@ export default function SellerDashboardPage() {
       t.push({
         id: `ret-${o.orderNumber}`,
         level: "warn",
+        icon: "cart",
         title: (
           <>
             Return requested on <b>{o.orderNumber}</b>
@@ -196,6 +200,24 @@ export default function SellerDashboardPage() {
         action: (
           <Link className="sp-btn sp-btn-sec sp-btn-sm" href={`/merchant/orders/${encodeURIComponent(o.orderNumber)}`}>
             Review return
+          </Link>
+        ),
+      });
+    }
+    for (const tk of (tickets.data?.content ?? []).filter((x) => x.status === "WAITING")) {
+      t.push({
+        id: `tk-${tk.reference}-${tk.messageCount}`,
+        level: "warn",
+        icon: "mail",
+        title: (
+          <>
+            {tk.lastMessage?.name ?? "Our team"} replied on <b>{tk.reference}</b>
+          </>
+        ),
+        detail: tk.subject,
+        action: (
+          <Link className="sp-btn sp-btn-sec sp-btn-sm" href={`/merchant/support/${tk.reference}`}>
+            Reply
           </Link>
         ),
       });
@@ -215,7 +237,7 @@ export default function SellerDashboardPage() {
     }
     const order = { bad: 0, warn: 1, info: 2 };
     return t.sort((a, b) => order[a.level] - order[b.level]);
-  }, [products, live, prices.data, documents.data, overview.data]);
+  }, [products, live, prices.data, documents.data, overview.data, tickets.data]);
 
   const hour = new Date().getHours();
   const hi = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
@@ -303,7 +325,7 @@ export default function SellerDashboardPage() {
                       <Thumb src={t.product.imageUrl} size={40} />
                     ) : (
                       <span className="sp-pthumb sp-doc" style={{ width: 40, height: 40 }} aria-hidden="true">
-                        <Ico name="doc" />
+                        <Ico name={t.icon ?? "doc"} />
                       </span>
                     )}
                     <div style={{ minWidth: 0 }}>
@@ -554,6 +576,14 @@ export default function SellerDashboardPage() {
                     <Link className="sp-lnk" href={ticketHref("orders")}>
                       Raise a ticket
                     </Link>
+                    {tickets.data?.counts.open ? (
+                      <>
+                        {" · "}
+                        <Link className="sp-lnk" href="/merchant/support">
+                          {tickets.data.counts.open} open
+                        </Link>
+                      </>
+                    ) : null}
                   </p>
                 </>
               ) : overview.error || payouts.error ? (
