@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import adminService from "@/services/admin/admin.service";
 import integrationService from "@/services/admin/integration.service";
 import sellerTicketsService from "@/services/admin/sellerTickets.service";
+import crmService from "@/services/admin/crm.service";
 import { useAuth } from "@/hooks/useAuth";
 import { Icon, PANEL_ROLE_LABEL, Toast, initials } from "@/components/admin/ui";
 import { useAdminSession } from "@/components/admin/useAdminSession";
@@ -12,7 +13,7 @@ import { BrandMark } from "@/components/daylora/BrandMark";
 import { ADMIN_INTEGRATIONS_EVENT, ADMIN_REFRESH_EVENT } from "@/components/admin/refresh";
 import type { IntegrationNavItem } from "@/types/api/integration.types";
 
-type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications" | "sellerTickets";
+type Count = "orders" | "stock" | "submissions" | "reviews" | "support" | "applications" | "sellerTickets" | "crm";
 const COUNT_LABEL: Record<Count, string> = {
   orders: "to fulfil",
   stock: "low or out of stock",
@@ -21,6 +22,7 @@ const COUNT_LABEL: Record<Count, string> = {
   support: "open",
   applications: "undecided",
   sellerTickets: "waiting for our team",
+  crm: "open tickets",
 };
 
 /**
@@ -40,13 +42,14 @@ const NAV: Array<{ href: string; label: string; icon: string; count?: Count; adm
   { href: "/admin/submissions", label: "Review queue", icon: "review", count: "submissions", group: "Review" },
   { href: "/admin/reviews", label: "Product reviews", icon: "star", count: "reviews" },
   { href: "/admin/audit-log", label: "Audit log", icon: "file" },
+  { href: "/admin/crm", label: "CRM", icon: "contact", count: "crm", adminOnly: true, group: "Customers & suppliers" },
   { href: "/admin/support", label: "Support messages", icon: "mail", count: "support", adminOnly: true, group: "Inbox" },
   { href: "/admin/seller-applications", label: "Supplier approvals", icon: "store", count: "applications", adminOnly: true },
   { href: "/admin/seller-tickets", label: "Seller tickets", icon: "inbox", count: "sellerTickets" },
   { href: "/admin/promotions", label: "Promotions", icon: "tag", adminOnly: true, group: "Marketing" },
   { href: "/admin/integrations", label: "API integrations", icon: "gear", adminOnly: true, group: "Integrations" },
 ];
-const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0, sellerTickets: 0 };
+const NO_COUNTS: Record<Count, number> = { orders: 0, stock: 0, submissions: 0, reviews: 0, support: 0, applications: 0, sellerTickets: 0, crm: 0 };
 const ADMIN_ONLY = [...NAV.filter((n) => n.adminOnly).flatMap((n) => [n.href, ...(n.also ?? [])]), "/admin/settings"];
 
 const inSection = (path: string, n: (typeof NAV)[number]) => [n.href, ...(n.also ?? [])].some((h) => path.startsWith(h));
@@ -100,7 +103,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
   // Counts are a convenience; the pages report their own errors, so each
   // request fails on its own without hiding the other badges.
   const loadCounts = useCallback(async () => {
-    const [stock, submissions, reviews, orders, inbox, tickets] = await Promise.allSettled([
+    const [stock, submissions, reviews, orders, inbox, tickets, crm] = await Promise.allSettled([
       adminService.inventoryStats(),
       adminService.submissionCounts(),
       // Catalog staff can't read the inbox counts, so they count the pending reviews directly.
@@ -109,6 +112,8 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       isAdmin ? adminService.orderStats() : Promise.reject(),
       isAdmin ? adminService.inboxCounts() : Promise.reject(),
       sellerTicketsService.list({ tab: "open", size: 1 }),
+      // The CRM is admin only; its open-ticket count is the badge.
+      isAdmin ? crmService.summary() : Promise.reject(),
     ]);
     const data = <T,>(r: PromiseSettledResult<{ data: { data: T | null } }>) => (r.status === "fulfilled" ? r.value.data.data : null);
     const s = data(stock);
@@ -122,6 +127,7 @@ export default function AdminPanelLayout({ children }: { children: ReactNode }) 
       support: box?.supportOpen ?? 0,
       applications: box?.sellerApplicationsNew ?? 0,
       sellerTickets: data(tickets)?.counts.open ?? 0,
+      crm: crm.status === "fulfilled" ? crm.value.tickets.open : 0,
     });
   }, [isAdmin]);
 

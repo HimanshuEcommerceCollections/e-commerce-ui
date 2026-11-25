@@ -325,7 +325,16 @@ function CustomerDrawer({ id, onClose, onChanged }: { id: string | null; onClose
       onClose={onClose}
       title={c?.fullName ?? "Account"}
       sub={c ? <span className="badges">{c.email} <RolePill role={c.role} /></span> : null}
-      foot={<button className="btn btn-secondary" onClick={onClose}>Close</button>}
+      foot={
+        <>
+          {c?.role === "ROLE_CUSTOMER" ? (
+            <Link className="btn btn-secondary" href={`/admin/crm/customers?q=${encodeURIComponent(c.email)}`}>
+              Open in CRM
+            </Link>
+          ) : null}
+          <button className="btn btn-secondary" onClick={onClose}>Close</button>
+        </>
+      }
     >
       {!c ? (
         error ? <p className="err-text">{error}</p> : <p className="sub">Loading…</p>
